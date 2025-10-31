@@ -1,0 +1,7 @@
+[package]
+name = "minecraft"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+glfw = { version = "0.60.0", features = ["raw-window-handle-v0-6"] }
