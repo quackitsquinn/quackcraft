@@ -1,11 +1,14 @@
+use std::sync::Arc;
+
 use glfw::{Glfw, GlfwReceiver, PWindow};
 use log::*;
 
 #[derive(Debug)]
 pub struct GlfwWindow {
     glfw: Glfw,
-    window: PWindow,
-    event_receiver: GlfwReceiver<(f64, glfw::WindowEvent)>,
+    /// The underlying GLFW window.
+    pub window: Arc<PWindow>,
+    pub event_receiver: GlfwReceiver<(f64, glfw::WindowEvent)>,
 }
 
 impl GlfwWindow {
@@ -19,7 +22,7 @@ impl GlfwWindow {
 
         Ok(GlfwWindow {
             glfw,
-            window,
+            window: Arc::new(window),
             event_receiver,
         })
     }
