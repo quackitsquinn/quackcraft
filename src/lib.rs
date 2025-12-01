@@ -1,10 +1,15 @@
-use std::{cell::RefCell, iter, rc::Rc};
+use std::{cell::RefCell, iter, rc::Rc, sync::Arc};
 
 use glfw::WindowEvent;
 use log::info;
 use wgpu::Color;
 
 use crate::graphics::WgpuInstance;
+
+/// A read-only string type.
+pub type ReadOnlyString = Arc<str>;
+/// A read-only slice type.
+pub type ReadOnly<T> = Arc<[T]>;
 
 mod graphics;
 mod window;

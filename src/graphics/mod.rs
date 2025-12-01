@@ -7,7 +7,10 @@ use wgpu::{
     Surface, SurfaceConfiguration, SurfaceTexture, TextureView, util::DeviceExt,
 };
 
+use crate::graphics::shader::ShaderProgram;
+
 pub mod buf;
+pub mod shader;
 
 pub struct WgpuInstance<'a> {
     pub instance: Instance,
@@ -115,18 +118,27 @@ impl<'a> WgpuInstance<'a> {
     }
 
     /// Loads a shader module from WGSL source code.
-    pub fn load_shader(&self, shader_source: &str, label: Option<&str>) -> wgpu::ShaderModule {
-        self.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label,
-            source: wgpu::ShaderSource::Wgsl(shader_source.into()),
-        })
-    }
+    pub fn load_shader(
+        &self,
+        shader_source: &str,
+        label: Option<&str>,
+        vs_entry: Option<&str>,
+        fs_entry: Option<&str>,
+        compilation_options: wgpu::PipelineCompilationOptions<'a>,
+    ) -> ShaderProgram<'a> {
+        let module = self
+            .device
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label,
+                source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+            });
 
-    /// Loads a shader module from a shader module descriptor.
-    ///
-    /// This is mainly provided for the `include_.*!` macros that generate a `wgpu::ShaderModuleDescriptor`.
-    pub fn create_shader_module(&self, desc: wgpu::ShaderModuleDescriptor) -> wgpu::ShaderModule {
-        self.device.create_shader_module(desc)
+        ShaderProgram::from_raw_parts(
+            module,
+            vs_entry.map(Arc::from),
+            fs_entry.map(Arc::from),
+            compilation_options,
+        )
     }
 
     /// Creates a pipeline layout from the given descriptor.
