@@ -114,6 +114,42 @@ impl<'a> WgpuInstance<'a> {
         unsafe { buf::WgpuBuffer::from_raw_parts(buffer) }
     }
 
+    /// Loads a shader module from WGSL source code.
+    pub fn load_shader(&self, shader_source: &str, label: Option<&str>) -> wgpu::ShaderModule {
+        self.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label,
+            source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+        })
+    }
+
+    /// Loads a shader module from a shader module descriptor.
+    ///
+    /// This is mainly provided for the `include_.*!` macros that generate a `wgpu::ShaderModuleDescriptor`.
+    pub fn create_shader_module(&self, desc: wgpu::ShaderModuleDescriptor) -> wgpu::ShaderModule {
+        self.device.create_shader_module(desc)
+    }
+
+    /// Creates a pipeline layout from the given descriptor.
+    pub fn create_pipeline_layout(
+        &self,
+        desc: &wgpu::PipelineLayoutDescriptor,
+    ) -> wgpu::PipelineLayout {
+        self.device.create_pipeline_layout(desc)
+    }
+
+    /// Creates a pipeline layout from the given bind group layouts.
+    pub fn pipeline_layout(
+        &self,
+        label: Option<&str>,
+        bind_group_layouts: &[&wgpu::BindGroupLayout],
+    ) -> wgpu::PipelineLayout {
+        self.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label,
+            bind_group_layouts,
+            push_constant_ranges: &[],
+        })
+    }
+
     /// Acquires the current texture view from the surface.
     pub fn current_view(&self) -> anyhow::Result<(SurfaceTexture, TextureView)> {
         let frame = self

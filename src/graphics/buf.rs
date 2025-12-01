@@ -15,6 +15,8 @@ where
     T: ShaderType,
 {
     /// Creates a new WgpuBuffer from a wgpu::Buffer.
+    ///
+    /// see also: [`crate::graphics::WgpuInstance::create_buffer`]
     /// # Safety
     /// The caller must ensure that the provided buffer is valid for the type T.
     pub unsafe fn from_raw_parts(buffer: wgpu::Buffer) -> Self {
@@ -38,7 +40,7 @@ where
 /// An enumeration of buffer attributes.
 pub enum BufferLayout {
     /// A vertex buffer format.
-    Vertex(Arc<[wgpu::VertexAttribute]>),
+    Vertex(wgpu::VertexBufferLayout<'static>),
     /// An index buffer format.
     Index(wgpu::IndexFormat),
 }
