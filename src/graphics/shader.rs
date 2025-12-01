@@ -1,5 +1,7 @@
 //! wgpu shader abstractions
 
+use wgpu::VertexBufferLayout;
+
 use crate::ReadOnlyString;
 
 pub struct ShaderProgram<'a> {
@@ -29,5 +31,30 @@ impl<'a> ShaderProgram<'a> {
             fragment_entry_point,
             compilation_options,
         }
+    }
+
+    /// Returns the vertex state for this shader program.
+    pub fn vertex_state(&'a self, buffers: &'a [VertexBufferLayout]) -> wgpu::VertexState<'a> {
+        wgpu::VertexState {
+            module: &self.module,
+            entry_point: self.vertex_entry_point.as_deref(),
+            buffers,
+            compilation_options: self.compilation_options.clone(),
+        }
+    }
+
+    /// Returns the fragment state for this shader program.
+    pub fn fragment_state(
+        &'a self,
+        targets: &'a [Option<wgpu::ColorTargetState>],
+    ) -> Option<wgpu::FragmentState<'a>> {
+        self.fragment_entry_point.as_ref()?;
+
+        Some(wgpu::FragmentState {
+            module: &self.module,
+            entry_point: self.fragment_entry_point.as_deref(),
+            targets,
+            compilation_options: self.compilation_options.clone(),
+        })
     }
 }

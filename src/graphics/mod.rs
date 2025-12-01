@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{primitive, sync::Arc};
 
 use anyhow::Context;
 use wgpu::{
@@ -162,6 +162,34 @@ impl<'a> WgpuInstance<'a> {
         })
     }
 
+    /// Creates a render pipeline from the given descriptor.
+    pub fn create_pipeline(&self, desc: &wgpu::RenderPipelineDescriptor) -> wgpu::RenderPipeline {
+        self.device.create_render_pipeline(desc)
+    }
+
+    /// Creates a render pipeline from the given parts.
+    pub fn pipeline(
+        &'a self,
+        label: Option<&str>,
+        shader: &ShaderProgram,
+        layout: &wgpu::PipelineLayout,
+        buffers: &[wgpu::VertexBufferLayout<'a>],
+        primitive: wgpu::PrimitiveState,
+        targets: &[Option<wgpu::ColorTargetState>],
+    ) -> wgpu::RenderPipeline {
+        self.create_pipeline(&wgpu::RenderPipelineDescriptor {
+            label,
+            layout: Some(layout),
+            vertex: shader.vertex_state(buffers),
+            fragment: shader.fragment_state(targets.as_ref()),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        })
+    }
+
     /// Acquires the current texture view from the surface.
     pub fn current_view(&self) -> anyhow::Result<(SurfaceTexture, TextureView)> {
         let frame = self
@@ -175,7 +203,12 @@ impl<'a> WgpuInstance<'a> {
     }
 
     /// Clears the given texture view with the specified color using the provided command encoder.
-    pub fn clear(&self, color: Color, encoder: &mut CommandEncoder, view: &TextureView) {
+    pub fn start_main_pass<'b>(
+        &self,
+        color: Color,
+        encoder: &'b mut CommandEncoder,
+        view: &TextureView,
+    ) -> RenderPass<'b> {
         encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("clear render pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -189,7 +222,7 @@ impl<'a> WgpuInstance<'a> {
             })],
             depth_stencil_attachment: None,
             ..Default::default()
-        });
+        })
     }
 
     /// Submits a single command encoder to the queue. This is a direct wrapper around `Queue::submit`.

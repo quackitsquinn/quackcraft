@@ -18,6 +18,7 @@ mod window;
 pub struct QuackCraft<'a> {
     window: window::GlfwWindow,
     wgpu: Rc<RefCell<graphics::WgpuInstance<'a>>>,
+    pipelines: Vec<wgpu::RenderPipeline>,
 }
 
 impl<'a> QuackCraft<'a> {
@@ -25,9 +26,34 @@ impl<'a> QuackCraft<'a> {
     pub fn new() -> anyhow::Result<Self> {
         let window = window::GlfwWindow::new(800, 600, "Quackcraft")?;
         let wgpu = smol::block_on(WgpuInstance::new(window.window.clone()))?;
+
+        let program = wgpu.load_shader(
+            include_str!("../shaders/test.wgsl"),
+            Some("test_shader"),
+            Some("vs_main"),
+            Some("fs_main"),
+            wgpu::PipelineCompilationOptions::default(),
+        );
+
+        let layout = wgpu.pipeline_layout(None, &[]);
+
+        let pipeline = wgpu.pipeline(
+            Some("main pipeline"),
+            &program,
+            &layout,
+            &[],
+            wgpu::PrimitiveState::default(),
+            &[Some(wgpu::ColorTargetState {
+                format: wgpu.config.format,
+                blend: Some(wgpu::BlendState::REPLACE),
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
+        );
+
         Ok(QuackCraft {
             window,
             wgpu: Rc::new(RefCell::new(wgpu)),
+            pipelines: vec![pipeline],
         })
     }
 
@@ -47,7 +73,12 @@ impl<'a> QuackCraft<'a> {
         let mut encoder = wgpu.create_encoder(None);
         let (surface, view) = wgpu.current_view()?;
 
-        wgpu.clear(Self::rainbow(frame), &mut encoder, &view);
+        let mut pass = wgpu.start_main_pass(Self::rainbow(frame), &mut encoder, &view);
+
+        pass.set_pipeline(&self.pipelines[0]);
+        pass.draw(0..3, 0..1);
+
+        drop(pass);
 
         wgpu.submit_single(encoder.finish());
         surface.present();
