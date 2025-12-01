@@ -2,10 +2,12 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use wgpu::{
-    Color, CommandEncoder, Device, DeviceDescriptor, Instance, InstanceDescriptor, PowerPreference,
-    Queue, RenderPass, RequestAdapterOptions, StoreOp, Surface, SurfaceConfiguration,
-    SurfaceTexture, TextureView,
+    self as w, Color, CommandBuffer, CommandEncoder, Device, DeviceDescriptor, Instance,
+    InstanceDescriptor, PowerPreference, Queue, RenderPass, RequestAdapterOptions, StoreOp,
+    Surface, SurfaceConfiguration, SurfaceTexture, TextureView, util::DeviceExt,
 };
+
+pub mod buf;
 
 pub struct WgpuInstance<'a> {
     pub instance: Instance,
@@ -90,6 +92,28 @@ impl<'a> WgpuInstance<'a> {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label })
     }
 
+    /// Creates a buffer with the given usage and data.
+    pub fn create_buffer<T>(
+        &self,
+        usage: wgpu::BufferUsages,
+        data: &[T],
+        label: Option<&str>,
+    ) -> buf::WgpuBuffer<T>
+    where
+        T: buf::ShaderType,
+    {
+        let buffer = self
+            .device
+            .create_buffer_init(&w::util::BufferInitDescriptor {
+                label,
+                contents: bytemuck::cast_slice(data),
+                usage,
+            });
+
+        // Safety: The buffer is valid for type T as it was created from a slice of T.
+        unsafe { buf::WgpuBuffer::from_raw_parts(buffer) }
+    }
+
     /// Acquires the current texture view from the surface.
     pub fn current_view(&self) -> anyhow::Result<(SurfaceTexture, TextureView)> {
         let frame = self
@@ -118,5 +142,15 @@ impl<'a> WgpuInstance<'a> {
             depth_stencil_attachment: None,
             ..Default::default()
         });
+    }
+
+    /// Submits a single command encoder to the queue. This is a direct wrapper around `Queue::submit`.
+    pub fn submit_single(&self, encoder: CommandBuffer) {
+        self.queue.submit(std::iter::once(encoder));
+    }
+
+    /// Submits multiple command buffers to the queue.
+    pub fn submit<I: IntoIterator<Item = CommandBuffer>>(&self, bufs: I) {
+        self.queue.submit(bufs);
     }
 }

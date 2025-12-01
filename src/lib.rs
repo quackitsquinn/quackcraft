@@ -38,10 +38,13 @@ impl<'a> QuackCraft<'a> {
 
     pub fn render(&mut self, frame: u64) -> anyhow::Result<()> {
         let wgpu = self.wgpu.borrow_mut();
-        let mut encoder = wgpu.create_encoder(Some("main encoder"));
+
+        let mut encoder = wgpu.create_encoder(None);
         let (surface, view) = wgpu.current_view()?;
+
         wgpu.clear(Self::rainbow(frame), &mut encoder, &view);
-        wgpu.queue.submit(iter::once(encoder.finish()));
+
+        wgpu.submit_single(encoder.finish());
         surface.present();
 
         Ok(())

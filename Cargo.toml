@@ -5,8 +5,10 @@ edition = "2024"
 
 [dependencies]
 anyhow = { version = "1.0.100", features = ["backtrace"] }
+bytemuck = { version = "1.24.0", features = ["derive"] }
 env_logger = "0.11.8"
 glfw = { version = "0.60.0", features = ["raw-window-handle-v0-6"] }
 log = "0.4.28"
+pod = "0.5.0"
 smol = "2.0.2"
 wgpu = "27.0.1"
