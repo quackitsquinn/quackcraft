@@ -142,6 +142,34 @@ impl<'a> WgpuInstance<'a> {
         )
     }
 
+    pub fn create_texture(&self, desc: &wgpu::TextureDescriptor) -> wgpu::Texture {
+        self.device.create_texture(desc)
+    }
+
+    pub fn texture(
+        &self,
+        label: Option<&str>,
+        mip_level_count: u32,
+        format: wgpu::TextureFormat,
+        usage: wgpu::TextureUsages,
+    ) -> wgpu::Texture {
+        let size = wgpu::Extent3d {
+            width: self.config.width,
+            height: self.config.height,
+            depth_or_array_layers: 1,
+        };
+        self.create_texture(&wgpu::TextureDescriptor {
+            label,
+            size,
+            mip_level_count,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format,
+            usage,
+            view_formats: &[],
+        })
+    }
+
     /// Creates a pipeline layout from the given descriptor.
     pub fn create_pipeline_layout(
         &self,

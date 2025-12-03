@@ -1,12 +1,13 @@
 use std::{cell::RefCell, iter, rc::Rc, sync::Arc};
 
+use bytemuck::Pod;
 use glfw::WindowEvent;
 use log::info;
 use wgpu::Color;
 
 use crate::graphics::{
     WgpuInstance,
-    buf::{BufferLayout, ShaderType},
+    buf::{BufferLayout, Index16, ShaderType},
 };
 
 /// A read-only string type.
@@ -23,6 +24,7 @@ pub struct QuackCraft<'a> {
     wgpu: Rc<RefCell<graphics::WgpuInstance<'a>>>,
     pipelines: Vec<wgpu::RenderPipeline>,
     vertex_buffer: graphics::buf::WgpuBuffer<Vertex>,
+    index_buffer: graphics::buf::WgpuBuffer<Index16>,
 }
 
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -52,9 +54,15 @@ impl Vertex {
 }
 
 const VERTICES: &[Vertex] = &[
-    Vertex::new_rgb([0.0, 0.5, 0.0], [0.0, 0.0, 1.0]),
+    Vertex::new_rgb([0.5, 0.5, 0.0], [1.0, 1.0, 0.0]),
+    Vertex::new_rgb([-0.5, 0.5, 0.0], [0.0, 0.0, 1.0]),
     Vertex::new_rgb([-0.5, -0.5, 0.0], [1.0, 0.0, 0.0]),
     Vertex::new_rgb([0.5, -0.5, 0.0], [0.0, 1.0, 0.0]),
+];
+
+const INDICES: &[u16] = &[
+    0, 1, 2, // first triangle
+    0, 2, 3, // second triangle
 ];
 
 unsafe impl ShaderType for Vertex {
@@ -81,7 +89,13 @@ impl<'a> QuackCraft<'a> {
             wgpu::PipelineCompilationOptions::default(),
         );
 
-        let buf = wgpu.create_buffer(wgpu::BufferUsages::VERTEX, VERTICES, Some("vertex buffer"));
+        let vbuf = wgpu.create_buffer(wgpu::BufferUsages::VERTEX, VERTICES, Some("vertex buffer"));
+
+        let ibuf = wgpu.create_buffer(
+            wgpu::BufferUsages::INDEX,
+            bytemuck::cast_slice::<_, Index16>(INDICES),
+            Some("index buffer"),
+        );
 
         let layout = wgpu.pipeline_layout(None, &[]);
 
@@ -89,7 +103,7 @@ impl<'a> QuackCraft<'a> {
             Some("main pipeline"),
             &program,
             &layout,
-            &[buf.layout().as_vertex().expect("infallible")],
+            &[vbuf.layout().as_vertex().expect("infallible")],
             wgpu::PrimitiveState::default(),
             &[Some(wgpu::ColorTargetState {
                 format: wgpu.config.format,
@@ -102,7 +116,8 @@ impl<'a> QuackCraft<'a> {
             window,
             wgpu: Rc::new(RefCell::new(wgpu)),
             pipelines: vec![pipeline],
-            vertex_buffer: buf,
+            vertex_buffer: vbuf,
+            index_buffer: ibuf,
         })
     }
 
@@ -126,7 +141,11 @@ impl<'a> QuackCraft<'a> {
 
         pass.set_pipeline(&self.pipelines[0]);
         pass.set_vertex_buffer(0, self.vertex_buffer.buffer().slice(..));
-        pass.draw(0..3, 0..1);
+        pass.set_index_buffer(
+            self.index_buffer.buffer().slice(..),
+            wgpu::IndexFormat::Uint16,
+        );
+        pass.draw_indexed(0..6, 0, 0..1);
 
         drop(pass);
 

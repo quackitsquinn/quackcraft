@@ -74,6 +74,9 @@ impl BufferLayout {
 }
 
 /// A trait for types that can be used as buffer layouts.
+///
+/// # Safety
+/// The implementor must ensure that the given `BufferLayout` correctly describes the memory layout of the type.
 pub unsafe trait ShaderType: Pod + Zeroable {
     /// Returns the vertex attributes for this buffer layout.
     ///
