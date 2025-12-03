@@ -10,6 +10,7 @@ use wgpu::{
 use crate::graphics::shader::ShaderProgram;
 
 pub mod buf;
+pub mod image;
 pub mod shader;
 
 pub struct WgpuInstance<'a> {
