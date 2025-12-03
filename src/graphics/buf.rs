@@ -45,6 +45,34 @@ pub enum BufferLayout {
     Index(wgpu::IndexFormat),
 }
 
+impl BufferLayout {
+    /// Returns true if the buffer layout is a vertex buffer.
+    pub fn is_vertex(&self) -> bool {
+        matches!(self, BufferLayout::Vertex(_))
+    }
+
+    /// Returns true if the buffer layout is an index buffer.
+    pub fn is_index(&self) -> bool {
+        matches!(self, BufferLayout::Index(_))
+    }
+
+    /// Returns the vertex buffer layout if the buffer layout is a vertex buffer.
+    pub fn as_vertex(&self) -> Option<wgpu::VertexBufferLayout<'static>> {
+        match self {
+            BufferLayout::Vertex(layout) => Some(layout.clone()),
+            _ => None,
+        }
+    }
+
+    /// Returns the index format if the buffer layout is an index buffer.
+    pub fn as_index(&self) -> Option<wgpu::IndexFormat> {
+        match self {
+            BufferLayout::Index(format) => Some(*format),
+            _ => None,
+        }
+    }
+}
+
 /// A trait for types that can be used as buffer layouts.
 pub unsafe trait ShaderType: Pod + Zeroable {
     /// Returns the vertex attributes for this buffer layout.

@@ -182,7 +182,7 @@ impl<'a> WgpuInstance<'a> {
             layout: Some(layout),
             vertex: shader.vertex_state(buffers),
             fragment: shader.fragment_state(targets.as_ref()),
-            primitive: wgpu::PrimitiveState::default(),
+            primitive,
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
             multiview: None,

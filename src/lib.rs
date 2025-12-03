@@ -4,7 +4,10 @@ use glfw::WindowEvent;
 use log::info;
 use wgpu::Color;
 
-use crate::graphics::WgpuInstance;
+use crate::graphics::{
+    WgpuInstance,
+    buf::{BufferLayout, ShaderType},
+};
 
 /// A read-only string type.
 pub type ReadOnlyString = Arc<str>;
@@ -19,6 +22,49 @@ pub struct QuackCraft<'a> {
     window: window::GlfwWindow,
     wgpu: Rc<RefCell<graphics::WgpuInstance<'a>>>,
     pipelines: Vec<wgpu::RenderPipeline>,
+    vertex_buffer: graphics::buf::WgpuBuffer<Vertex>,
+}
+
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+#[repr(C)]
+struct Vertex {
+    position: [f32; 3],
+    color: [f32; 3],
+}
+
+impl Vertex {
+    const ATTRIBUTES: &[wgpu::VertexAttribute] = &wgpu::vertex_attr_array![
+        0 => Float32x3, // position
+        1 => Float32x3, // color
+    ];
+
+    pub const fn new(position: [f32; 3], color: [f32; 3]) -> Self {
+        Self { position, color }
+    }
+
+    // TODO: color correction
+    pub const fn new_rgb(position: [f32; 3], rgb: [f32; 3]) -> Self {
+        Self {
+            position,
+            color: [rgb[0], rgb[1], rgb[2]],
+        }
+    }
+}
+
+const VERTICES: &[Vertex] = &[
+    Vertex::new_rgb([0.0, 0.5, 0.0], [0.0, 0.0, 1.0]),
+    Vertex::new_rgb([-0.5, -0.5, 0.0], [1.0, 0.0, 0.0]),
+    Vertex::new_rgb([0.5, -0.5, 0.0], [0.0, 1.0, 0.0]),
+];
+
+unsafe impl ShaderType for Vertex {
+    fn layout() -> BufferLayout {
+        BufferLayout::Vertex(wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: Self::ATTRIBUTES,
+        })
+    }
 }
 
 impl<'a> QuackCraft<'a> {
@@ -35,13 +81,15 @@ impl<'a> QuackCraft<'a> {
             wgpu::PipelineCompilationOptions::default(),
         );
 
+        let buf = wgpu.create_buffer(wgpu::BufferUsages::VERTEX, VERTICES, Some("vertex buffer"));
+
         let layout = wgpu.pipeline_layout(None, &[]);
 
         let pipeline = wgpu.pipeline(
             Some("main pipeline"),
             &program,
             &layout,
-            &[],
+            &[buf.layout().as_vertex().expect("infallible")],
             wgpu::PrimitiveState::default(),
             &[Some(wgpu::ColorTargetState {
                 format: wgpu.config.format,
@@ -54,6 +102,7 @@ impl<'a> QuackCraft<'a> {
             window,
             wgpu: Rc::new(RefCell::new(wgpu)),
             pipelines: vec![pipeline],
+            vertex_buffer: buf,
         })
     }
 
@@ -76,6 +125,7 @@ impl<'a> QuackCraft<'a> {
         let mut pass = wgpu.start_main_pass(Self::rainbow(frame), &mut encoder, &view);
 
         pass.set_pipeline(&self.pipelines[0]);
+        pass.set_vertex_buffer(0, self.vertex_buffer.buffer().slice(..));
         pass.draw(0..3, 0..1);
 
         drop(pass);
