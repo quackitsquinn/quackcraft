@@ -1,6 +1,6 @@
 use std::{fmt::Debug, rc::Rc};
 
-use crate::graphics::WgpuInstance;
+use crate::graphics::lowlevel::WgpuInstance;
 
 /// A structure representing a texture, its view, and its sampler.
 #[derive(Clone)]

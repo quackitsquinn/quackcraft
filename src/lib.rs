@@ -5,9 +5,9 @@ use glfw::WindowEvent;
 use log::info;
 use wgpu::{Color, TextureFormat, TextureUsages};
 
-use crate::graphics::{
+use crate::graphics::lowlevel::{
     WgpuInstance,
-    buf::{BufferLayout, Index16, ShaderType},
+    buf::{BufferLayout, Index16, ShaderType, WgpuBuffer},
 };
 
 /// A read-only string type.
@@ -21,12 +21,12 @@ mod window;
 /// The main game structure.
 pub struct QuackCraft<'a> {
     window: window::GlfwWindow,
-    wgpu: Rc<graphics::WgpuInstance<'a>>,
+    wgpu: Rc<graphics::lowlevel::WgpuInstance<'a>>,
     pipelines: Vec<wgpu::RenderPipeline>,
-    vertex_buffer: graphics::buf::WgpuBuffer<Vertex>,
-    index_buffer: graphics::buf::WgpuBuffer<Index16>,
+    vertex_buffer: WgpuBuffer<Vertex>,
+    index_buffer: WgpuBuffer<Index16>,
     dirt_image: graphics::image::Image,
-    dirt_texture: graphics::texture::Texture<'a>,
+    dirt_texture: graphics::lowlevel::texture::Texture<'a>,
     dirt_bind_group: (wgpu::BindGroupLayout, wgpu::BindGroup),
 }
 
