@@ -204,7 +204,7 @@ impl<'a> WgpuInstance<'a> {
                 view_dimension: wgpu::TextureViewDimension::D2,
                 // TODO: Allow this to be configurable based on texture format.
                 // Minecraft clone probably means that using a integer format is easier.
-                sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                sample_type: wgpu::TextureSampleType::Float { filterable: false },
             },
             count: None,
         };
@@ -294,8 +294,8 @@ impl<'a> WgpuInstance<'a> {
             address_mode_u: address_mode,
             address_mode_v: address_mode,
             address_mode_w: address_mode,
-            mag_filter: wgpu::FilterMode::Linear, // gotta love the n64
-            min_filter: wgpu::FilterMode::Linear,
+            mag_filter: wgpu::FilterMode::Nearest, // gotta love the n64
+            min_filter: wgpu::FilterMode::Nearest,
             mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
         })

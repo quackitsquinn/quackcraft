@@ -27,39 +27,35 @@ pub struct QuackCraft<'a> {
     index_buffer: graphics::buf::WgpuBuffer<Index16>,
     dirt_image: graphics::image::Image,
     dirt_texture: graphics::texture::Texture<'a>,
+    dirt_bind_group: (wgpu::BindGroupLayout, wgpu::BindGroup),
 }
 
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 #[repr(C)]
 struct Vertex {
     position: [f32; 3],
-    color: [f32; 3],
+    tex_coords: [f32; 2],
 }
 
 impl Vertex {
     const ATTRIBUTES: &[wgpu::VertexAttribute] = &wgpu::vertex_attr_array![
         0 => Float32x3, // position
-        1 => Float32x3, // color
+        1 => Float32x2, // tex_coords
     ];
 
-    pub const fn new(position: [f32; 3], color: [f32; 3]) -> Self {
-        Self { position, color }
-    }
-
-    // TODO: color correction
-    pub const fn new_rgb(position: [f32; 3], rgb: [f32; 3]) -> Self {
+    pub const fn new(position: [f32; 3], tex_coords: [f32; 2]) -> Self {
         Self {
             position,
-            color: [rgb[0], rgb[1], rgb[2]],
+            tex_coords,
         }
     }
 }
 
 const VERTICES: &[Vertex] = &[
-    Vertex::new_rgb([0.5, 0.5, 0.0], [1.0, 1.0, 0.0]),
-    Vertex::new_rgb([-0.5, 0.5, 0.0], [0.0, 0.0, 1.0]),
-    Vertex::new_rgb([-0.5, -0.5, 0.0], [1.0, 0.0, 0.0]),
-    Vertex::new_rgb([0.5, -0.5, 0.0], [0.0, 1.0, 0.0]),
+    Vertex::new([-0.5, 0.5, 0.0], [0.0, 1.0]),  // top-left
+    Vertex::new([0.5, 0.5, 0.0], [1.0, 1.0]),   // top-right
+    Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0]),  // bottom-right
+    Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0]), // bottom-left
 ];
 
 const INDICES: &[u16] = &[
@@ -80,8 +76,6 @@ unsafe impl ShaderType for Vertex {
 impl<'a> QuackCraft<'a> {
     /// Creates a new game instance.
     pub fn new(window: window::GlfwWindow, wgpu: Rc<WgpuInstance<'a>>) -> anyhow::Result<Self> {
-        let wgpu_ret = wgpu.clone();
-
         let program = wgpu.load_shader(
             include_str!("../shaders/test.wgsl"),
             Some("test_shader"),
@@ -98,7 +92,18 @@ impl<'a> QuackCraft<'a> {
             Some("index buffer"),
         );
 
-        let layout = wgpu.pipeline_layout(None, &[]);
+        let dirt_image = graphics::image::Image::from_mem(include_bytes!("../dirt.png"))?;
+
+        let dirt_texture = wgpu.texture(
+            Some("dirt texture"),
+            TextureFormat::Rgba8UnormSrgb,
+            TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
+            &dirt_image,
+        );
+
+        let dirt_bind_group = dirt_texture.layout_and_bind_group(Some("dirt"), 0, 1);
+
+        let layout = wgpu.pipeline_layout(None, &[&dirt_bind_group.0]);
 
         let pipeline = wgpu.pipeline(
             Some("main pipeline"),
@@ -113,15 +118,6 @@ impl<'a> QuackCraft<'a> {
             })],
         );
 
-        let dirt_image = graphics::image::Image::from_mem(include_bytes!("../dirt.png"))?;
-
-        let dirt_texture = wgpu.texture(
-            Some("dirt texture"),
-            TextureFormat::Rgba8Uint,
-            TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
-            &dirt_image,
-        );
-
         Ok(QuackCraft {
             window,
             dirt_texture,
@@ -130,6 +126,7 @@ impl<'a> QuackCraft<'a> {
             vertex_buffer: vbuf,
             index_buffer: ibuf,
             dirt_image,
+            dirt_bind_group,
         })
     }
 
@@ -151,6 +148,7 @@ impl<'a> QuackCraft<'a> {
 
         let mut pass = wgpu.start_main_pass(Self::rainbow(frame), &mut encoder, &view);
 
+        pass.set_bind_group(0, &self.dirt_bind_group.1, &[]);
         pass.set_pipeline(&self.pipelines[0]);
         pass.set_vertex_buffer(0, self.vertex_buffer.buffer().slice(..));
         pass.set_index_buffer(
