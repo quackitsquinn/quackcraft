@@ -1,28 +1,37 @@
-use std::{primitive, sync::Arc};
+use std::{
+    cell::RefCell,
+    primitive,
+    rc::{Rc, Weak},
+    sync::Arc,
+};
 
 use anyhow::Context;
 use wgpu::{
     self as w, Color, CommandBuffer, CommandEncoder, Device, DeviceDescriptor, Instance,
-    InstanceDescriptor, PowerPreference, Queue, RenderPass, RequestAdapterOptions, StoreOp,
-    Surface, SurfaceConfiguration, SurfaceTexture, TextureView, util::DeviceExt,
+    InstanceDescriptor, Origin3d, PowerPreference, Queue, RenderPass, RequestAdapterOptions,
+    StoreOp, Surface, SurfaceConfiguration, SurfaceTexture, TextureAspect, TextureView,
+    naga::back::msl::sampler, util::DeviceExt,
 };
 
-use crate::graphics::shader::ShaderProgram;
+use crate::graphics::{image::Image, shader::ShaderProgram, texture::Texture};
 
 pub mod buf;
 pub mod image;
 pub mod shader;
+pub mod texture;
 
 pub struct WgpuInstance<'a> {
     pub instance: Instance,
     pub surface: Surface<'a>,
     pub device: Device,
     pub queue: Queue,
-    pub config: SurfaceConfiguration,
+    pub config: RefCell<SurfaceConfiguration>,
+    pub default_sampler: Option<wgpu::Sampler>,
+    this: Weak<WgpuInstance<'a>>,
 }
 
 impl<'a> WgpuInstance<'a> {
-    pub async fn new(window: Arc<glfw::PWindow>) -> anyhow::Result<Self> {
+    pub async fn new(window: Arc<glfw::PWindow>) -> anyhow::Result<Rc<Self>> {
         let size = window.get_size();
 
         let instance = Instance::new(&InstanceDescriptor {
@@ -70,24 +79,37 @@ impl<'a> WgpuInstance<'a> {
 
         surface.configure(&device, &config);
 
-        Ok(Self {
-            instance,
-            surface,
-            device,
-            queue,
-            config,
-        })
+        let this = Rc::new_cyclic(|weak| {
+            let mut this = WgpuInstance {
+                instance,
+                surface,
+                device,
+                queue,
+                config: RefCell::new(config),
+                default_sampler: None,
+                this: weak.clone(),
+            };
+
+            this.default_sampler =
+                Some(this.sampler(Some("default sampler"), wgpu::AddressMode::ClampToEdge));
+
+            this
+        });
+
+        Ok(this)
     }
 
     /// Resize the surface to the new size.
     ///
     /// # Panics
     /// Panics if the new size has a width or height less than or equal to zero.
-    pub fn resize(&mut self, new_size: (i32, i32)) {
+    pub fn resize(&self, new_size: (i32, i32)) {
         debug_assert!(new_size.0 > 0 && new_size.1 > 0, "Window size <= 0");
-        self.config.width = new_size.0 as u32;
-        self.config.height = new_size.1 as u32;
-        self.surface.configure(&self.device, &self.config);
+        let mut cfg = self.config.borrow_mut();
+        cfg.width = new_size.0 as u32;
+        cfg.height = new_size.1 as u32;
+        drop(cfg);
+        self.surface.configure(&self.device, &self.config.borrow());
     }
 
     /// Creates a command encoder.
@@ -142,31 +164,140 @@ impl<'a> WgpuInstance<'a> {
         )
     }
 
+    /// Creates a texture with the given descriptor.
     pub fn create_texture(&self, desc: &wgpu::TextureDescriptor) -> wgpu::Texture {
         self.device.create_texture(desc)
     }
 
+    /// Creates a texture from the given parameters, sized to the current surface configuration.
+    ///
+    /// This will upload the image pixel data to the texture.
     pub fn texture(
         &self,
         label: Option<&str>,
-        mip_level_count: u32,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
-    ) -> wgpu::Texture {
+        image: &Image,
+    ) -> Texture<'a> {
         let size = wgpu::Extent3d {
-            width: self.config.width,
-            height: self.config.height,
+            width: image.width(),
+            height: image.height(),
             depth_or_array_layers: 1,
         };
-        self.create_texture(&wgpu::TextureDescriptor {
+        // TODO: Mip level and sample count should probably be configurable.
+        let text = self.create_texture(&wgpu::TextureDescriptor {
             label,
             size,
-            mip_level_count,
+            mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format,
             usage,
             view_formats: &[],
+        });
+
+        let text_layout = wgpu::BindGroupLayoutEntry {
+            binding: 0,
+            visibility: wgpu::ShaderStages::FRAGMENT,
+            ty: wgpu::BindingType::Texture {
+                multisampled: false,
+                view_dimension: wgpu::TextureViewDimension::D2,
+                // TODO: Allow this to be configurable based on texture format.
+                // Minecraft clone probably means that using a integer format is easier.
+                sample_type: wgpu::TextureSampleType::Float { filterable: true },
+            },
+            count: None,
+        };
+
+        self.queue.write_texture(
+            wgpu::TexelCopyTextureInfoBase {
+                texture: &text,
+                mip_level: 0,
+                origin: Origin3d::ZERO,
+                aspect: TextureAspect::All,
+            },
+            image.pixel_bytes(),
+            wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(4 * image.width()),
+                rows_per_image: Some(image.height()),
+            },
+            size,
+        );
+
+        let texture_view = text.create_view(&wgpu::TextureViewDescriptor::default());
+
+        let sampler = self.default_sampler.clone().expect("no default sampler!");
+
+        let sampler_layout = wgpu::BindGroupLayoutEntry {
+            binding: 1,
+            visibility: wgpu::ShaderStages::FRAGMENT,
+            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+            count: None,
+        };
+
+        Texture::new(
+            self.this.upgrade().clone().expect("WgpuInstance dropped!"),
+            text,
+            text_layout,
+            sampler,
+            sampler_layout,
+            texture_view,
+        )
+    }
+
+    /// Creates a bind group layout from the given descriptor.
+    pub fn create_bind_group_layout(
+        &self,
+        desc: &wgpu::BindGroupLayoutDescriptor,
+    ) -> wgpu::BindGroupLayout {
+        self.device.create_bind_group_layout(desc)
+    }
+
+    /// Creates a bind group layout from the given entries.
+    pub fn bind_group_layout(
+        &self,
+        label: Option<&str>,
+        entries: &[wgpu::BindGroupLayoutEntry],
+    ) -> wgpu::BindGroupLayout {
+        self.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { label, entries })
+    }
+
+    /// Creates a bind group from the given descriptor.
+    pub fn create_bind_group(&self, desc: &wgpu::BindGroupDescriptor) -> wgpu::BindGroup {
+        self.device.create_bind_group(desc)
+    }
+
+    /// Creates a bind group from the given parts.
+    pub fn bind_group(
+        &self,
+        label: Option<&str>,
+        layout: &wgpu::BindGroupLayout,
+        entries: &[wgpu::BindGroupEntry],
+    ) -> wgpu::BindGroup {
+        self.create_bind_group(&wgpu::BindGroupDescriptor {
+            label,
+            layout,
+            entries,
+        })
+    }
+
+    /// Creates a sampler with the given descriptor.
+    pub fn create_sampler(&self, desc: &wgpu::SamplerDescriptor) -> wgpu::Sampler {
+        self.device.create_sampler(desc)
+    }
+
+    /// Creates a sampler with linear filtering and the specified address mode.
+    pub fn sampler(&self, label: Option<&str>, address_mode: wgpu::AddressMode) -> wgpu::Sampler {
+        self.create_sampler(&wgpu::SamplerDescriptor {
+            label,
+            address_mode_u: address_mode,
+            address_mode_v: address_mode,
+            address_mode_w: address_mode,
+            mag_filter: wgpu::FilterMode::Linear, // gotta love the n64
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Nearest,
+            ..Default::default()
         })
     }
 

@@ -3,7 +3,7 @@ use std::{cell::RefCell, iter, rc::Rc, sync::Arc};
 use bytemuck::Pod;
 use glfw::WindowEvent;
 use log::info;
-use wgpu::Color;
+use wgpu::{Color, TextureFormat, TextureUsages};
 
 use crate::graphics::{
     WgpuInstance,
@@ -21,10 +21,12 @@ mod window;
 /// The main game structure.
 pub struct QuackCraft<'a> {
     window: window::GlfwWindow,
-    wgpu: Rc<RefCell<graphics::WgpuInstance<'a>>>,
+    wgpu: Rc<graphics::WgpuInstance<'a>>,
     pipelines: Vec<wgpu::RenderPipeline>,
     vertex_buffer: graphics::buf::WgpuBuffer<Vertex>,
     index_buffer: graphics::buf::WgpuBuffer<Index16>,
+    dirt_image: graphics::image::Image,
+    dirt_texture: graphics::texture::Texture<'a>,
 }
 
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -77,9 +79,8 @@ unsafe impl ShaderType for Vertex {
 
 impl<'a> QuackCraft<'a> {
     /// Creates a new game instance.
-    pub fn new() -> anyhow::Result<Self> {
-        let window = window::GlfwWindow::new(800, 600, "Quackcraft")?;
-        let wgpu = smol::block_on(WgpuInstance::new(window.window.clone()))?;
+    pub fn new(window: window::GlfwWindow, wgpu: Rc<WgpuInstance<'a>>) -> anyhow::Result<Self> {
+        let wgpu_ret = wgpu.clone();
 
         let program = wgpu.load_shader(
             include_str!("../shaders/test.wgsl"),
@@ -106,18 +107,29 @@ impl<'a> QuackCraft<'a> {
             &[vbuf.layout().as_vertex().expect("infallible")],
             wgpu::PrimitiveState::default(),
             &[Some(wgpu::ColorTargetState {
-                format: wgpu.config.format,
+                format: wgpu.config.borrow().format,
                 blend: Some(wgpu::BlendState::REPLACE),
                 write_mask: wgpu::ColorWrites::ALL,
             })],
         );
 
+        let dirt_image = graphics::image::Image::from_mem(include_bytes!("../dirt.png"))?;
+
+        let dirt_texture = wgpu.texture(
+            Some("dirt texture"),
+            TextureFormat::Rgba8Uint,
+            TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
+            &dirt_image,
+        );
+
         Ok(QuackCraft {
             window,
-            wgpu: Rc::new(RefCell::new(wgpu)),
+            dirt_texture,
+            wgpu: wgpu.clone(),
             pipelines: vec![pipeline],
             vertex_buffer: vbuf,
             index_buffer: ibuf,
+            dirt_image,
         })
     }
 
@@ -132,7 +144,7 @@ impl<'a> QuackCraft<'a> {
     }
 
     pub fn render(&mut self, frame: u64) -> anyhow::Result<()> {
-        let wgpu = self.wgpu.borrow_mut();
+        let wgpu = self.wgpu.clone();
 
         let mut encoder = wgpu.create_encoder(None);
         let (surface, view) = wgpu.current_view()?;
@@ -158,7 +170,9 @@ impl<'a> QuackCraft<'a> {
 
 pub fn run_game() -> anyhow::Result<()> {
     info!("Starting quackcraft");
-    let mut qc = QuackCraft::new()?;
+    let window = window::GlfwWindow::new(800, 600, "Quackcraft")?;
+    let wgpu = smol::block_on(WgpuInstance::new(window.window.clone()))?;
+    let mut qc = QuackCraft::new(window, wgpu)?;
     let mut frame: u64 = 0;
     while !qc.window.should_close() {
         qc.window.poll_events();
@@ -167,7 +181,7 @@ pub fn run_game() -> anyhow::Result<()> {
             match event {
                 WindowEvent::Close => break,
                 WindowEvent::Size(x, y) => {
-                    qc.wgpu.borrow_mut().resize((x, y));
+                    qc.wgpu.resize((x, y));
                 }
 
                 _ => {}
