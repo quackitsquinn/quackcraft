@@ -1,4 +1,8 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 
 use bytemuck::{Pod, Zeroable};
 
@@ -43,6 +47,8 @@ pub enum BufferLayout {
     Vertex(wgpu::VertexBufferLayout<'static>),
     /// An index buffer format.
     Index(wgpu::IndexFormat),
+    /// A uniform buffer format.
+    Uniform,
 }
 
 impl BufferLayout {
@@ -54,6 +60,11 @@ impl BufferLayout {
     /// Returns true if the buffer layout is an index buffer.
     pub fn is_index(&self) -> bool {
         matches!(self, BufferLayout::Index(_))
+    }
+
+    /// Returns true if the buffer layout is a uniform buffer.
+    pub fn is_uniform(&self) -> bool {
+        matches!(self, BufferLayout::Uniform)
     }
 
     /// Returns the vertex buffer layout if the buffer layout is a vertex buffer.
@@ -103,5 +114,36 @@ pub struct Index32(u32);
 unsafe impl ShaderType for Index32 {
     fn layout() -> BufferLayout {
         BufferLayout::Index(wgpu::IndexFormat::Uint32)
+    }
+}
+
+/// A uniform buffer type.
+#[repr(transparent)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct Uniform<T>(T);
+
+unsafe impl<T> ShaderType for Uniform<T>
+where
+    T: Pod + Zeroable,
+{
+    fn layout() -> BufferLayout {
+        // Uniform buffers do not have a specific layout in wgpu.
+        // The layout is determined by the shader and the data type T.
+        // Therefore, we return a vertex buffer layout with no attributes.
+        BufferLayout::Uniform
+    }
+}
+
+impl<T> Deref for Uniform<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for Uniform<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }

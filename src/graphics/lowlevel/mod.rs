@@ -6,6 +6,7 @@ use std::{
 };
 
 use anyhow::Context;
+use bytemuck::Pod;
 use wgpu::{
     self as w, Color, CommandBuffer, CommandEncoder, Device, DeviceDescriptor, Instance,
     InstanceDescriptor, Origin3d, PowerPreference, Queue, RenderPass, RequestAdapterOptions,
@@ -13,7 +14,10 @@ use wgpu::{
     naga::back::msl::sampler, util::DeviceExt,
 };
 
-use crate::graphics::{image::Image, lowlevel::shader::ShaderProgram, lowlevel::texture::Texture};
+use crate::graphics::{
+    image::Image,
+    lowlevel::{buf::Uniform, shader::ShaderProgram, texture::Texture},
+};
 
 pub mod buf;
 pub mod shader;
@@ -136,6 +140,23 @@ impl<'a> WgpuInstance<'a> {
             });
 
         // Safety: The buffer is valid for type T as it was created from a slice of T.
+        unsafe { buf::WgpuBuffer::from_raw_parts(buffer) }
+    }
+
+    pub fn uniform_buffer<T: Pod>(
+        &self,
+        data: T,
+        label: Option<&str>,
+    ) -> buf::WgpuBuffer<Uniform<T>> {
+        let buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label,
+                contents: bytemuck::bytes_of(&data),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            });
+
+        // Safety: The buffer is valid for type Uniform<T> as it was created from a T.
         unsafe { buf::WgpuBuffer::from_raw_parts(buffer) }
     }
 

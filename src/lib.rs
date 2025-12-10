@@ -1,13 +1,17 @@
 use std::{cell::RefCell, iter, rc::Rc, sync::Arc};
 
 use bytemuck::Pod;
+use glam::Mat4;
 use glfw::WindowEvent;
 use log::info;
 use wgpu::{Color, TextureFormat, TextureUsages};
 
-use crate::graphics::lowlevel::{
-    WgpuInstance,
-    buf::{BufferLayout, Index16, ShaderType, WgpuBuffer},
+use crate::graphics::{
+    camera::Camera,
+    lowlevel::{
+        WgpuInstance,
+        buf::{BufferLayout, Index16, ShaderType, Uniform, WgpuBuffer},
+    },
 };
 
 /// A read-only string type.
@@ -28,6 +32,9 @@ pub struct QuackCraft<'a> {
     dirt_image: graphics::image::Image,
     dirt_texture: graphics::lowlevel::texture::Texture<'a>,
     dirt_bind_group: (wgpu::BindGroupLayout, wgpu::BindGroup),
+    camera: RefCell<Camera>,
+    transform_uniform: WgpuBuffer<Uniform<Mat4>>,
+    camera_bind_group: wgpu::BindGroup,
 }
 
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -63,6 +70,28 @@ const INDICES: &[u16] = &[
     0, 2, 3, // second triangle
 ];
 
+const CUBE: &[Vertex] = &[
+    Vertex::new([1.0, 1.0, 1.0], [0.0, 1.0]),
+    Vertex::new([1.0, -1.0, 1.0], [0.0, 0.0]),
+    Vertex::new([1.0, 1.0, -1.0], [1.0, 1.0]),
+    Vertex::new([1.0, -1.0, -1.0], [1.0, 0.0]),
+    // Back face
+    Vertex::new([-1.0, 1.0, 1.0], [1.0, 1.0]),
+    Vertex::new([-1.0, -1.0, 1.0], [0.0, 0.0]),
+    Vertex::new([-1.0, 1.0, -1.0], [0.0, 1.0]),
+    Vertex::new([-1.0, -1.0, -1.0], [1.0, 0.0]),
+];
+
+const CUBE_INDICES: &[u16] = &[
+    // Front face
+    0, 1, 2, 2, 1, 3, // Back face
+    4, 6, 5, 5, 6, 7, // Left face
+    4, 5, 0, 0, 5, 1, // Right face
+    2, 3, 6, 6, 3, 7, // Top face
+    4, 0, 6, 6, 0, 2, // Bottom face
+    1, 5, 3, 3, 5, 7,
+];
+
 unsafe impl ShaderType for Vertex {
     fn layout() -> BufferLayout {
         BufferLayout::Vertex(wgpu::VertexBufferLayout {
@@ -84,11 +113,45 @@ impl<'a> QuackCraft<'a> {
             wgpu::PipelineCompilationOptions::default(),
         );
 
-        let vbuf = wgpu.create_buffer(wgpu::BufferUsages::VERTEX, VERTICES, Some("vertex buffer"));
+        let camera = Camera::new(
+            wgpu.config.borrow().width as f32 / wgpu.config.borrow().height as f32,
+            0.1,
+            100.0,
+        );
+
+        let camera_layout = wgpu.bind_group_layout(
+            Some("camera bind group layout"),
+            &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+        );
+
+        let camera_buf =
+            wgpu.uniform_buffer(camera.projection_view_matrix(), Some("camera buffer"));
+
+        let camera_bind_group = wgpu.bind_group(
+            Some("camera bind group"),
+            &camera_layout,
+            &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::Buffer(
+                    camera_buf.buffer().as_entire_buffer_binding(),
+                ),
+            }],
+        );
+
+        let vbuf = wgpu.create_buffer(wgpu::BufferUsages::VERTEX, CUBE, Some("vertex buffer"));
 
         let ibuf = wgpu.create_buffer(
             wgpu::BufferUsages::INDEX,
-            bytemuck::cast_slice::<_, Index16>(INDICES),
+            bytemuck::cast_slice::<_, Index16>(CUBE_INDICES),
             Some("index buffer"),
         );
 
@@ -103,7 +166,7 @@ impl<'a> QuackCraft<'a> {
 
         let dirt_bind_group = dirt_texture.layout_and_bind_group(Some("dirt"), 0, 1);
 
-        let layout = wgpu.pipeline_layout(None, &[&dirt_bind_group.0]);
+        let layout = wgpu.pipeline_layout(None, &[&dirt_bind_group.0, &camera_layout]);
 
         let pipeline = wgpu.pipeline(
             Some("main pipeline"),
@@ -127,6 +190,9 @@ impl<'a> QuackCraft<'a> {
             index_buffer: ibuf,
             dirt_image,
             dirt_bind_group,
+            camera: RefCell::new(camera),
+            transform_uniform: camera_buf,
+            camera_bind_group,
         })
     }
 
@@ -149,13 +215,14 @@ impl<'a> QuackCraft<'a> {
         let mut pass = wgpu.start_main_pass(Self::rainbow(frame), &mut encoder, &view);
 
         pass.set_bind_group(0, &self.dirt_bind_group.1, &[]);
+        pass.set_bind_group(1, &self.camera_bind_group, &[]);
         pass.set_pipeline(&self.pipelines[0]);
         pass.set_vertex_buffer(0, self.vertex_buffer.buffer().slice(..));
         pass.set_index_buffer(
             self.index_buffer.buffer().slice(..),
             wgpu::IndexFormat::Uint16,
         );
-        pass.draw_indexed(0..6, 0, 0..1);
+        pass.draw_indexed(0..CUBE_INDICES.len() as u32, 0, 0..1);
 
         drop(pass);
 
