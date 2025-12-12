@@ -1,7 +1,7 @@
 use std::{cell::RefCell, iter, rc::Rc, sync::Arc};
 
 use bytemuck::Pod;
-use glam::Mat4;
+use glam::{Mat4, Vec3};
 use glfw::WindowEvent;
 use log::info;
 use wgpu::{Color, TextureFormat, TextureUsages};
@@ -71,15 +71,15 @@ const INDICES: &[u16] = &[
 ];
 
 const CUBE: &[Vertex] = &[
-    Vertex::new([1.0, 1.0, 1.0], [0.0, 1.0]),
-    Vertex::new([1.0, -1.0, 1.0], [0.0, 0.0]),
-    Vertex::new([1.0, 1.0, -1.0], [1.0, 1.0]),
-    Vertex::new([1.0, -1.0, -1.0], [1.0, 0.0]),
+    Vertex::new([1.0, 1.0, 1.0], [1.0, 1.0]),
+    Vertex::new([1.0, -1.0, 1.0], [0.0, 1.0]),
+    Vertex::new([1.0, 1.0, -1.0], [1.0, 0.0]),
+    Vertex::new([1.0, -1.0, -1.0], [0.0, 0.0]),
     // Back face
     Vertex::new([-1.0, 1.0, 1.0], [1.0, 1.0]),
-    Vertex::new([-1.0, -1.0, 1.0], [0.0, 0.0]),
-    Vertex::new([-1.0, 1.0, -1.0], [0.0, 1.0]),
-    Vertex::new([-1.0, -1.0, -1.0], [1.0, 0.0]),
+    Vertex::new([-1.0, -1.0, 1.0], [0.0, 1.0]),
+    Vertex::new([-1.0, 1.0, -1.0], [1.0, 0.0]),
+    Vertex::new([-1.0, -1.0, -1.0], [0.0, 0.0]),
 ];
 
 const CUBE_INDICES: &[u16] = &[
@@ -113,11 +113,14 @@ impl<'a> QuackCraft<'a> {
             wgpu::PipelineCompilationOptions::default(),
         );
 
-        let camera = Camera::new(
+        let mut camera = Camera::new(
             wgpu.config.borrow().width as f32 / wgpu.config.borrow().height as f32,
             0.1,
             100.0,
         );
+
+        camera.pos(Vec3::new(2.0, 0.0, 2.0));
+        camera.look_at(Vec3::new(0.0, 0.0, 0.0));
 
         let camera_layout = wgpu.bind_group_layout(
             Some("camera bind group layout"),
