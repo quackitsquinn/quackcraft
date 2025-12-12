@@ -143,6 +143,10 @@ impl<'a> WgpuInstance<'a> {
         unsafe { buf::WgpuBuffer::from_raw_parts(buffer) }
     }
 
+    /// Creates a uniform buffer with the given data.
+    ///
+    /// This is effectively a wrapper around `create_buffer` that just uses the `Uniform<T>` type.
+    /// This is the only place that Uniform<T> can be safely constructed.
     pub fn uniform_buffer<T: Pod>(
         &self,
         data: T,

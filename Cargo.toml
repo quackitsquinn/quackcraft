@@ -14,3 +14,4 @@ pod = "0.5.0"
 smol = "2.0.2"
 wgpu = "27.0.1"
 glam = { version = "0.30.9", features = ["bytemuck"] }
+tobj = "4.0.3"
