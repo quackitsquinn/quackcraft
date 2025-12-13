@@ -10,7 +10,7 @@ use crate::graphics::{
     camera::Camera,
     lowlevel::{
         WgpuInstance,
-        buf::{BufferLayout, Index16, ShaderType, Uniform, WgpuBuffer},
+        buf::{IndexBuffer, UniformBuffer, VertexBuffer, VertexLayout},
     },
 };
 
@@ -27,13 +27,13 @@ pub struct QuackCraft<'a> {
     window: window::GlfwWindow,
     wgpu: Rc<graphics::lowlevel::WgpuInstance<'a>>,
     pipelines: Vec<wgpu::RenderPipeline>,
-    vertex_buffer: WgpuBuffer<Vertex>,
-    index_buffer: WgpuBuffer<Index16>,
+    vertex_buffer: VertexBuffer<Vertex>,
+    index_buffer: IndexBuffer<u16>,
     dirt_image: graphics::image::Image,
     dirt_texture: graphics::lowlevel::texture::Texture<'a>,
     dirt_bind_group: (wgpu::BindGroupLayout, wgpu::BindGroup),
     camera: RefCell<Camera>,
-    transform_uniform: WgpuBuffer<Uniform<Mat4>>,
+    transform_uniform: UniformBuffer<Mat4>,
     camera_bind_group: wgpu::BindGroup,
 }
 
@@ -58,18 +58,6 @@ impl Vertex {
     }
 }
 
-const VERTICES: &[Vertex] = &[
-    Vertex::new([-0.5, 0.5, 0.0], [0.0, 1.0]),  // top-left
-    Vertex::new([0.5, 0.5, 0.0], [1.0, 1.0]),   // top-right
-    Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0]),  // bottom-right
-    Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0]), // bottom-left
-];
-
-const INDICES: &[u16] = &[
-    0, 1, 2, // first triangle
-    0, 2, 3, // second triangle
-];
-
 const CUBE: &[Vertex] = &[
     Vertex::new([1.0, 1.0, 1.0], [1.0, 1.0]),
     Vertex::new([1.0, -1.0, 1.0], [0.0, 1.0]),
@@ -92,14 +80,12 @@ const CUBE_INDICES: &[u16] = &[
     1, 5, 3, 3, 5, 7,
 ];
 
-unsafe impl ShaderType for Vertex {
-    fn layout() -> BufferLayout {
-        BufferLayout::Vertex(wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: Self::ATTRIBUTES,
-        })
-    }
+unsafe impl VertexLayout for Vertex {
+    const LAYOUT: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
+        array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+        step_mode: wgpu::VertexStepMode::Vertex,
+        attributes: Self::ATTRIBUTES,
+    };
 }
 
 impl<'a> QuackCraft<'a> {
@@ -137,7 +123,7 @@ impl<'a> QuackCraft<'a> {
         );
 
         let camera_buf =
-            wgpu.uniform_buffer(camera.projection_view_matrix(), Some("camera buffer"));
+            wgpu.uniform_buffer(&camera.projection_view_matrix(), Some("camera buffer"));
 
         let camera_bind_group = wgpu.bind_group(
             Some("camera bind group"),
@@ -150,13 +136,9 @@ impl<'a> QuackCraft<'a> {
             }],
         );
 
-        let vbuf = wgpu.create_buffer(wgpu::BufferUsages::VERTEX, CUBE, Some("vertex buffer"));
+        let vertex_buf = wgpu.vertex_buffer(CUBE, Some("vertex buffer"));
 
-        let ibuf = wgpu.create_buffer(
-            wgpu::BufferUsages::INDEX,
-            bytemuck::cast_slice::<_, Index16>(CUBE_INDICES),
-            Some("index buffer"),
-        );
+        let ibuf = wgpu.index_buffer(CUBE_INDICES, Some("index buffer"));
 
         let dirt_image = graphics::image::Image::from_mem(include_bytes!("../dirt.png"))?;
 
@@ -175,7 +157,7 @@ impl<'a> QuackCraft<'a> {
             Some("main pipeline"),
             &program,
             &layout,
-            &[vbuf.layout().as_vertex().expect("infallible")],
+            &[vertex_buf.layout()],
             wgpu::PrimitiveState::default(),
             &[Some(wgpu::ColorTargetState {
                 format: wgpu.config.borrow().format,
@@ -189,7 +171,7 @@ impl<'a> QuackCraft<'a> {
             dirt_texture,
             wgpu: wgpu.clone(),
             pipelines: vec![pipeline],
-            vertex_buffer: vbuf,
+            vertex_buffer: vertex_buf,
             index_buffer: ibuf,
             dirt_image,
             dirt_bind_group,
@@ -220,11 +202,8 @@ impl<'a> QuackCraft<'a> {
         pass.set_bind_group(0, &self.dirt_bind_group.1, &[]);
         pass.set_bind_group(1, &self.camera_bind_group, &[]);
         pass.set_pipeline(&self.pipelines[0]);
-        pass.set_vertex_buffer(0, self.vertex_buffer.buffer().slice(..));
-        pass.set_index_buffer(
-            self.index_buffer.buffer().slice(..),
-            wgpu::IndexFormat::Uint16,
-        );
+        self.vertex_buffer.set_on(&mut pass, 0, ..);
+        self.index_buffer.set_on(&mut pass, ..);
         pass.draw_indexed(0..CUBE_INDICES.len() as u32, 0, 0..1);
 
         drop(pass);

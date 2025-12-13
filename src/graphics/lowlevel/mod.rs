@@ -16,7 +16,11 @@ use wgpu::{
 
 use crate::graphics::{
     image::Image,
-    lowlevel::{buf::Uniform, shader::ShaderProgram, texture::Texture},
+    lowlevel::{
+        buf::{IndexBuffer, IndexLayout, UniformBuffer, VertexBuffer, VertexLayout},
+        shader::ShaderProgram,
+        texture::Texture,
+    },
 };
 
 pub mod buf;
@@ -122,46 +126,53 @@ impl<'a> WgpuInstance<'a> {
     }
 
     /// Creates a buffer with the given usage and data.
-    pub fn create_buffer<T>(
-        &self,
-        usage: wgpu::BufferUsages,
-        data: &[T],
-        label: Option<&str>,
-    ) -> buf::WgpuBuffer<T>
+    pub fn vertex_buffer<T>(&self, data: &[T], label: Option<&str>) -> VertexBuffer<T>
     where
-        T: buf::ShaderType,
+        T: VertexLayout,
     {
         let buffer = self
             .device
             .create_buffer_init(&w::util::BufferInitDescriptor {
                 label,
                 contents: bytemuck::cast_slice(data),
-                usage,
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             });
 
         // Safety: The buffer is valid for type T as it was created from a slice of T.
-        unsafe { buf::WgpuBuffer::from_raw_parts(buffer) }
+        unsafe { VertexBuffer::from_raw_parts(buffer) }
     }
 
-    /// Creates a uniform buffer with the given data.
-    ///
-    /// This is effectively a wrapper around `create_buffer` that just uses the `Uniform<T>` type.
-    /// This is the only place that Uniform<T> can be safely constructed.
-    pub fn uniform_buffer<T: Pod>(
-        &self,
-        data: T,
-        label: Option<&str>,
-    ) -> buf::WgpuBuffer<Uniform<T>> {
+    /// Creates an index buffer with the given usage and data.
+    pub fn index_buffer<T>(&self, data: &[T], label: Option<&str>) -> IndexBuffer<T>
+    where
+        T: IndexLayout,
+    {
         let buffer = self
             .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            .create_buffer_init(&w::util::BufferInitDescriptor {
                 label,
-                contents: bytemuck::bytes_of(&data),
+                contents: bytemuck::cast_slice(data),
+                usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            });
+
+        // Safety: The buffer is valid for type T as it was created from a slice of T.
+        unsafe { IndexBuffer::from_raw_parts(buffer) }
+    }
+
+    pub fn uniform_buffer<T>(&self, data: &T, label: Option<&str>) -> UniformBuffer<T>
+    where
+        T: Pod,
+    {
+        let buffer = self
+            .device
+            .create_buffer_init(&w::util::BufferInitDescriptor {
+                label,
+                contents: bytemuck::bytes_of(data),
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             });
 
-        // Safety: The buffer is valid for type Uniform<T> as it was created from a T.
-        unsafe { buf::WgpuBuffer::from_raw_parts(buffer) }
+        // Safety: The buffer is valid for type T as it was created from a slice of T.
+        unsafe { UniformBuffer::from_raw_parts(buffer) }
     }
 
     /// Loads a shader module from WGSL source code.

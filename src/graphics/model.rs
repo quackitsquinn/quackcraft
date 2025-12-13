@@ -8,7 +8,7 @@ use crate::{
     ReadOnly, ReadOnlyString,
     graphics::lowlevel::{
         WgpuInstance,
-        buf::{BufferLayout, Index16, ShaderType, WgpuBuffer},
+        buf::{IndexBuffer, VertexBuffer, VertexLayout},
     },
 };
 
@@ -18,9 +18,9 @@ use crate::{
 pub struct Model<'a> {
     data: ModelData,
     // Vertex buffer
-    vbuf: WgpuBuffer<VertexData>,
+    vbuf: VertexBuffer<VertexData>,
     // 16-bit index buffer
-    ibuf: WgpuBuffer<Index16>,
+    ibuf: IndexBuffer<u16>,
     wgpu: Rc<WgpuInstance<'a>>,
     label: ReadOnlyString,
 }
@@ -31,14 +31,9 @@ impl<'a> Model<'a> {
         let vbuf_label = format!("{label} index buffer");
         let ibuf_label = format!("{label} vertex buffer");
 
-        let ibuf = wgpu.create_buffer::<Index16>(
-            wgpu::BufferUsages::INDEX,
-            bytemuck::cast_slice::<_, Index16>(&data.indices),
-            Some(&ibuf_label),
-        );
+        let ibuf = wgpu.index_buffer(&data.indices, Some(&ibuf_label));
 
-        let vbuf = wgpu.create_buffer::<VertexData>(
-            wgpu::BufferUsages::VERTEX,
+        let vbuf = wgpu.vertex_buffer::<VertexData>(
             bytemuck::cast_slice::<_, VertexData>(&data.vertices),
             Some(&vbuf_label),
         );
@@ -78,23 +73,21 @@ pub struct VertexData {
     pub tex_coords: Vec2,
 }
 
-unsafe impl ShaderType for VertexData {
-    fn layout() -> BufferLayout {
-        BufferLayout::Vertex(VertexBufferLayout {
-            array_stride: std::mem::size_of::<VertexData>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &[
-                wgpu::VertexAttribute {
-                    format: wgpu::VertexFormat::Float32x3,
-                    offset: 0,
-                    shader_location: 0,
-                },
-                wgpu::VertexAttribute {
-                    format: wgpu::VertexFormat::Float32x2,
-                    offset: std::mem::size_of::<Vec3>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                },
-            ],
-        })
-    }
+unsafe impl VertexLayout for VertexData {
+    const LAYOUT: VertexBufferLayout<'static> = VertexBufferLayout {
+        array_stride: std::mem::size_of::<VertexData>() as wgpu::BufferAddress,
+        step_mode: wgpu::VertexStepMode::Vertex,
+        attributes: &[
+            wgpu::VertexAttribute {
+                format: wgpu::VertexFormat::Float32x3,
+                offset: 0,
+                shader_location: 0,
+            },
+            wgpu::VertexAttribute {
+                format: wgpu::VertexFormat::Float32x2,
+                offset: std::mem::size_of::<Vec3>() as wgpu::BufferAddress,
+                shader_location: 1,
+            },
+        ],
+    };
 }
