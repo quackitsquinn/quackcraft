@@ -1,6 +1,5 @@
 use std::{
     cell::RefCell,
-    primitive,
     rc::{Rc, Weak},
     sync::Arc,
 };
@@ -8,10 +7,10 @@ use std::{
 use anyhow::Context;
 use bytemuck::Pod;
 use wgpu::{
-    self as w, Color, CommandBuffer, CommandEncoder, Device, DeviceDescriptor, Instance,
-    InstanceDescriptor, Origin3d, PowerPreference, Queue, RenderPass, RequestAdapterOptions,
-    StoreOp, Surface, SurfaceConfiguration, SurfaceTexture, TextureAspect, TextureView,
-    naga::back::msl::sampler, util::DeviceExt,
+    self as w, Color, CommandBuffer, CommandEncoder, CompareFunction, Device, DeviceDescriptor,
+    Instance, InstanceDescriptor, Origin3d, PowerPreference, Queue, RenderPass,
+    RequestAdapterOptions, StoreOp, Surface, SurfaceConfiguration, SurfaceTexture, TextureAspect,
+    TextureView, util::DeviceExt,
 };
 
 use crate::graphics::{
@@ -24,6 +23,7 @@ use crate::graphics::{
 };
 
 pub mod buf;
+pub mod depth;
 pub mod shader;
 pub mod texture;
 
@@ -281,6 +281,10 @@ impl<'a> WgpuInstance<'a> {
         )
     }
 
+    pub fn depth_texture(&self) -> depth::DepthTexture<'a> {
+        depth::DepthTexture::new(self.this.upgrade().clone().expect("WgpuInstance dropped!"))
+    }
+
     /// Creates a bind group layout from the given descriptor.
     pub fn create_bind_group_layout(
         &self,
@@ -336,6 +340,23 @@ impl<'a> WgpuInstance<'a> {
         })
     }
 
+    /// Creates a sampler with comparison functionality.
+    pub fn comparing_sampler(&self, func: CompareFunction) -> wgpu::Sampler {
+        self.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("comparing sampler"),
+            address_mode_u: wgpu::AddressMode::ClampToEdge,
+            address_mode_v: wgpu::AddressMode::ClampToEdge,
+            address_mode_w: wgpu::AddressMode::ClampToEdge,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
+            compare: Some(func),
+            lod_max_clamp: 100.0,
+            lod_min_clamp: 0.0,
+            ..Default::default()
+        })
+    }
+
     /// Creates a pipeline layout from the given descriptor.
     pub fn create_pipeline_layout(
         &self,
@@ -371,6 +392,7 @@ impl<'a> WgpuInstance<'a> {
         buffers: &[wgpu::VertexBufferLayout<'a>],
         primitive: wgpu::PrimitiveState,
         targets: &[Option<wgpu::ColorTargetState>],
+        depth_stencil: Option<wgpu::DepthStencilState>,
     ) -> wgpu::RenderPipeline {
         self.create_pipeline(&wgpu::RenderPipelineDescriptor {
             label,
@@ -378,7 +400,7 @@ impl<'a> WgpuInstance<'a> {
             vertex: shader.vertex_state(buffers),
             fragment: shader.fragment_state(targets.as_ref()),
             primitive,
-            depth_stencil: None,
+            depth_stencil,
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
             cache: None,
@@ -403,6 +425,7 @@ impl<'a> WgpuInstance<'a> {
         color: Color,
         encoder: &'b mut CommandEncoder,
         view: &TextureView,
+        depth_stencil_attachment: Option<wgpu::RenderPassDepthStencilAttachment>,
     ) -> RenderPass<'b> {
         encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("clear render pass"),
@@ -415,7 +438,7 @@ impl<'a> WgpuInstance<'a> {
                 },
                 depth_slice: None,
             })],
-            depth_stencil_attachment: None,
+            depth_stencil_attachment,
             ..Default::default()
         })
     }

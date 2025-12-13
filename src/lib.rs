@@ -29,6 +29,7 @@ pub struct QuackCraft<'a> {
     pipelines: Vec<wgpu::RenderPipeline>,
     vertex_buffer: VertexBuffer<Vertex>,
     index_buffer: IndexBuffer<u16>,
+    depth_texture: graphics::lowlevel::depth::DepthTexture<'a>,
     dirt_image: graphics::image::Image,
     dirt_texture: graphics::lowlevel::texture::Texture<'a>,
     dirt_bind_group: (wgpu::BindGroupLayout, wgpu::BindGroup),
@@ -105,7 +106,7 @@ impl<'a> QuackCraft<'a> {
             100.0,
         );
 
-        camera.pos(Vec3::new(2.0, 0.0, 2.0));
+        camera.pos(Vec3::new(3.0, 3.0, 3.0));
         camera.look_at(Vec3::new(0.0, 0.0, 0.0));
 
         let camera_layout = wgpu.bind_group_layout(
@@ -153,6 +154,8 @@ impl<'a> QuackCraft<'a> {
 
         let layout = wgpu.pipeline_layout(None, &[&dirt_bind_group.0, &camera_layout]);
 
+        let depth_texture = wgpu.depth_texture();
+
         let pipeline = wgpu.pipeline(
             Some("main pipeline"),
             &program,
@@ -164,6 +167,7 @@ impl<'a> QuackCraft<'a> {
                 blend: Some(wgpu::BlendState::REPLACE),
                 write_mask: wgpu::ColorWrites::ALL,
             })],
+            Some(depth_texture.state()),
         );
 
         Ok(QuackCraft {
@@ -178,6 +182,7 @@ impl<'a> QuackCraft<'a> {
             camera: RefCell::new(camera),
             transform_uniform: camera_buf,
             camera_bind_group,
+            depth_texture,
         })
     }
 
@@ -197,7 +202,12 @@ impl<'a> QuackCraft<'a> {
         let mut encoder = wgpu.create_encoder(None);
         let (surface, view) = wgpu.current_view()?;
 
-        let mut pass = wgpu.start_main_pass(Self::rainbow(frame), &mut encoder, &view);
+        let mut pass = wgpu.start_main_pass(
+            Self::rainbow(frame),
+            &mut encoder,
+            &view,
+            Some(self.depth_texture.attachment()),
+        );
 
         pass.set_bind_group(0, &self.dirt_bind_group.1, &[]);
         pass.set_bind_group(1, &self.camera_bind_group, &[]);

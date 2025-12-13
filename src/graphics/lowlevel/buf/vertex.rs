@@ -1,8 +1,4 @@
-use std::{
-    marker::PhantomData,
-    ops::{Deref, DerefMut, RangeBounds},
-    sync::Arc,
-};
+use std::{marker::PhantomData, ops::RangeBounds};
 
 use bytemuck::{Pod, Zeroable};
 use wgpu::VertexBufferLayout;
