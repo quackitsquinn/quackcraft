@@ -34,7 +34,7 @@ pub struct QuackCraft<'a> {
     dirt_texture: graphics::lowlevel::texture::Texture<'a>,
     dirt_bind_group: (wgpu::BindGroupLayout, wgpu::BindGroup),
     camera: RefCell<Camera>,
-    transform_uniform: UniformBuffer<Mat4>,
+    transform_uniform: UniformBuffer<'a, Mat4>,
     camera_bind_group: wgpu::BindGroup,
 }
 
@@ -58,27 +58,46 @@ impl Vertex {
         }
     }
 }
-
-const CUBE: &[Vertex] = &[
+const CUBE_VERTICES: &[Vertex] = &[
+    // Front (+Z)
+    Vertex::new([-1.0, -1.0, 1.0], [0.0, 0.0]),
+    Vertex::new([1.0, -1.0, 1.0], [1.0, 0.0]),
     Vertex::new([1.0, 1.0, 1.0], [1.0, 1.0]),
-    Vertex::new([1.0, -1.0, 1.0], [0.0, 1.0]),
-    Vertex::new([1.0, 1.0, -1.0], [1.0, 0.0]),
+    Vertex::new([-1.0, 1.0, 1.0], [0.0, 1.0]),
+    // Back (-Z)
     Vertex::new([1.0, -1.0, -1.0], [0.0, 0.0]),
-    // Back face
-    Vertex::new([-1.0, 1.0, 1.0], [1.0, 1.0]),
-    Vertex::new([-1.0, -1.0, 1.0], [0.0, 1.0]),
-    Vertex::new([-1.0, 1.0, -1.0], [1.0, 0.0]),
+    Vertex::new([-1.0, -1.0, -1.0], [1.0, 0.0]),
+    Vertex::new([-1.0, 1.0, -1.0], [1.0, 1.0]),
+    Vertex::new([1.0, 1.0, -1.0], [0.0, 1.0]),
+    // Left (-X)
     Vertex::new([-1.0, -1.0, -1.0], [0.0, 0.0]),
+    Vertex::new([-1.0, -1.0, 1.0], [1.0, 0.0]),
+    Vertex::new([-1.0, 1.0, 1.0], [1.0, 1.0]),
+    Vertex::new([-1.0, 1.0, -1.0], [0.0, 1.0]),
+    // Right (+X)
+    Vertex::new([1.0, -1.0, 1.0], [0.0, 0.0]),
+    Vertex::new([1.0, -1.0, -1.0], [1.0, 0.0]),
+    Vertex::new([1.0, 1.0, -1.0], [1.0, 1.0]),
+    Vertex::new([1.0, 1.0, 1.0], [0.0, 1.0]),
+    // Top (+Y)
+    Vertex::new([-1.0, 1.0, 1.0], [0.0, 0.0]),
+    Vertex::new([1.0, 1.0, 1.0], [1.0, 0.0]),
+    Vertex::new([1.0, 1.0, -1.0], [1.0, 1.0]),
+    Vertex::new([-1.0, 1.0, -1.0], [0.0, 1.0]),
+    // Bottom (-Y)
+    Vertex::new([-1.0, -1.0, -1.0], [0.0, 0.0]),
+    Vertex::new([1.0, -1.0, -1.0], [1.0, 0.0]),
+    Vertex::new([1.0, -1.0, 1.0], [1.0, 1.0]),
+    Vertex::new([-1.0, -1.0, 1.0], [0.0, 1.0]),
 ];
 
-const CUBE_INDICES: &[u16] = &[
-    // Front face
-    0, 1, 2, 2, 1, 3, // Back face
-    4, 6, 5, 5, 6, 7, // Left face
-    4, 5, 0, 0, 5, 1, // Right face
-    2, 3, 6, 6, 3, 7, // Top face
-    4, 0, 6, 6, 0, 2, // Bottom face
-    1, 5, 3, 3, 5, 7,
+pub const CUBE_INDICES: &[u16] = &[
+    0, 1, 2, 2, 3, 0, // Front
+    4, 5, 6, 6, 7, 4, // Back
+    8, 9, 10, 10, 11, 8, // Left
+    12, 13, 14, 14, 15, 12, // Right
+    16, 17, 18, 18, 19, 16, // Top
+    20, 21, 22, 22, 23, 20, // Bottom
 ];
 
 unsafe impl VertexLayout for Vertex {
@@ -137,7 +156,7 @@ impl<'a> QuackCraft<'a> {
             }],
         );
 
-        let vertex_buf = wgpu.vertex_buffer(CUBE, Some("vertex buffer"));
+        let vertex_buf = wgpu.vertex_buffer(CUBE_VERTICES, Some("vertex buffer"));
 
         let ibuf = wgpu.index_buffer(CUBE_INDICES, Some("index buffer"));
 
@@ -196,11 +215,25 @@ impl<'a> QuackCraft<'a> {
         }
     }
 
+    fn update_camera(&mut self, frame: u64) {
+        let angle = (frame as f32) * 0.02;
+        let radius = 5.0;
+        let mut camera = self.camera.borrow_mut();
+        let x = radius * angle.cos();
+        let z = radius * angle.sin();
+        camera.pos(Vec3::new(x, 3.0, z));
+        camera.look_at(Vec3::new(0.0, 0.0, 0.0));
+        let matrix = camera.projection_view_matrix();
+        self.transform_uniform.write(&matrix);
+    }
+
     pub fn render(&mut self, frame: u64) -> anyhow::Result<()> {
         let wgpu = self.wgpu.clone();
 
         let mut encoder = wgpu.create_encoder(None);
         let (surface, view) = wgpu.current_view()?;
+
+        self.update_camera(frame);
 
         let mut pass = wgpu.start_main_pass(
             Self::rainbow(frame),

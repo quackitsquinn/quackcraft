@@ -106,6 +106,10 @@ impl<'a> WgpuInstance<'a> {
         Ok(this)
     }
 
+    fn instance(&self) -> Rc<WgpuInstance<'a>> {
+        self.this.upgrade().expect("WgpuInstance dropped!").clone()
+    }
+
     /// Resize the surface to the new size.
     ///
     /// # Panics
@@ -159,7 +163,7 @@ impl<'a> WgpuInstance<'a> {
         unsafe { IndexBuffer::from_raw_parts(buffer) }
     }
 
-    pub fn uniform_buffer<T>(&self, data: &T, label: Option<&str>) -> UniformBuffer<T>
+    pub fn uniform_buffer<T>(&self, data: &T, label: Option<&str>) -> UniformBuffer<'a, T>
     where
         T: Pod,
     {
@@ -172,7 +176,7 @@ impl<'a> WgpuInstance<'a> {
             });
 
         // Safety: The buffer is valid for type T as it was created from a slice of T.
-        unsafe { UniformBuffer::from_raw_parts(buffer) }
+        unsafe { UniformBuffer::from_raw_parts(buffer, self.instance()) }
     }
 
     /// Loads a shader module from WGSL source code.
@@ -272,7 +276,7 @@ impl<'a> WgpuInstance<'a> {
         };
 
         Texture::new(
-            self.this.upgrade().clone().expect("WgpuInstance dropped!"),
+            self.instance(),
             text,
             text_layout,
             sampler,
@@ -282,7 +286,7 @@ impl<'a> WgpuInstance<'a> {
     }
 
     pub fn depth_texture(&self) -> depth::DepthTexture<'a> {
-        depth::DepthTexture::new(self.this.upgrade().clone().expect("WgpuInstance dropped!"))
+        depth::DepthTexture::new(self.instance())
     }
 
     /// Creates a bind group layout from the given descriptor.
@@ -384,6 +388,7 @@ impl<'a> WgpuInstance<'a> {
     }
 
     /// Creates a render pipeline from the given parts.
+    #[allow(clippy::too_many_arguments)] // self is essentially invisible
     pub fn pipeline(
         &'a self,
         label: Option<&str>,
