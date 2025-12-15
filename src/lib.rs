@@ -19,6 +19,8 @@ pub type ReadOnlyString = Arc<str>;
 /// A read-only slice type.
 pub type ReadOnly<T> = Arc<[T]>;
 
+mod block;
+mod chunk;
 mod graphics;
 mod window;
 

@@ -27,6 +27,7 @@ pub mod depth;
 pub mod shader;
 pub mod texture;
 
+#[derive(Debug)]
 pub struct WgpuInstance<'a> {
     pub instance: Instance,
     pub surface: Surface<'a>,
