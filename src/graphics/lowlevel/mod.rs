@@ -6,6 +6,7 @@ use std::{
 
 use anyhow::Context;
 use bytemuck::Pod;
+use image::buffer;
 use wgpu::{
     self as w, Color, CommandBuffer, CommandEncoder, CompareFunction, Device, DeviceDescriptor,
     Instance, InstanceDescriptor, Origin3d, PowerPreference, Queue, RenderPass,
@@ -61,7 +62,11 @@ impl<'a> WgpuInstance<'a> {
             .with_context(|| "Failed to find an appropriate adapter")?;
 
         let (device, queue) = adapter
-            .request_device(&DeviceDescriptor::default())
+            .request_device(&DeviceDescriptor {
+                label: Some("root device"),
+                required_features: wgpu::Features::POLYGON_MODE_LINE,
+                ..Default::default()
+            })
             .await
             .with_context(|| "Failed to create device")?;
 
@@ -161,7 +166,7 @@ impl<'a> WgpuInstance<'a> {
             });
 
         // Safety: The buffer is valid for type T as it was created from a slice of T.
-        unsafe { IndexBuffer::from_raw_parts(buffer) }
+        unsafe { IndexBuffer::from_raw_parts(buffer, data.len()) }
     }
 
     pub fn uniform_buffer<T>(&self, data: &T, label: Option<&str>) -> UniformBuffer<'a, T>

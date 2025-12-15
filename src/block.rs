@@ -6,6 +6,7 @@ use glam::Vec4;
 pub enum Block {
     Air = 0,
     Dirt = 1,
+    Stone = 2,
 }
 
 impl Block {
@@ -24,6 +25,7 @@ impl Block {
         match self {
             Block::Air => Vec4::new(0.0, 0.0, 0.0, 0.0),
             Block::Dirt => Vec4::new(0.59, 0.29, 0.0, 1.0),
+            Block::Stone => Vec4::new(0.5, 0.5, 0.5, 1.0),
         }
     }
 }

@@ -2,11 +2,13 @@ use std::ops::RangeBounds;
 
 use bytemuck::{Pod, Zeroable};
 
+#[derive(Debug, Clone)]
 pub struct IndexBuffer<T>
 where
     T: IndexLayout,
 {
     buffer: wgpu::Buffer,
+    count: usize,
     _marker: std::marker::PhantomData<T>,
 }
 
@@ -16,9 +18,10 @@ impl<T: IndexLayout> IndexBuffer<T> {
     /// see also: [`crate::graphics::WgpuInstance::create_buffer`]
     /// # Safety
     /// The caller must ensure that the provided buffer is valid for the type T.
-    pub unsafe fn from_raw_parts(buffer: wgpu::Buffer) -> Self {
+    pub unsafe fn from_raw_parts(buffer: wgpu::Buffer, count: usize) -> Self {
         Self {
             buffer,
+            count,
             _marker: std::marker::PhantomData,
         }
     }
@@ -28,7 +31,12 @@ impl<T: IndexLayout> IndexBuffer<T> {
         &self.buffer
     }
 
-    /// Sets the index buffer on the given render pass for the specified range.
+    /// Returns the number of indices in the buffer.
+    pub fn count(&self) -> usize {
+        self.count
+    }
+
+    ///
     pub fn set_on(&self, pass: &mut wgpu::RenderPass<'_>, range: impl RangeBounds<u64>) {
         pass.set_index_buffer(self.buffer.slice(range), T::FORMAT);
     }

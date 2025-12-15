@@ -2,7 +2,7 @@ use std::{marker::PhantomData, ops::RangeBounds};
 
 use bytemuck::{Pod, Zeroable};
 use wgpu::VertexBufferLayout;
-
+#[derive(Debug, Clone)]
 pub struct VertexBuffer<T>
 where
     T: VertexLayout,

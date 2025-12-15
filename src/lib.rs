@@ -4,13 +4,18 @@ use bytemuck::Pod;
 use glam::{Mat4, Vec3};
 use glfw::WindowEvent;
 use log::info;
-use wgpu::{Color, TextureFormat, TextureUsages};
+use wgpu::{Color, PrimitiveState, TextureFormat, TextureUsages};
 
-use crate::graphics::{
-    camera::Camera,
-    lowlevel::{
-        WgpuInstance,
-        buf::{IndexBuffer, UniformBuffer, VertexBuffer, VertexLayout},
+use crate::{
+    block::Block,
+    chunk::Chunk,
+    graphics::{
+        camera::Camera,
+        lowlevel::{
+            WgpuInstance,
+            buf::{UniformBuffer, VertexLayout},
+        },
+        mesh::BlockVertex,
     },
 };
 
@@ -18,6 +23,10 @@ use crate::graphics::{
 pub type ReadOnlyString = Arc<str>;
 /// A read-only slice type.
 pub type ReadOnly<T> = Arc<[T]>;
+/// A position in the world, in chunk coordinates.
+pub type BlockPosition = (i64, i64, i64);
+/// A position in the world, in floating-point coordinates.
+pub type FloatPosition = Vec3;
 
 mod block;
 mod chunk;
@@ -29,85 +38,11 @@ pub struct QuackCraft<'a> {
     window: window::GlfwWindow,
     wgpu: Rc<graphics::lowlevel::WgpuInstance<'a>>,
     pipelines: Vec<wgpu::RenderPipeline>,
-    vertex_buffer: VertexBuffer<Vertex>,
-    index_buffer: IndexBuffer<u16>,
+    chunk: Chunk<'a>,
     depth_texture: graphics::lowlevel::depth::DepthTexture<'a>,
-    dirt_image: graphics::image::Image,
-    dirt_texture: graphics::lowlevel::texture::Texture<'a>,
-    dirt_bind_group: (wgpu::BindGroupLayout, wgpu::BindGroup),
     camera: RefCell<Camera>,
     transform_uniform: UniformBuffer<'a, Mat4>,
     camera_bind_group: wgpu::BindGroup,
-}
-
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-#[repr(C)]
-struct Vertex {
-    position: [f32; 3],
-    tex_coords: [f32; 2],
-}
-
-impl Vertex {
-    const ATTRIBUTES: &[wgpu::VertexAttribute] = &wgpu::vertex_attr_array![
-        0 => Float32x3, // position
-        1 => Float32x2, // tex_coords
-    ];
-
-    pub const fn new(position: [f32; 3], tex_coords: [f32; 2]) -> Self {
-        Self {
-            position,
-            tex_coords,
-        }
-    }
-}
-const CUBE_VERTICES: &[Vertex] = &[
-    // Front (+Z)
-    Vertex::new([-1.0, -1.0, 1.0], [0.0, 0.0]),
-    Vertex::new([1.0, -1.0, 1.0], [1.0, 0.0]),
-    Vertex::new([1.0, 1.0, 1.0], [1.0, 1.0]),
-    Vertex::new([-1.0, 1.0, 1.0], [0.0, 1.0]),
-    // Back (-Z)
-    Vertex::new([1.0, -1.0, -1.0], [0.0, 0.0]),
-    Vertex::new([-1.0, -1.0, -1.0], [1.0, 0.0]),
-    Vertex::new([-1.0, 1.0, -1.0], [1.0, 1.0]),
-    Vertex::new([1.0, 1.0, -1.0], [0.0, 1.0]),
-    // Left (-X)
-    Vertex::new([-1.0, -1.0, -1.0], [0.0, 0.0]),
-    Vertex::new([-1.0, -1.0, 1.0], [1.0, 0.0]),
-    Vertex::new([-1.0, 1.0, 1.0], [1.0, 1.0]),
-    Vertex::new([-1.0, 1.0, -1.0], [0.0, 1.0]),
-    // Right (+X)
-    Vertex::new([1.0, -1.0, 1.0], [0.0, 0.0]),
-    Vertex::new([1.0, -1.0, -1.0], [1.0, 0.0]),
-    Vertex::new([1.0, 1.0, -1.0], [1.0, 1.0]),
-    Vertex::new([1.0, 1.0, 1.0], [0.0, 1.0]),
-    // Top (+Y)
-    Vertex::new([-1.0, 1.0, 1.0], [0.0, 0.0]),
-    Vertex::new([1.0, 1.0, 1.0], [1.0, 0.0]),
-    Vertex::new([1.0, 1.0, -1.0], [1.0, 1.0]),
-    Vertex::new([-1.0, 1.0, -1.0], [0.0, 1.0]),
-    // Bottom (-Y)
-    Vertex::new([-1.0, -1.0, -1.0], [0.0, 0.0]),
-    Vertex::new([1.0, -1.0, -1.0], [1.0, 0.0]),
-    Vertex::new([1.0, -1.0, 1.0], [1.0, 1.0]),
-    Vertex::new([-1.0, -1.0, 1.0], [0.0, 1.0]),
-];
-
-pub const CUBE_INDICES: &[u16] = &[
-    0, 1, 2, 2, 3, 0, // Front
-    4, 5, 6, 6, 7, 4, // Back
-    8, 9, 10, 10, 11, 8, // Left
-    12, 13, 14, 14, 15, 12, // Right
-    16, 17, 18, 18, 19, 16, // Top
-    20, 21, 22, 22, 23, 20, // Bottom
-];
-
-unsafe impl VertexLayout for Vertex {
-    const LAYOUT: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
-        array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-        step_mode: wgpu::VertexStepMode::Vertex,
-        attributes: Self::ATTRIBUTES,
-    };
 }
 
 impl<'a> QuackCraft<'a> {
@@ -158,22 +93,7 @@ impl<'a> QuackCraft<'a> {
             }],
         );
 
-        let vertex_buf = wgpu.vertex_buffer(CUBE_VERTICES, Some("vertex buffer"));
-
-        let ibuf = wgpu.index_buffer(CUBE_INDICES, Some("index buffer"));
-
-        let dirt_image = graphics::image::Image::from_mem(include_bytes!("../dirt.png"))?;
-
-        let dirt_texture = wgpu.texture(
-            Some("dirt texture"),
-            TextureFormat::Rgba8UnormSrgb,
-            TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
-            &dirt_image,
-        );
-
-        let dirt_bind_group = dirt_texture.layout_and_bind_group(Some("dirt"), 0, 1);
-
-        let layout = wgpu.pipeline_layout(None, &[&dirt_bind_group.0, &camera_layout]);
+        let layout = wgpu.pipeline_layout(None, &[&camera_layout]);
 
         let depth_texture = wgpu.depth_texture();
 
@@ -181,8 +101,11 @@ impl<'a> QuackCraft<'a> {
             Some("main pipeline"),
             &program,
             &layout,
-            &[vertex_buf.layout()],
-            wgpu::PrimitiveState::default(),
+            &[BlockVertex::LAYOUT],
+            PrimitiveState {
+                polygon_mode: wgpu::PolygonMode::Line,
+                ..Default::default()
+            },
             &[Some(wgpu::ColorTargetState {
                 format: wgpu.config.borrow().format,
                 blend: Some(wgpu::BlendState::REPLACE),
@@ -191,19 +114,33 @@ impl<'a> QuackCraft<'a> {
             Some(depth_texture.state()),
         );
 
+        let mut chunk = Chunk::empty((0, 0, 0), wgpu.clone());
+
+        for i in 0..8 {
+            for j in 0..8 {
+                for k in 0..8 {
+                    chunk.data[i + 4][j + 4][k + 4] = if k % 2 == 0 {
+                        Block::Dirt
+                    } else {
+                        Block::Stone
+                    }
+                }
+            }
+        }
+
+        println!("Generating chunk mesh...");
+
+        chunk.render_state.borrow_mut().generate_mesh(&chunk);
+
         Ok(QuackCraft {
             window,
-            dirt_texture,
             wgpu: wgpu.clone(),
             pipelines: vec![pipeline],
-            vertex_buffer: vertex_buf,
-            index_buffer: ibuf,
-            dirt_image,
-            dirt_bind_group,
             camera: RefCell::new(camera),
             transform_uniform: camera_buf,
             camera_bind_group,
             depth_texture,
+            chunk,
         })
     }
 
@@ -218,13 +155,9 @@ impl<'a> QuackCraft<'a> {
     }
 
     fn update_camera(&mut self, frame: u64) {
-        let angle = (frame as f32) * 0.02;
-        let radius = 5.0;
         let mut camera = self.camera.borrow_mut();
-        let x = radius * angle.cos();
-        let z = radius * angle.sin();
-        camera.pos(Vec3::new(x, 3.0, z));
-        camera.look_at(Vec3::new(0.0, 0.0, 0.0));
+        camera.pos(Vec3::new(12.0, 12.0, 0.0));
+        camera.look_at(Vec3::new(8.0, 8.0, 8.0));
         let matrix = camera.projection_view_matrix();
         self.transform_uniform.write(&matrix);
     }
@@ -244,12 +177,12 @@ impl<'a> QuackCraft<'a> {
             Some(self.depth_texture.attachment()),
         );
 
-        pass.set_bind_group(0, &self.dirt_bind_group.1, &[]);
-        pass.set_bind_group(1, &self.camera_bind_group, &[]);
+        pass.set_bind_group(0, &self.camera_bind_group, &[]);
         pass.set_pipeline(&self.pipelines[0]);
-        self.vertex_buffer.set_on(&mut pass, 0, ..);
-        self.index_buffer.set_on(&mut pass, ..);
-        pass.draw_indexed(0..CUBE_INDICES.len() as u32, 0, 0..1);
+        let (vertex_buffer, index_buffer) = self.chunk.render_state.borrow().buffers();
+        vertex_buffer.set_on(&mut pass, 0, ..);
+        index_buffer.set_on(&mut pass, ..);
+        pass.draw_indexed(0..index_buffer.count() as u32, 0, 0..1);
 
         drop(pass);
 

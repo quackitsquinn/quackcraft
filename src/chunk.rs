@@ -1,26 +1,43 @@
-use std::rc::{Rc, Weak};
+use std::{
+    cell::RefCell,
+    rc::{Rc, Weak},
+};
 
-use crate::{block::Block, graphics::lowlevel::WgpuInstance};
+use crate::{
+    block::Block,
+    graphics::{
+        CardinalDirection,
+        lowlevel::{
+            WgpuInstance,
+            buf::{IndexBuffer, VertexBuffer},
+        },
+        mesh::{BlockMesh, BlockVertex},
+    },
+};
+
+pub const CHUNK_SIZE: usize = 16;
 
 #[derive(Clone, Debug)]
 pub struct Chunk<'a> {
-    data: [[[Block; 16]; 16]; 16],
+    pub chunk_position: (i64, i64, i64),
+    pub data: [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+    pub render_state: RefCell<ChunkRenderState<'a>>,
     wgpu: Rc<WgpuInstance<'a>>,
-    this: Weak<Chunk<'a>>,
 }
 
 impl<'a> Chunk<'a> {
-    pub fn empty(wgpu: Rc<WgpuInstance<'a>>) -> Rc<Self> {
-        Rc::new_cyclic(|weak| Self {
-            data: [[[Block::Air; 16]; 16]; 16],
-            this: weak.clone(),
+    pub fn empty(chunk_position: (i64, i64, i64), wgpu: Rc<WgpuInstance<'a>>) -> Self {
+        Self {
+            chunk_position,
+            data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+            render_state: RefCell::new(ChunkRenderState::new(wgpu.clone())),
             wgpu: wgpu.clone(),
-        })
+        }
     }
 }
 
 impl<'a> std::ops::Deref for Chunk<'a> {
-    type Target = [[[Block; 16]; 16]; 16];
+    type Target = [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE];
 
     fn deref(&self) -> &Self::Target {
         &self.data
@@ -35,5 +52,74 @@ impl<'a> std::ops::Index<(usize, usize, usize)> for Chunk<'a> {
     }
 }
 
+impl<'a> std::ops::IndexMut<(usize, usize, usize)> for Chunk<'a> {
+    fn index_mut(&mut self, index: (usize, usize, usize)) -> &mut Self::Output {
+        &mut self.data[index.0][index.1][index.2]
+    }
+}
+
 /// Render state for a chunk.
-struct ChunkRenderState {}
+#[derive(Debug, Clone)]
+pub struct ChunkRenderState<'a> {
+    block_mesh: Option<BlockMesh>,
+    buffers: Option<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>,
+    wgpu: Rc<WgpuInstance<'a>>,
+}
+
+impl<'a> ChunkRenderState<'a> {
+    pub fn new(wgpu: Rc<WgpuInstance<'a>>) -> Self {
+        Self {
+            block_mesh: None,
+            buffers: None,
+            wgpu,
+        }
+    }
+
+    /// Generates the mesh for the chunk.
+    pub fn generate_mesh(&mut self, chunk: &Chunk<'a>) {
+        let mut mesh = BlockMesh::empty();
+
+        for x in 0..16 {
+            for y in 0..16 {
+                for z in 0..16 {
+                    let block = chunk.data[x][y][z];
+                    let true_pos = (
+                        x as i64 + (chunk.chunk_position.0 * CHUNK_SIZE as i64),
+                        y as i64 + (chunk.chunk_position.1 * CHUNK_SIZE as i64),
+                        z as i64 + (chunk.chunk_position.2 * CHUNK_SIZE as i64),
+                    );
+                    if block != Block::Air {
+                        // TODO: Culling
+                        println!("Emitting face at {:?}", true_pos);
+                        CardinalDirection::iter().for_each(|dir| {
+                            mesh.emit_face(&block, true_pos, dir);
+                        });
+                    }
+                }
+            }
+        }
+
+        self.block_mesh = Some(mesh);
+        self.buffers = None; // Invalidate buffers
+    }
+    /// Returns the vertex and index buffers for the chunk.
+    pub fn buffers(&self) -> (VertexBuffer<BlockVertex>, IndexBuffer<u16>) {
+        let mesh = self.block_mesh.as_ref().expect("Mesh not generated");
+
+        if let Some((vbuf, ibuf)) = &self.buffers {
+            return (vbuf.clone(), ibuf.clone());
+        }
+
+        let vertex_buffer = self.wgpu.vertex_buffer::<BlockVertex>(
+            bytemuck::cast_slice::<_, BlockVertex>(&mesh.vertices()),
+            Some("Chunk Vertex Buffer"),
+        );
+
+        let index_buffer = self.wgpu.index_buffer::<u16>(
+            bytemuck::cast_slice::<_, u16>(&mesh.indices()),
+            Some("Chunk Index Buffer"),
+        );
+
+        (vertex_buffer, index_buffer)
+    }
+}
