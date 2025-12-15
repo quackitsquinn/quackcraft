@@ -103,7 +103,6 @@ impl<'a> QuackCraft<'a> {
             &layout,
             &[BlockVertex::LAYOUT],
             PrimitiveState {
-                polygon_mode: wgpu::PolygonMode::Line,
                 ..Default::default()
             },
             &[Some(wgpu::ColorTargetState {
@@ -119,7 +118,7 @@ impl<'a> QuackCraft<'a> {
         for i in 0..8 {
             for j in 0..8 {
                 for k in 0..8 {
-                    chunk.data[i + 4][j + 4][k + 4] = if k % 2 == 0 {
+                    chunk.data[i + 4][j + 4][k + 4] = if i + j + k % 2 == 0 {
                         Block::Dirt
                     } else {
                         Block::Stone

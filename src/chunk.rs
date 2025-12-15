@@ -4,6 +4,7 @@ use std::{
 };
 
 use crate::{
+    BlockPosition,
     block::Block,
     graphics::{
         CardinalDirection,
@@ -33,6 +34,21 @@ impl<'a> Chunk<'a> {
             render_state: RefCell::new(ChunkRenderState::new(wgpu.clone())),
             wgpu: wgpu.clone(),
         }
+    }
+
+    /// Inspects a block at the given world position.
+    /// This can be in the range of [-1, CHUNK_SIZE + 1], where out-of-bounds positions return the neighboring chunk's block. (in the future)
+    pub fn inspect_block(&self, position: BlockPosition) -> Block {
+        if position.0 < 0
+            || position.0 >= CHUNK_SIZE as i64
+            || position.1 < 0
+            || position.1 >= CHUNK_SIZE as i64
+            || position.2 < 0
+            || position.2 >= CHUNK_SIZE as i64
+        {
+            return Block::Air; // Out of bounds for now
+        }
+        self.data[position.0 as usize][position.1 as usize][position.2 as usize]
     }
 }
 
@@ -89,10 +105,10 @@ impl<'a> ChunkRenderState<'a> {
                         z as i64 + (chunk.chunk_position.2 * CHUNK_SIZE as i64),
                     );
                     if block != Block::Air {
-                        // TODO: Culling
-                        println!("Emitting face at {:?}", true_pos);
                         CardinalDirection::iter().for_each(|dir| {
-                            mesh.emit_face(&block, true_pos, dir);
+                            if !chunk.inspect_block(dir.offset_pos(true_pos)).is_solid() {
+                                mesh.emit_face(&block, true_pos, dir);
+                            }
                         });
                     }
                 }
@@ -111,12 +127,12 @@ impl<'a> ChunkRenderState<'a> {
         }
 
         let vertex_buffer = self.wgpu.vertex_buffer::<BlockVertex>(
-            bytemuck::cast_slice::<_, BlockVertex>(&mesh.vertices()),
+            bytemuck::cast_slice::<_, BlockVertex>(mesh.vertices()),
             Some("Chunk Vertex Buffer"),
         );
 
         let index_buffer = self.wgpu.index_buffer::<u16>(
-            bytemuck::cast_slice::<_, u16>(&mesh.indices()),
+            bytemuck::cast_slice::<_, u16>(mesh.indices()),
             Some("Chunk Index Buffer"),
         );
 

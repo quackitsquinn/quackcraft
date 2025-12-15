@@ -21,7 +21,7 @@ impl Block {
         !matches!(self, Block::Air)
     }
 
-    pub fn col(&self) -> Vec4 {
+    pub fn color(&self) -> Vec4 {
         match self {
             Block::Air => Vec4::new(0.0, 0.0, 0.0, 0.0),
             Block::Dirt => Vec4::new(0.59, 0.29, 0.0, 1.0),

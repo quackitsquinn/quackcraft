@@ -99,7 +99,7 @@ impl BlockMesh {
             face[1] += position.1 as f32;
             face[2] += position.2 as f32;
 
-            let color = block.col();
+            let color = block.color();
             let vertex = BlockVertex {
                 position: *face,
                 color: [color.x, color.y, color.z, color.w],
