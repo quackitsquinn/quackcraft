@@ -23,7 +23,6 @@ pub struct Chunk<'a> {
     pub chunk_position: (i64, i64, i64),
     pub data: [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
     pub render_state: RefCell<ChunkRenderState<'a>>,
-    wgpu: Rc<WgpuInstance<'a>>,
 }
 
 impl<'a> Chunk<'a> {
@@ -32,7 +31,6 @@ impl<'a> Chunk<'a> {
             chunk_position,
             data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
             render_state: RefCell::new(ChunkRenderState::new(wgpu.clone())),
-            wgpu: wgpu.clone(),
         }
     }
 
