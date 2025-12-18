@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use glam::Vec3;
 
 use crate::BlockPosition;
@@ -7,6 +9,10 @@ pub mod image;
 pub mod lowlevel;
 pub mod mesh;
 pub mod model;
+
+/// A reference-counted WGPU instance.
+// TODO: WgpuInstance should be renamed and probably placed in a Rc wrapper here.
+pub type Wgpu<'a> = Rc<lowlevel::WgpuInstance<'a>>;
 
 /// Cardinal directions in 3D space.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

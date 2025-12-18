@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    BlockPosition,
+    BlockPosition, ChunkPosition,
     block::Block,
     graphics::{
         CardinalDirection,
@@ -20,15 +20,13 @@ pub const CHUNK_SIZE: usize = 16;
 
 #[derive(Clone, Debug)]
 pub struct Chunk<'a> {
-    pub chunk_position: (i64, i64, i64),
     pub data: [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
     pub render_state: RefCell<ChunkRenderState<'a>>,
 }
 
 impl<'a> Chunk<'a> {
-    pub fn empty(chunk_position: (i64, i64, i64), wgpu: Rc<WgpuInstance<'a>>) -> Self {
+    pub fn empty(wgpu: Rc<WgpuInstance<'a>>) -> Self {
         Self {
-            chunk_position,
             data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
             render_state: RefCell::new(ChunkRenderState::new(wgpu.clone())),
         }
@@ -89,8 +87,8 @@ impl<'a> ChunkRenderState<'a> {
         }
     }
 
-    /// Generates the mesh for the chunk.
-    pub fn generate_mesh(&mut self, chunk: &Chunk<'a>) {
+    /// Generates the mesh for the `chunk` `at`
+    pub fn generate_mesh(&mut self, chunk: &Chunk<'a>, at: ChunkPosition) {
         let mut mesh = BlockMesh::empty();
 
         for x in 0..16 {
@@ -98,12 +96,14 @@ impl<'a> ChunkRenderState<'a> {
                 for z in 0..16 {
                     let block = chunk.data[x][y][z];
                     let true_pos = (
-                        x as i64 + (chunk.chunk_position.0 * CHUNK_SIZE as i64),
-                        y as i64 + (chunk.chunk_position.1 * CHUNK_SIZE as i64),
-                        z as i64 + (chunk.chunk_position.2 * CHUNK_SIZE as i64),
+                        x as i64 + (at.0 * CHUNK_SIZE as i64),
+                        y as i64 + (at.1 * CHUNK_SIZE as i64),
+                        z as i64 + (at.2 * CHUNK_SIZE as i64),
                     );
                     if block != Block::Air {
                         CardinalDirection::iter().for_each(|dir| {
+                            // For now, were just going to assume that out-of-bounds blocks are air.
+                            // This is a bigger problem in this engine since chunks are only 16x16x16, rather than 16x256x16.
                             if !chunk.inspect_block(dir.offset_pos(true_pos)).is_solid() {
                                 mesh.emit_face(&block, true_pos, dir);
                             }

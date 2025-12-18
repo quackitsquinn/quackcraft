@@ -17,12 +17,15 @@ use crate::{
         },
         mesh::BlockVertex,
     },
+    world::World,
 };
 
 /// A read-only string type.
 pub type ReadOnlyString = Arc<str>;
 /// A read-only slice type.
 pub type ReadOnly<T> = Arc<[T]>;
+/// A position in the world, in chunk coordinates.
+pub type ChunkPosition = (i64, i64, i64);
 /// A position in the world, in chunk coordinates.
 pub type BlockPosition = (i64, i64, i64);
 /// A position in the world, in floating-point coordinates.
@@ -32,13 +35,14 @@ mod block;
 mod chunk;
 mod graphics;
 mod window;
+mod world;
 
 /// The main game structure.
 pub struct QuackCraft<'a> {
     window: window::GlfwWindow,
     wgpu: Rc<graphics::lowlevel::WgpuInstance<'a>>,
     pipelines: Vec<wgpu::RenderPipeline>,
-    chunk: Chunk<'a>,
+    world: World<'a>,
     depth_texture: graphics::lowlevel::depth::DepthTexture<'a>,
     camera: RefCell<Camera>,
     transform_uniform: UniformBuffer<'a, Mat4>,
@@ -103,6 +107,7 @@ impl<'a> QuackCraft<'a> {
             &layout,
             &[BlockVertex::LAYOUT],
             PrimitiveState {
+                polygon_mode: wgpu::PolygonMode::Line,
                 ..Default::default()
             },
             &[Some(wgpu::ColorTargetState {
@@ -113,11 +118,12 @@ impl<'a> QuackCraft<'a> {
             Some(depth_texture.state()),
         );
 
-        let mut chunk = Chunk::empty((0, 0, 0), wgpu.clone());
+        let mut world = World::empty(wgpu.clone());
 
-        for i in 0..8 {
-            for j in 0..8 {
-                for k in 0..8 {
+        let mut chunk = Chunk::empty(wgpu.clone());
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
                     chunk.data[i + 4][j + 4][k + 4] = if (i + j + k) % 2 == 0 {
                         Block::Dirt
                     } else {
@@ -127,9 +133,17 @@ impl<'a> QuackCraft<'a> {
             }
         }
 
+        for x in -16..16 {
+            for y in -16..16 {
+                for z in -16..16 {
+                    world.push_chunk((x, y, z), chunk.clone());
+                }
+            }
+        }
+
         println!("Generating chunk mesh...");
 
-        chunk.render_state.borrow_mut().generate_mesh(&chunk);
+        world.render_state.borrow_mut().generate_mesh(&world);
 
         Ok(QuackCraft {
             window,
@@ -139,7 +153,7 @@ impl<'a> QuackCraft<'a> {
             transform_uniform: camera_buf,
             camera_bind_group,
             depth_texture,
-            chunk,
+            world,
         })
     }
 
@@ -155,7 +169,7 @@ impl<'a> QuackCraft<'a> {
 
     fn update_camera(&mut self, frame: u64) {
         let mut camera = self.camera.borrow_mut();
-        camera.pos(Vec3::new(12.0, 12.0, 0.0));
+        camera.pos(Vec3::new(16.0, 16.0, 0.0));
         camera.look_at(Vec3::new(8.0, 8.0, 8.0));
         let matrix = camera.projection_view_matrix();
         self.transform_uniform.write(&matrix);
@@ -178,10 +192,8 @@ impl<'a> QuackCraft<'a> {
 
         pass.set_bind_group(0, &self.camera_bind_group, &[]);
         pass.set_pipeline(&self.pipelines[0]);
-        let (vertex_buffer, index_buffer) = self.chunk.render_state.borrow().buffers();
-        vertex_buffer.set_on(&mut pass, 0, ..);
-        index_buffer.set_on(&mut pass, ..);
-        pass.draw_indexed(0..index_buffer.count() as u32, 0, 0..1);
+
+        self.world.render_state.borrow().render(&mut pass);
 
         drop(pass);
 
