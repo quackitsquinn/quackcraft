@@ -6,7 +6,7 @@ use crate::{
     graphics::{
         Wgpu,
         lowlevel::buf::{IndexBuffer, VertexBuffer},
-        mesh::BlockVertex,
+        mesh::{BlockMesh, BlockVertex},
     },
 };
 
@@ -40,6 +40,7 @@ impl<'a> World<'a> {
 
 pub struct WorldRenderState<'a> {
     pub wgpu: Wgpu<'a>,
+    meshes: HashMap<(i64, i64), BlockMesh>,
     buffers: Option<Vec<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>>,
 }
 
@@ -47,19 +48,32 @@ impl<'a> WorldRenderState<'a> {
     pub fn new(wgpu: Wgpu<'a>) -> Self {
         Self {
             wgpu,
+            meshes: HashMap::new(),
             buffers: None,
         }
     }
 
     /// Generates the mesh for all chunks in the world.
     pub fn generate_mesh(&mut self, world: &World<'a>) {
-        let mut buffers = Vec::new();
+        // Ok so, rather than generate area^3, we merge all buffers in y axis only.
+        let mut meshes = HashMap::new();
 
         for (pos, chunk) in world.chunks.iter() {
             let mut render_state = chunk.render_state.borrow_mut();
-            render_state.generate_mesh(chunk, *pos);
-            buffers.push(render_state.buffers());
+            let mesh = render_state.generate_mesh(chunk, *pos);
+            meshes
+                .entry((pos.0, pos.2))
+                .and_modify(|f: &mut BlockMesh| f.combine(mesh))
+                .or_insert_with(|| mesh.clone());
         }
+
+        self.meshes = meshes;
+
+        let buffers = self
+            .meshes
+            .values()
+            .map(|mesh| mesh.create_buffers(&self.wgpu))
+            .collect();
 
         self.buffers = Some(buffers);
     }

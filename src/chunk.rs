@@ -88,7 +88,7 @@ impl<'a> ChunkRenderState<'a> {
     }
 
     /// Generates the mesh for the `chunk` `at`
-    pub fn generate_mesh(&mut self, chunk: &Chunk<'a>, at: ChunkPosition) {
+    pub fn generate_mesh(&mut self, chunk: &Chunk<'a>, at: ChunkPosition) -> &BlockMesh {
         let mut mesh = BlockMesh::empty();
 
         for x in 0..16 {
@@ -115,6 +115,7 @@ impl<'a> ChunkRenderState<'a> {
 
         self.block_mesh = Some(mesh);
         self.buffers = None; // Invalidate buffers
+        self.block_mesh.as_ref().unwrap()
     }
     /// Returns the vertex and index buffers for the chunk.
     pub fn buffers(&self) -> (VertexBuffer<BlockVertex>, IndexBuffer<u16>) {

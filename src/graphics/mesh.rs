@@ -4,7 +4,10 @@ use glam::Vec3;
 use crate::{
     BlockPosition,
     block::Block,
-    graphics::{CardinalDirection, lowlevel::buf::VertexLayout},
+    graphics::{
+        CardinalDirection,
+        lowlevel::buf::{IndexBuffer, VertexBuffer, VertexLayout},
+    },
 };
 #[derive(Clone, Debug)]
 pub struct BlockMesh {
@@ -124,6 +127,48 @@ impl BlockMesh {
 
     pub fn indices(&self) -> &Vec<u16> {
         &self.indices
+    }
+
+    /// Combines this mesh with another mesh and returns the result.
+    pub fn combine_with(&self, other: &BlockMesh) -> BlockMesh {
+        let mut combined = self.clone();
+        let index_offset = combined.vertices.len() as u16;
+
+        combined.vertices.extend_from_slice(&other.vertices);
+
+        combined
+            .indices
+            .extend(other.indices.iter().map(|&i| i + index_offset));
+
+        combined
+    }
+
+    /// Combines another mesh into this mesh.
+    pub fn combine(&mut self, other: &BlockMesh) {
+        let index_offset = self.vertices.len() as u16;
+
+        self.vertices.extend_from_slice(&other.vertices);
+
+        self.indices
+            .extend(other.indices.iter().map(|&i| i + index_offset));
+    }
+
+    /// Creates the vertex and index buffers for the mesh.
+    pub fn create_buffers<'a>(
+        &self,
+        wgpu: &crate::graphics::Wgpu<'a>,
+    ) -> (VertexBuffer<BlockVertex>, IndexBuffer<u16>) {
+        let vertex_buffer = wgpu.vertex_buffer::<BlockVertex>(
+            bytemuck::cast_slice::<_, BlockVertex>(self.vertices()),
+            Some("BlockMesh Vertex Buffer"),
+        );
+
+        let index_buffer = wgpu.index_buffer::<u16>(
+            bytemuck::cast_slice::<_, u16>(self.indices()),
+            Some("BlockMesh Index Buffer"),
+        );
+
+        (vertex_buffer, index_buffer)
     }
 }
 

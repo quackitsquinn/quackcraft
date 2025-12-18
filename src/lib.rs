@@ -107,7 +107,6 @@ impl<'a> QuackCraft<'a> {
             &layout,
             &[BlockVertex::LAYOUT],
             PrimitiveState {
-                polygon_mode: wgpu::PolygonMode::Line,
                 ..Default::default()
             },
             &[Some(wgpu::ColorTargetState {
@@ -133,8 +132,8 @@ impl<'a> QuackCraft<'a> {
             }
         }
 
-        for x in -16..16 {
-            for y in -16..16 {
+        for x in -32..32 {
+            for y in -32..32 {
                 for z in -16..16 {
                     world.push_chunk((x, y, z), chunk.clone());
                 }
@@ -144,6 +143,8 @@ impl<'a> QuackCraft<'a> {
         println!("Generating chunk mesh...");
 
         world.render_state.borrow_mut().generate_mesh(&world);
+
+        println!("Chunk mesh generated.");
 
         Ok(QuackCraft {
             window,
