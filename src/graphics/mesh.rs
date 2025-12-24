@@ -108,12 +108,7 @@ impl BlockMesh {
                 color: [color.x, color.y, color.z, color.w],
             };
 
-            let vertex_index = match self.contains_vertex(&vertex) {
-                Some(index) => index as u16,
-                None => self.push_vertex(vertex),
-            };
-
-            face_indices[i] = vertex_index;
+            face_indices[i] = self.push_vertex(vertex);
         }
 
         FACE_INDICES.iter().for_each(|&i| {

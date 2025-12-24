@@ -1,0 +1,4 @@
+[target.'cfg(target_os = "macos")']
+rustflags = [
+  "-C", "link-arg=-Wl,-rpath,/opt/homebrew/opt/glfw/lib"
+]
