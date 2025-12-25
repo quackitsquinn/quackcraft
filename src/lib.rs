@@ -17,6 +17,7 @@ use crate::{
         },
         mesh::BlockVertex,
     },
+    input::camera::CameraController,
     world::World,
 };
 
@@ -34,6 +35,7 @@ pub type FloatPosition = Vec3;
 mod block;
 mod chunk;
 mod graphics;
+mod input;
 mod window;
 mod world;
 
@@ -44,8 +46,7 @@ pub struct QuackCraft<'a> {
     pipelines: Vec<wgpu::RenderPipeline>,
     world: World<'a>,
     depth_texture: graphics::lowlevel::depth::DepthTexture<'a>,
-    camera: RefCell<Camera>,
-    transform_uniform: UniformBuffer<'a, Mat4>,
+    camera: Rc<RefCell<CameraController<'a>>>,
     camera_bind_group: wgpu::BindGroup,
 }
 
@@ -60,42 +61,9 @@ impl<'a> QuackCraft<'a> {
             wgpu::PipelineCompilationOptions::default(),
         );
 
-        let mut camera = Camera::new(
-            wgpu.config.borrow().width as f32 / wgpu.config.borrow().height as f32,
-            0.1,
-            100.0,
-        );
+        let mut camera = CameraController::new(wgpu.clone());
 
-        camera.pos(Vec3::new(3.0, 3.0, 3.0));
-        camera.look_at(Vec3::new(0.0, 0.0, 0.0));
-
-        let camera_layout = wgpu.bind_group_layout(
-            Some("camera bind group layout"),
-            &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
-        );
-
-        let camera_buf =
-            wgpu.uniform_buffer(&camera.projection_view_matrix(), Some("camera buffer"));
-
-        let camera_bind_group = wgpu.bind_group(
-            Some("camera bind group"),
-            &camera_layout,
-            &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::Buffer(
-                    camera_buf.buffer().as_entire_buffer_binding(),
-                ),
-            }],
-        );
+        let (camera_layout, camera_bind_group) = camera.bind_group(0);
 
         let layout = wgpu.pipeline_layout(None, &[&camera_layout]);
 
@@ -150,8 +118,7 @@ impl<'a> QuackCraft<'a> {
             window,
             wgpu: wgpu.clone(),
             pipelines: vec![pipeline],
-            camera: RefCell::new(camera),
-            transform_uniform: camera_buf,
+            camera: Rc::new(RefCell::new(camera)),
             camera_bind_group,
             depth_texture,
             world,
@@ -170,10 +137,7 @@ impl<'a> QuackCraft<'a> {
 
     fn update_camera(&mut self, frame: u64) {
         let mut camera = self.camera.borrow_mut();
-        camera.pos(Vec3::new(16.0, 16.0, 0.0));
-        camera.look_at(Vec3::new(8.0, 8.0, 8.0));
-        let matrix = camera.projection_view_matrix();
-        self.transform_uniform.write(&matrix);
+        camera.update(1.0 / 60.0, glam::Vec2::new(0.0, 0.0));
     }
 
     pub fn render(&mut self, frame: u64) -> anyhow::Result<()> {

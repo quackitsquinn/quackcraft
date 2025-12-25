@@ -5,6 +5,7 @@ use bytemuck::Pod;
 use crate::graphics::lowlevel::WgpuInstance;
 
 /// A buffer for uniform data.
+#[derive(Clone, Debug)]
 pub struct UniformBuffer<'a, T>
 where
     T: Pod,
