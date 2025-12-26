@@ -15,6 +15,7 @@ pub struct Texture<'a> {
     pub sampler_bind_group_entry: wgpu::BindGroupLayoutEntry,
     /// The texture view.
     pub view: wgpu::TextureView,
+    image_count: usize,
     wgpu: Rc<WgpuInstance<'a>>,
 }
 
@@ -27,6 +28,7 @@ impl<'a> Texture<'a> {
         sampler: wgpu::Sampler,
         sampler_bind_group_entry: wgpu::BindGroupLayoutEntry,
         view: wgpu::TextureView,
+        image_count: usize,
     ) -> Self {
         Self {
             texture,
@@ -35,6 +37,7 @@ impl<'a> Texture<'a> {
             sampler_bind_group_entry,
             view,
             wgpu,
+            image_count,
         }
     }
 
@@ -60,7 +63,7 @@ impl<'a> Texture<'a> {
                         visibility: wgpu::ShaderStages::FRAGMENT,
                         ty: wgpu::BindingType::Texture {
                             multisampled: false,
-                            view_dimension: wgpu::TextureViewDimension::D2,
+                            view_dimension: wgpu::TextureViewDimension::D2Array,
                             sample_type: wgpu::TextureSampleType::Float { filterable: true },
                         },
                         count: None,

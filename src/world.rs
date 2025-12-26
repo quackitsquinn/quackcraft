@@ -54,13 +54,13 @@ impl<'a> WorldRenderState<'a> {
     }
 
     /// Generates the mesh for all chunks in the world.
-    pub fn generate_mesh(&mut self, world: &World<'a>) {
+    pub fn generate_mesh(&mut self, world: &World<'a>, with: &crate::block::BlockTextureAtlas) {
         // Ok so, rather than generate area^3, we merge all buffers in y axis only.
         let mut meshes = HashMap::new();
 
         for (pos, chunk) in world.chunks.iter() {
             let mut render_state = chunk.render_state.borrow_mut();
-            let mesh = render_state.generate_mesh(chunk, *pos);
+            let mesh = render_state.generate_mesh(chunk, *pos, with);
             meshes
                 .entry((pos.0, pos.2))
                 .and_modify(|f: &mut BlockMesh| f.combine(mesh))

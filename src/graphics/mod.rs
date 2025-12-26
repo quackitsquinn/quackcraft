@@ -10,6 +10,7 @@ pub mod image;
 pub mod lowlevel;
 pub mod mesh;
 pub mod model;
+pub mod textures;
 
 /// A reference-counted WGPU instance.
 // TODO: WgpuInstance should be renamed and probably placed in a Rc wrapper here.

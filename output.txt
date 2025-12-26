@@ -1,0 +1,1222 @@
+warning: unused import: `iter`
+ --> src/lib.rs:1:26
+  |
+1 | use std::{cell::RefCell, iter, rc::Rc, sync::Arc};
+  |                          ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `bytemuck::Pod`
+ --> src/lib.rs:3:5
+  |
+3 | use bytemuck::Pod;
+  |     ^^^^^^^^^^^^^
+
+warning: unused imports: `Mat4`, `Vec2`, and `vec2`
+ --> src/lib.rs:4:12
+  |
+4 | use glam::{Mat4, Vec2, Vec3, vec2};
+  |            ^^^^  ^^^^        ^^^^
+
+warning: unused imports: `TextureFormat` and `TextureUsages`
+ --> src/lib.rs:7:35
+  |
+7 | use wgpu::{Color, PrimitiveState, TextureFormat, TextureUsages};
+  |                                   ^^^^^^^^^^^^^  ^^^^^^^^^^^^^
+
+warning: unused imports: `UniformBuffer`, `camera::Camera`, and `self`
+  --> src/lib.rs:13:9
+   |
+13 |         camera::Camera,
+   |         ^^^^^^^^^^^^^^
+...
+17 |             buf::{UniformBuffer, VertexLayout},
+   |                   ^^^^^^^^^^^^^
+...
+24 |         keyboard::{self, Keyboard},
+   |                    ^^^^
+
+warning: unused import: `Weak`
+ --> src/chunk.rs:3:14
+  |
+3 |     rc::{Rc, Weak},
+  |              ^^^^
+
+warning: unused import: `glam::Vec3`
+ --> src/graphics/mod.rs:3:5
+  |
+3 | use glam::Vec3;
+  |     ^^^^^^^^^^
+
+warning: unused import: `any`
+ --> src/graphics/image.rs:1:11
+  |
+1 | use std::{any, sync::Arc};
+  |           ^^^
+
+warning: unused import: `num::NonZeroU32`
+ --> src/graphics/lowlevel/mod.rs:3:5
+  |
+3 |     num::NonZeroU32,
+  |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `image::buffer`
+  --> src/graphics/lowlevel/mod.rs:10:5
+   |
+10 | use image::buffer;
+   |     ^^^^^^^^^^^^^
+
+warning: unused import: `image::Image`
+  --> src/graphics/lowlevel/mod.rs:21:9
+   |
+21 |         image::Image,
+   |         ^^^^^^^^^^^^
+
+warning: unused import: `naga::back::msl::sampler`
+ --> src/graphics/lowlevel/depth.rs:3:53
+  |
+3 | use wgpu::{CompareFunction, StoreOp, TextureFormat, naga::back::msl::sampler};
+  |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `glam::Vec3`
+ --> src/graphics/mesh.rs:2:5
+  |
+2 | use glam::Vec3;
+  |     ^^^^^^^^^^
+
+warning: unused import: `block::Block`
+ --> src/graphics/mesh.rs:6:5
+  |
+6 |     block::Block,
+  |     ^^^^^^^^^^^^
+
+warning: unused import: `Weak`
+ --> src/input/camera.rs:3:14
+  |
+3 |     rc::{Rc, Weak},
+  |              ^^^^
+
+warning: unused import: `log::info`
+ --> src/input/camera.rs:7:5
+  |
+7 | use log::info;
+  |     ^^^^^^^^^
+
+warning: unused import: `Window`
+ --> src/window.rs:3:50
+  |
+3 | use glfw::{Context, Glfw, GlfwReceiver, PWindow, Window};
+  |                                                  ^^^^^^
+
+warning: unused variable: `frame`
+   --> src/lib.rs:177:33
+    |
+177 |     fn update_camera(&mut self, frame: u64) {
+    |                                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_frame`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `block_textures` is never read
+  --> src/lib.rs:57:5
+   |
+48 | pub struct QuackCraft<'a> {
+   |            ---------- field in this struct
+...
+57 |     block_textures: Textures<'a>,
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `color` is never used
+  --> src/block.rs:26:12
+   |
+14 | impl Block {
+   | ---------- method in this implementation
+...
+26 |     pub fn color(&self) -> Vec4 {
+   |            ^^^^^
+
+warning: field `wgpu` is never read
+  --> src/chunk.rs:78:5
+   |
+75 | pub struct ChunkRenderState<'a> {
+   |            ---------------- field in this struct
+...
+78 |     wgpu: Rc<WgpuInstance<'a>>,
+   |     ^^^^
+   |
+   = note: `ChunkRenderState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `buffers` is never used
+   --> src/chunk.rs:126:12
+    |
+ 81 | impl<'a> ChunkRenderState<'a> {
+    | ----------------------------- method in this implementation
+...
+126 |     pub fn buffers(&self) -> (VertexBuffer<BlockVertex>, IndexBuffer<u16>) {
+    |            ^^^^^^^
+
+warning: method `normal` is never used
+  --> src/graphics/mod.rs:38:12
+   |
+36 | impl CardinalDirection {
+   | ---------------------- method in this implementation
+37 |     /// Returns the normal vector corresponding to the cardinal direction.
+38 |     pub fn normal(&self) -> glam::Vec3 {
+   |            ^^^^^^
+
+warning: methods `look_at`, `projection`, and `view` are never used
+  --> src/graphics/camera.rs:74:12
+   |
+24 | impl Camera {
+   | ----------- methods in this implementation
+...
+74 |     pub fn look_at(&mut self, target: Vec3) {
+   |            ^^^^^^^
+...
+91 |     pub fn projection(&self) -> Mat4 {
+   |            ^^^^^^^^^^
+...
+96 |     pub fn view(&self) -> Mat4 {
+   |            ^^^^
+
+warning: field `image` is never read
+ --> src/graphics/image.rs:9:5
+  |
+8 | pub struct Image {
+  |            ----- field in this struct
+9 |     image: image::ImageBuffer<image::Rgba<u8>, ReadOnly<u8>>,
+  |     ^^^^^
+
+warning: methods `width` and `height` are never used
+  --> src/graphics/image.rs:27:12
+   |
+13 | impl Image {
+   | ---------- methods in this implementation
+...
+27 |     pub fn width(&self) -> u32 {
+   |            ^^^^^
+...
+32 |     pub fn height(&self) -> u32 {
+   |            ^^^^^^
+
+warning: field `image_count` is never read
+  --> src/graphics/lowlevel/texture.rs:18:5
+   |
+ 7 | pub struct Texture<'a> {
+   |            ------- field in this struct
+...
+18 |     image_count: usize,
+   |     ^^^^^^^^^^^
+   |
+   = note: `Texture` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: associated items `new`, `contains_vertex`, and `combine_with` are never used
+   --> src/graphics/mesh.rs:70:12
+    |
+ 69 | impl BlockMesh {
+    | -------------- associated items in this implementation
+ 70 |     pub fn new(vertices: Vec<BlockVertex>, indices: Vec<u16>) -> Self {
+    |            ^^^
+...
+ 83 |     pub fn contains_vertex(&self, vertex: &BlockVertex) -> Option<usize> {
+    |            ^^^^^^^^^^^^^^^
+...
+132 |     pub fn combine_with(&self, other: &BlockMesh) -> BlockMesh {
+    |            ^^^^^^^^^^^^
+
+warning: struct `Model` is never constructed
+  --> src/graphics/model.rs:18:12
+   |
+18 | pub struct Model<'a> {
+   |            ^^^^^
+
+warning: associated items `new`, `vertex_data`, and `index_data` are never used
+  --> src/graphics/model.rs:30:12
+   |
+28 | impl<'a> Model<'a> {
+   | ------------------ associated items in this implementation
+29 |     /// Creates a new Model from the given ModelData.
+30 |     pub fn new(wgpu: Rc<WgpuInstance<'a>>, label: &str, data: ModelData) -> Self {
+   |            ^^^
+...
+51 |     pub fn vertex_data(&self) -> &ReadOnly<VertexData> {
+   |            ^^^^^^^^^^^
+...
+56 |     pub fn index_data(&self) -> &ReadOnly<u16> {
+   |            ^^^^^^^^^^
+
+warning: struct `ModelData` is never constructed
+  --> src/graphics/model.rs:62:12
+   |
+62 | pub struct ModelData {
+   |            ^^^^^^^^^
+
+warning: method `get_texture` is never used
+  --> src/graphics/textures.rs:45:12
+   |
+20 | impl<'a> Textures<'a> {
+   | --------------------- method in this implementation
+...
+45 |     pub fn get_texture(&self, name: &str) -> Option<&TextureHandle> {
+   |            ^^^^^^^^^^^
+
+warning: methods `uniform`, `look_at`, and `position` are never used
+   --> src/input/camera.rs:58:12
+    |
+ 24 | impl CameraController<'_> {
+    | ------------------------- methods in this implementation
+...
+ 58 |     pub fn uniform(&self) -> UniformBuffer<'_, Mat4> {
+    |            ^^^^^^^
+...
+ 86 |     pub fn look_at(&mut self, target: Vec3) {
+    |            ^^^^^^^
+...
+157 |     pub fn position(&self) -> Vec3 {
+    |            ^^^^^^^^
+
+warning: associated function `new` is never used
+  --> src/world.rs:28:12
+   |
+18 | impl<'a> World<'a> {
+   | ------------------ associated function in this implementation
+...
+28 |     pub fn new(chunks: Vec<((i64, i64, i64), Chunk<'a>)>, wgpu: Wgpu<'a>) -> Self {
+   |            ^^^
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> src/graphics/lowlevel/depth.rs:83:23
+   |
+83 |     pub fn attachment(&self) -> wgpu::RenderPassDepthStencilAttachment {
+   |                       ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                       |
+   |                       the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+83 |     pub fn attachment(&self) -> wgpu::RenderPassDepthStencilAttachment<'_> {
+   |                                                                       ++++
+
+warning: `quackcraft` (lib) generated 35 warnings (run `cargo fix --lib -p quackcraft` to apply 19 suggestions)
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.34s
+     Running `target/release/quackcraft`
+[2025-12-26T18:00:12Z INFO  quackcraft] Starting quackcraft
+[2025-12-26T18:00:13Z DEBUG wgpu_core::instance] Instance::new: created Metal backend
+[2025-12-26T18:00:13Z DEBUG wgpu_hal::metal] PrivateCapabilities {
+        family_check: true,
+        msl_version: V3_1,
+        fragment_rw_storage: true,
+        read_write_texture_tier: Tier2,
+        msaa_desktop: true,
+        msaa_apple3: true,
+        msaa_apple7: true,
+        resource_heaps: true,
+        argument_buffers: Tier2,
+        shared_textures: false,
+        mutable_comparison_samplers: true,
+        sampler_clamp_to_border: true,
+        indirect_draw_dispatch: true,
+        base_vertex_first_instance_drawing: true,
+        dual_source_blending: true,
+        low_power: false,
+        headless: false,
+        layered_rendering: true,
+        function_specialization: true,
+        depth_clip_mode: true,
+        texture_cube_array: true,
+        supports_float_filtering: true,
+        format_depth24_stencil8: false,
+        format_depth32_stencil8_filter: true,
+        format_depth32_stencil8_none: false,
+        format_min_srgb_channels: 4,
+        format_b5: false,
+        format_bc: true,
+        format_eac_etc: true,
+        format_astc: true,
+        format_astc_hdr: true,
+        format_astc_3d: true,
+        format_any8_unorm_srgb_all: true,
+        format_any8_unorm_srgb_no_write: false,
+        format_any8_snorm_all: true,
+        format_r16_norm_all: true,
+        format_r32_all: false,
+        format_r32_no_write: false,
+        format_r32float_no_write_no_filter: false,
+        format_r32float_no_filter: false,
+        format_r32float_all: true,
+        format_rgba8_srgb_all: true,
+        format_rgba8_srgb_no_write: false,
+        format_rgb10a2_unorm_all: true,
+        format_rgb10a2_unorm_no_write: false,
+        format_rgb10a2_uint_write: true,
+        format_rg11b10_all: true,
+        format_rg11b10_no_write: false,
+        format_rgb9e5_all: true,
+        format_rgb9e5_no_write: false,
+        format_rgb9e5_filter_only: true,
+        format_rg32_color: true,
+        format_rg32_color_write: true,
+        format_rg32float_all: true,
+        format_rg32float_color_blend: true,
+        format_rg32float_no_filter: false,
+        format_rgba32int_color: true,
+        format_rgba32int_color_write: true,
+        format_rgba32float_color: true,
+        format_rgba32float_color_write: true,
+        format_rgba32float_all: true,
+        format_depth16unorm: true,
+        format_depth32float_filter: true,
+        format_depth32float_none: false,
+        format_bgr10a2_all: true,
+        format_bgr10a2_no_write: false,
+        max_buffers_per_stage: 31,
+        max_vertex_buffers: 16,
+        max_textures_per_stage: 128,
+        max_samplers_per_stage: 16,
+        max_binding_array_elements: 1000000,
+        max_sampler_binding_array_elements: 500000,
+        buffer_alignment: 256,
+        max_buffer_size: 10726686720,
+        max_texture_size: 16384,
+        max_texture_3d_size: 2048,
+        max_texture_layers: 2048,
+        max_fragment_input_components: 124,
+        max_color_render_targets: 8,
+        max_color_attachment_bytes_per_sample: 64,
+        max_varying_components: 124,
+        max_threads_per_group: 1024,
+        max_total_threadgroup_memory: 32768,
+        sample_count_mask: TextureFormatCapabilities(
+            MULTISAMPLE_X2 | MULTISAMPLE_X4,
+        ),
+        supports_debug_markers: true,
+        supports_binary_archives: true,
+        supports_capture_manager: true,
+        can_set_maximum_drawables_count: true,
+        can_set_display_sync: true,
+        can_set_next_drawable_timeout: true,
+        supports_arrays_of_textures: true,
+        supports_arrays_of_textures_write: true,
+        supports_mutability: true,
+        supports_depth_clip_control: true,
+        supports_preserve_invariance: true,
+        supports_shader_primitive_index: true,
+        has_unified_memory: Some(
+            true,
+        ),
+        timestamp_query_support: TimestampQuerySupport(
+            STAGE_BOUNDARIES,
+        ),
+        supports_simd_scoped_operations: true,
+        int64: true,
+        int64_atomics: true,
+        float_atomics: true,
+        supports_shared_event: true,
+    }
+[2025-12-26T18:00:13Z DEBUG wgpu_core::instance] Found 1 compatible adapters. Sorted by preference:
+[2025-12-26T18:00:13Z DEBUG wgpu_core::instance] * AdapterInfo { name: "Apple M3 Pro", vendor: 0, device: 0, device_type: IntegratedGpu, driver: "", driver_info: "", backend: Metal }
+[2025-12-26T18:00:13Z DEBUG wgpu_core::instance] Request adapter result AdapterInfo { name: "Apple M3 Pro", vendor: 0, device: 0, device_type: IntegratedGpu, driver: "", driver_info: "", backend: Metal }
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [0] = Literal(AbstractInt(6)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [1] = Literal(I32(6)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [2] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [3] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [4] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [5] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [6] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [7] = Literal(I32(1)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [8] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [0] = GlobalVariable([1]) : Value(Pointer { base: [2], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [1] = GlobalVariable([2]) : Value(Pointer { base: [3], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [2] = AccessIndex { base: [1], index: 0 } : Value(Pointer { base: [0], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [3] = Load { pointer: [2] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [4] = Access { base: [0], index: [3] } : Value(Pointer { base: [0], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [5] = Load { pointer: [4] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [6] = GlobalVariable([1]) : Value(Pointer { base: [2], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [7] = GlobalVariable([2]) : Value(Pointer { base: [3], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [8] = AccessIndex { base: [7], index: 0 } : Value(Pointer { base: [0], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [9] = Load { pointer: [8] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [10] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [11] = Literal(U32(1)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [12] = Binary { op: Add, left: [9], right: [11] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [13] = Access { base: [6], index: [12] } : Value(Pointer { base: [0], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [14] = Load { pointer: [13] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [15] = GlobalVariable([1]) : Value(Pointer { base: [2], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [16] = GlobalVariable([2]) : Value(Pointer { base: [3], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [17] = AccessIndex { base: [16], index: 0 } : Value(Pointer { base: [0], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [18] = Load { pointer: [17] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [19] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [20] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [21] = Binary { op: Add, left: [18], right: [20] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [22] = Access { base: [15], index: [21] } : Value(Pointer { base: [0], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [23] = Load { pointer: [22] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [24] = Compose { ty: [4], components: [[5], [14], [23]] } : Handle([4])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [25] = Literal(U32(65535)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [26] = AccessIndex { base: [24], index: 0 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [27] = Binary { op: Greater, left: [26], right: [25] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [28] = AccessIndex { base: [24], index: 1 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [29] = Binary { op: Greater, left: [28], right: [25] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: bool, bool
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: bool
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [30] = Binary { op: LogicalOr, left: [27], right: [29] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [31] = AccessIndex { base: [24], index: 2 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [32] = Binary { op: Greater, left: [31], right: [25] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: bool, bool
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: bool
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [33] = Binary { op: LogicalOr, left: [30], right: [32] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [34] = GlobalVariable([0]) : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [35] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [36] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [37] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [38] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [39] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [40] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32, u32, u32, u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [41] = Compose { ty: [1], components: [[35], [36], [37], [38], [39], [40]] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [42] = GlobalVariable([0]) : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [43] = AccessIndex { base: [24], index: 0 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [44] = AccessIndex { base: [24], index: 1 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [45] = AccessIndex { base: [24], index: 2 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [46] = AccessIndex { base: [24], index: 0 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [47] = AccessIndex { base: [24], index: 1 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [48] = AccessIndex { base: [24], index: 2 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32, u32, u32, u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [49] = Compose { ty: [1], components: [[43], [44], [45], [46], [47], [48]] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [9] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [10] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("dst"), space: Storage { access: StorageAccess(LOAD | STORE) }, binding: Some(ResourceBinding { group: 0, binding: 0 }), ty: [1], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("src"), space: Storage { access: StorageAccess(LOAD) }, binding: Some(ResourceBinding { group: 1, binding: 0 }), ty: [2], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("offset"), space: PushConstant, binding: None, ty: [3], init: None }
+[2025-12-26T18:00:13Z DEBUG wgpu_hal::metal::device] Naga generated shader for entry point 'main' and stage Compute
+    // language: metal3.1
+    #include <metal_stdlib>
+    #include <simd/simd.h>
+    
+    using metal::uint;
+    
+    struct _mslBufferSizes {
+        uint size1;
+    };
+    
+    struct type_1 {
+        uint inner[6];
+    };
+    typedef uint type_2[1];
+    struct OffsetPc {
+        uint inner;
+    };
+    
+    kernel void main_(
+      device type_1& dst [[buffer(1)]]
+    , device type_2 const& src [[buffer(2)]]
+    , constant OffsetPc& offset [[buffer(0)]]
+    , constant _mslBufferSizes& _buffer_sizes [[buffer(3)]]
+    ) {
+        uint _e3 = offset.inner;
+        uint _e5 = src[_e3];
+        uint _e9 = offset.inner;
+        uint _e13 = src[_e9 + 1u];
+        uint _e17 = offset.inner;
+        uint _e21 = src[_e17 + 2u];
+        metal::uint3 src_1 = metal::uint3(_e5, _e13, _e21);
+        if (((src_1.x > 65535u) || (src_1.y > 65535u)) || (src_1.z > 65535u)) {
+            dst = type_1 {0u, 0u, 0u, 0u, 0u, 0u};
+            return;
+        } else {
+            dst = type_1 {src_1.x, src_1.y, src_1.z, src_1.x, src_1.y, src_1.z};
+            return;
+        }
+    }
+    
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [0] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [1] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [2] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [3] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [4] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [5] = Literal(I32(1)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [6] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [7] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [8] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [9] = Literal(I32(2)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [10] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [0] = FunctionArgument(0) : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [1] = FunctionArgument(1) : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [2] = Binary { op: ShiftRight, left: [0], right: [1] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [3] = Literal(U32(1)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [4] = Binary { op: And, left: [2], right: [3] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [5] = Literal(U32(1)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [6] = Binary { op: Equal, left: [4], right: [5] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [0] = FunctionArgument(0) : Handle([6])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [1] = AccessIndex { base: [0], index: 0 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [2] = GlobalVariable([0]) : Value(Pointer { base: [3], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [3] = AccessIndex { base: [2], index: 1 } : Value(Pointer { base: [1], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [4] = Load { pointer: [3] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [5] = Binary { op: GreaterEqual, left: [1], right: [4] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [6] = GlobalVariable([1]) : Value(Pointer { base: [4], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [7] = GlobalVariable([0]) : Value(Pointer { base: [3], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [8] = AccessIndex { base: [7], index: 0 } : Value(Pointer { base: [1], space: PushConstant })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [9] = Load { pointer: [8] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [10] = AccessIndex { base: [0], index: 0 } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [11] = Binary { op: Add, left: [9], right: [10] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [12] = Access { base: [6], index: [11] } : Value(Pointer { base: [2], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [13] = Load { pointer: [12] } : Handle([2])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [14] = Literal(Bool(false)) : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [15] = LocalVariable([0]) : Value(Pointer { base: [0], space: Function })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [16] = AccessIndex { base: [13], index: 0 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [17] = Literal(AbstractInt(31)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [18] = Literal(U32(31)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [19] = CallResult([0]) : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [20] = AccessIndex { base: [13], index: 0 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [21] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [22] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [23] = Binary { op: ShiftLeft, left: [20], right: [22] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [24] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [25] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [26] = Binary { op: ShiftRight, left: [23], right: [25] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [27] = AccessIndex { base: [13], index: 1 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [28] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [29] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [30] = Binary { op: ShiftLeft, left: [27], right: [29] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [31] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [32] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [33] = Binary { op: ShiftRight, left: [30], right: [32] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [34] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [35] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [36] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [37] = Binary { op: Add, left: [26], right: [36] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [38] = Access { base: [34], index: [37] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [39] = Load { pointer: [38] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [40] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [41] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [42] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [43] = Binary { op: Add, left: [26], right: [42] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [44] = Access { base: [40], index: [43] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [45] = Load { pointer: [44] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [46] = AccessIndex { base: [13], index: 1 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [47] = Literal(AbstractInt(30)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [48] = Literal(U32(30)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [49] = CallResult([0]) : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [50] = AccessIndex { base: [13], index: 2 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [51] = Binary { op: Less, left: [50], right: [39] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [52] = Unary { op: LogicalNot, expr: [49] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: bool, bool
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: bool
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [53] = Binary { op: LogicalAnd, left: [51], right: [52] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [54] = Load { pointer: [15] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [55] = Binary { op: InclusiveOr, left: [54], right: [53] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [56] = AccessIndex { base: [13], index: 2 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [57] = Binary { op: Subtract, left: [56], right: [39] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [58] = Binary { op: Less, left: [57], right: [45] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [59] = Load { pointer: [15] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [60] = Binary { op: InclusiveOr, left: [59], right: [58] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [61] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [62] = Literal(AbstractInt(3)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [63] = Literal(U32(3)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [64] = Binary { op: Add, left: [26], right: [63] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [65] = As { expr: [19], kind: Uint, convert: Some(4) } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [66] = Binary { op: Add, left: [64], right: [65] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [67] = Access { base: [61], index: [66] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [68] = Load { pointer: [67] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [69] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [70] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [71] = Literal(U32(1)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [72] = Binary { op: Add, left: [26], right: [71] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [73] = Access { base: [69], index: [72] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [74] = Load { pointer: [73] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [75] = AccessIndex { base: [13], index: 1 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [76] = Literal(AbstractInt(31)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [77] = Literal(U32(31)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [78] = CallResult([0]) : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [79] = AccessIndex { base: [13], index: 3 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [80] = Binary { op: Less, left: [79], right: [68] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [81] = Unary { op: LogicalNot, expr: [78] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: bool, bool
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: bool
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [82] = Binary { op: LogicalAnd, left: [80], right: [81] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [83] = Load { pointer: [15] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [84] = Binary { op: InclusiveOr, left: [83], right: [82] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [85] = AccessIndex { base: [13], index: 3 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [86] = Binary { op: Subtract, left: [85], right: [68] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [87] = Binary { op: Less, left: [86], right: [74] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [88] = Load { pointer: [15] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [89] = Binary { op: InclusiveOr, left: [88], right: [87] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [90] = Override([0]) : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [91] = Unary { op: LogicalNot, expr: [90] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [92] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [93] = Binary { op: NotEqual, left: [68], right: [92] } : Value(Scalar(Scalar { kind: Bool, width: 1 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [94] = Load { pointer: [15] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [95] = Binary { op: InclusiveOr, left: [94], right: [93] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [96] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [97] = Literal(U32(3)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [98] = Override([1]) : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [99] = Select { condition: [98], accept: [97], reject: [96] } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [100] = Load { pointer: [15] } : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [101] = Override([1]) : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [102] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [103] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [104] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [105] = Binary { op: Add, left: [33], right: [104] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [106] = Access { base: [102], index: [105] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [107] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [108] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [109] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [110] = Literal(U32(1)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [111] = Binary { op: Add, left: [33], right: [110] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [112] = Access { base: [108], index: [111] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [113] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [114] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [115] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [116] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [117] = Binary { op: Add, left: [33], right: [116] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [118] = Access { base: [114], index: [117] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [119] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [120] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [121] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [122] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [123] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [124] = Binary { op: Add, left: [121], right: [123] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [125] = Access { base: [120], index: [124] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [126] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [127] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [128] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [129] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [130] = Literal(U32(1)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [131] = Binary { op: Add, left: [128], right: [130] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [132] = Access { base: [127], index: [131] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [133] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [134] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [135] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [136] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [137] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [138] = Binary { op: Add, left: [135], right: [137] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [139] = Access { base: [134], index: [138] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [140] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [141] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [142] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [143] = Literal(AbstractInt(3)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [144] = Literal(U32(3)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [145] = Binary { op: Add, left: [142], right: [144] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [146] = Access { base: [141], index: [145] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [147] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [148] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [149] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [150] = Literal(AbstractInt(4)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [151] = Literal(U32(4)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [152] = Binary { op: Add, left: [149], right: [151] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [153] = Access { base: [148], index: [152] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [154] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [155] = Override([1]) : Handle([0])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [156] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [157] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [158] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [159] = Binary { op: Add, left: [33], right: [158] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [160] = Access { base: [156], index: [159] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [161] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [162] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [163] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [164] = Binary { op: Add, left: [26], right: [163] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [165] = As { expr: [19], kind: Uint, convert: Some(4) } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [166] = Binary { op: Add, left: [164], right: [165] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [167] = Access { base: [161], index: [166] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [168] = Load { pointer: [167] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [169] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [170] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [171] = Literal(U32(1)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [172] = Binary { op: Add, left: [33], right: [171] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [173] = Access { base: [169], index: [172] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [174] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [175] = Literal(AbstractInt(3)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [176] = Literal(U32(3)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [177] = Binary { op: Add, left: [26], right: [176] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [178] = As { expr: [19], kind: Uint, convert: Some(4) } : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [179] = Binary { op: Add, left: [177], right: [178] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [180] = Access { base: [174], index: [179] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [181] = Load { pointer: [180] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [182] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [183] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [184] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [185] = Binary { op: Add, left: [33], right: [184] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [186] = Access { base: [182], index: [185] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [187] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [188] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [189] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [190] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [191] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [192] = Binary { op: Add, left: [189], right: [191] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [193] = Access { base: [188], index: [192] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [194] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [195] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [196] = Literal(U32(0)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [197] = Binary { op: Add, left: [26], right: [196] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [198] = Access { base: [194], index: [197] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [199] = Load { pointer: [198] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [200] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [201] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [202] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [203] = Literal(U32(1)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [204] = Binary { op: Add, left: [201], right: [203] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [205] = Access { base: [200], index: [204] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [206] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [207] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [208] = Literal(U32(1)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [209] = Binary { op: Add, left: [26], right: [208] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [210] = Access { base: [206], index: [209] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [211] = Load { pointer: [210] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [212] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [213] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [214] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [215] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [216] = Binary { op: Add, left: [213], right: [215] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [217] = Access { base: [212], index: [216] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [218] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [219] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [220] = Literal(U32(2)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [221] = Binary { op: Add, left: [26], right: [220] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [222] = Access { base: [218], index: [221] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [223] = Load { pointer: [222] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [224] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [225] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [226] = Literal(AbstractInt(3)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [227] = Literal(U32(3)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [228] = Binary { op: Add, left: [225], right: [227] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [229] = Access { base: [224], index: [228] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [230] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [231] = Literal(AbstractInt(3)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [232] = Literal(U32(3)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [233] = Binary { op: Add, left: [26], right: [232] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [234] = Access { base: [230], index: [233] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [235] = Load { pointer: [234] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, u32
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [236] = GlobalVariable([3]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [237] = Binary { op: Add, left: [33], right: [99] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [238] = Literal(AbstractInt(4)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [239] = Literal(U32(4)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [240] = Binary { op: Add, left: [237], right: [239] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [241] = Access { base: [236], index: [240] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD | STORE) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [242] = GlobalVariable([2]) : Value(Pointer { base: [5], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [243] = Literal(AbstractInt(4)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: u32, {AbstractInt}
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: u32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [244] = Literal(U32(4)) : Value(Scalar(Scalar { kind: Uint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [245] = Binary { op: Add, left: [26], right: [244] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [246] = Access { base: [242], index: [245] } : Value(Pointer { base: [1], space: Storage { access: StorageAccess(LOAD) } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [247] = Load { pointer: [246] } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [11] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [12] = Literal(AbstractInt(64)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("metadata_range"), space: PushConstant, binding: None, ty: [3], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("metadata"), space: Storage { access: StorageAccess(LOAD) }, binding: Some(ResourceBinding { group: 0, binding: 0 }), ty: [4], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("src"), space: Storage { access: StorageAccess(LOAD) }, binding: Some(ResourceBinding { group: 1, binding: 0 }), ty: [5], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("dst"), space: Storage { access: StorageAccess(LOAD | STORE) }, binding: Some(ResourceBinding { group: 2, binding: 0 }), ty: [5], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::function] var LocalVariable { name: Some("failed"), ty: [0], init: Some([14]) }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("metadata_range"), space: PushConstant, binding: None, ty: [3], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("metadata"), space: Storage { access: StorageAccess(LOAD) }, binding: Some(ResourceBinding { group: 0, binding: 0 }), ty: [4], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("src"), space: Storage { access: StorageAccess(LOAD) }, binding: Some(ResourceBinding { group: 1, binding: 0 }), ty: [5], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("dst"), space: Storage { access: StorageAccess(LOAD | STORE) }, binding: Some(ResourceBinding { group: 2, binding: 0 }), ty: [5], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::function] var LocalVariable { name: Some("failed"), ty: [0], init: Some([14]) }
+[2025-12-26T18:00:13Z DEBUG wgpu_hal::metal::device] Naga generated shader for entry point 'main' and stage Compute
+    // language: metal3.1
+    #include <metal_stdlib>
+    #include <simd/simd.h>
+    
+    using metal::uint;
+    
+    struct _mslBufferSizes {
+        uint size1;
+        uint size2;
+        uint size3;
+    };
+    
+    struct MetadataEntry {
+        uint src_offset;
+        uint dst_offset;
+        uint vertex_or_index_limit;
+        uint instance_limit;
+    };
+    struct MetadataRange {
+        uint start;
+        uint count;
+    };
+    typedef MetadataEntry type_2[1];
+    typedef uint type_3[1];
+    constant bool supports_indirect_first_instance = false;
+    constant bool write_d3d12_special_constants = false;
+    
+    bool is_bit_set(
+        uint data,
+        uint index
+    ) {
+        return ((data >> index) & 1u) == 1u;
+    }
+    
+    struct main_Input {
+    };
+    kernel void main_(
+      metal::uint3 global_invocation_id [[thread_position_in_grid]]
+    , constant MetadataRange& metadata_range [[buffer(0)]]
+    , device type_2 const& metadata [[buffer(1)]]
+    , device type_3 const& src [[buffer(2)]]
+    , device type_3& dst [[buffer(3)]]
+    , constant _mslBufferSizes& _buffer_sizes [[buffer(4)]]
+    ) {
+        bool failed = false;
+        uint _e4 = metadata_range.count;
+        if (global_invocation_id.x >= _e4) {
+            return;
+        }
+        uint _e9 = metadata_range.start;
+        MetadataEntry metadata_1 = metadata[_e9 + global_invocation_id.x];
+        bool _e18 = is_bit_set(metadata_1.src_offset, 31u);
+        uint src_base_offset = (metadata_1.src_offset << 2u) >> 2u;
+        uint dst_base_offset = (metadata_1.dst_offset << 2u) >> 2u;
+        uint first_vertex_or_index = src[src_base_offset + 2u];
+        uint vertex_or_index_count = src[src_base_offset + 0u];
+        {
+            bool _e41 = is_bit_set(metadata_1.dst_offset, 30u);
+            bool sub_overflows = metadata_1.vertex_or_index_limit < first_vertex_or_index;
+            bool _e46 = failed;
+            failed = _e46 | (sub_overflows && !(_e41));
+            uint vertex_or_index_limit = metadata_1.vertex_or_index_limit - first_vertex_or_index;
+            bool _e51 = failed;
+            failed = _e51 | (vertex_or_index_limit < vertex_or_index_count);
+        }
+        uint first_instance = src[(src_base_offset + 3u) + static_cast<uint>(_e18)];
+        uint instance_count = src[src_base_offset + 1u];
+        {
+            bool _e67 = is_bit_set(metadata_1.dst_offset, 31u);
+            bool sub_overflows_1 = metadata_1.instance_limit < first_instance;
+            bool _e72 = failed;
+            failed = _e72 | (sub_overflows_1 && !(_e67));
+            uint instance_limit = metadata_1.instance_limit - first_instance;
+            bool _e77 = failed;
+            failed = _e77 | (instance_limit < instance_count);
+        }
+        if (true) {
+            bool _e84 = failed;
+            failed = _e84 | (first_instance != 0u);
+        }
+        bool _e91 = failed;
+        if (_e91) {
+            if (write_d3d12_special_constants) {
+                dst[dst_base_offset + 0u] = 0u;
+                dst[dst_base_offset + 1u] = 0u;
+                dst[dst_base_offset + 2u] = 0u;
+            }
+            dst[(dst_base_offset + 0u) + 0u] = 0u;
+            dst[(dst_base_offset + 0u) + 1u] = 0u;
+            dst[(dst_base_offset + 0u) + 2u] = 0u;
+            dst[(dst_base_offset + 0u) + 3u] = 0u;
+            if (_e18) {
+                dst[(dst_base_offset + 0u) + 4u] = 0u;
+                return;
+            } else {
+                return;
+            }
+        } else {
+            if (write_d3d12_special_constants) {
+                uint _e149 = src[(src_base_offset + 2u) + static_cast<uint>(_e18)];
+                dst[dst_base_offset + 0u] = _e149;
+                uint _e160 = src[(src_base_offset + 3u) + static_cast<uint>(_e18)];
+                dst[dst_base_offset + 1u] = _e160;
+                dst[dst_base_offset + 2u] = 0u;
+            }
+            uint _e175 = src[src_base_offset + 0u];
+            dst[(dst_base_offset + 0u) + 0u] = _e175;
+            uint _e185 = src[src_base_offset + 1u];
+            dst[(dst_base_offset + 0u) + 1u] = _e185;
+            uint _e195 = src[src_base_offset + 2u];
+            dst[(dst_base_offset + 0u) + 2u] = _e195;
+            uint _e205 = src[src_base_offset + 3u];
+            dst[(dst_base_offset + 0u) + 3u] = _e205;
+            if (_e18) {
+                uint _e215 = src[src_base_offset + 4u];
+                dst[(dst_base_offset + 0u) + 4u] = _e215;
+                return;
+            } else {
+                return;
+            }
+        }
+    }
+    
+[2025-12-26T18:00:13Z DEBUG wgpu_core::device::global] configuring surface with SurfaceConfiguration { usage: TextureUsages(RENDER_ATTACHMENT), format: Bgra8UnormSrgb, width: 800, height: 600, present_mode: Fifo, desired_maximum_frame_latency: 2, alpha_mode: Opaque, view_formats: [] }
+[2025-12-26T18:00:13Z DEBUG wgpu_hal::metal::surface] build swapchain SurfaceConfiguration { maximum_frame_latency: 2, present_mode: Fifo, composite_alpha_mode: Opaque, format: Bgra8UnormSrgb, extent: (800, 600, 1), usage: TextureUses(COLOR_TARGET), view_formats: [] }
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [0] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [1] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [2] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [3] = Literal(I32(1)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [4] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [5] = Literal(I32(2)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [6] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [7] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [8] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [9] = Literal(I32(1)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [10] = Literal(AbstractInt(2)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [11] = Literal(I32(2)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [12] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [13] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [14] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [15] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [16] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [17] = Literal(I32(1)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [18] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [19] = Literal(I32(0)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [20] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [21] = Literal(I32(1)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [22] = Literal(AbstractInt(1)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [0] = FunctionArgument(0) : Handle([4])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [1] = LocalVariable([0]) : Value(Pointer { base: [6], space: Function })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [2] = AccessIndex { base: [1], index: 2 } : Value(Pointer { base: [2], space: Function })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [3] = AccessIndex { base: [0], index: 1 } : Handle([2])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [4] = AccessIndex { base: [1], index: 3 } : Value(Pointer { base: [3], space: Function })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [5] = AccessIndex { base: [0], index: 2 } : Handle([3])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [6] = AccessIndex { base: [1], index: 0 } : Value(Pointer { base: [5], space: Function })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [7] = GlobalVariable([0]) : Value(Pointer { base: [8], space: Uniform })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [8] = AccessIndex { base: [7], index: 0 } : Value(Pointer { base: [7], space: Uniform })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [9] = Load { pointer: [8] } : Handle([7])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [10] = AccessIndex { base: [0], index: 0 } : Handle([1])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [11] = Literal(AbstractFloat(1.0)) : Value(Scalar(Scalar { kind: AbstractFloat, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [12] = Literal(F32(1.0)) : Value(Scalar(Scalar { kind: Float, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [13] = Compose { ty: [5], components: [[10], [12]] } : Handle([5])
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion] wgsl automatic_conversion_consensus: mat4x4<f32>, vec4<f32>
+[2025-12-26T18:00:13Z DEBUG naga::front::wgsl::lower::conversion]     consensus: f32
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [14] = Binary { op: Multiply, left: [9], right: [13] } : Value(Vector { size: Quad, scalar: Scalar { kind: Float, width: 4 } })
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [15] = Load { pointer: [1] } : Handle([6])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [23] = Literal(I32(1)) : Value(Scalar(Scalar { kind: Sint, width: 4 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [24] = Literal(AbstractInt(0)) : Value(Scalar(Scalar { kind: AbstractInt, width: 8 }))
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [0] = FunctionArgument(0) : Handle([6])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [1] = GlobalVariable([1]) : Handle([9])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [2] = GlobalVariable([2]) : Handle([10])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [3] = AccessIndex { base: [0], index: 2 } : Handle([2])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [4] = AccessIndex { base: [0], index: 3 } : Handle([3])
+[2025-12-26T18:00:13Z DEBUG naga::front] Resolving [5] = ImageSample { image: [1], sampler: [2], gather: None, coordinate: [3], array_index: Some([4]), offset: None, level: Auto, depth_ref: None, clamp_to_edge: false } : Value(Vector { size: Quad, scalar: Scalar { kind: Float, width: 4 } })
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("camera"), space: Uniform, binding: Some(ResourceBinding { group: 0, binding: 0 }), ty: [7], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("block_textures"), space: Handle, binding: Some(ResourceBinding { group: 1, binding: 0 }), ty: [8], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("sampler_block"), space: Handle, binding: Some(ResourceBinding { group: 1, binding: 1 }), ty: [9], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::function] var LocalVariable { name: Some("out"), ty: [5], init: None }
+[2025-12-26T18:00:13Z DEBUG quackcraft::window] Setting mouse mode to Disabled
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("camera"), space: Uniform, binding: Some(ResourceBinding { group: 0, binding: 0 }), ty: [7], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::function] var LocalVariable { name: Some("out"), ty: [5], init: None }
+[2025-12-26T18:00:13Z DEBUG wgpu_hal::metal::device] Naga generated shader for entry point 'vs_main' and stage Vertex
+    // language: metal3.1
+    #include <metal_stdlib>
+    #include <simd/simd.h>
+    
+    using metal::uint;
+    
+    struct _mslBufferSizes {
+        uint buffer_size15;
+    };
+    
+    struct VertexInput {
+        metal::float3 position;
+        metal::float2 tex_coord;
+        uint block_type;
+        char _pad3[4];
+    };
+    struct VertexOutput {
+        metal::float4 clip_position;
+        metal::float4 color;
+        metal::float2 tex_coord;
+        uint block_type;
+        char _pad4[4];
+    };
+    struct CameraUniform {
+        metal::float4x4 view_proj;
+    };
+    metal::float3 unpackFloat32x3_(uint b0, uint b1, uint b2, uint b3, uint b4, uint b5, uint b6, uint b7, uint b8, uint b9, uint b10, uint b11) {
+        return metal::float3(as_type<float>(b3 << 24 | b2 << 16 | b1 << 8 | b0), as_type<float>(b7 << 24 | b6 << 16 | b5 << 8 | b4), as_type<float>(b11 << 24 | b10 << 16 | b9 << 8 | b8));
+    }
+    metal::float2 unpackFloat32x2_(uint b0, uint b1, uint b2, uint b3, uint b4, uint b5, uint b6, uint b7) {
+        return metal::float2(as_type<float>(b3 << 24 | b2 << 16 | b1 << 8 | b0), as_type<float>(b7 << 24 | b6 << 16 | b5 << 8 | b4));
+    }
+    uint unpackUint32_(uint b0, uint b1, uint b2, uint b3) {
+        return (b3 << 24 | b2 << 16 | b1 << 8 | b0);
+    }
+    
+    struct vs_mainOutput {
+        metal::float4 clip_position [[position]];
+        metal::float4 color [[user(loc0), center_perspective]];
+        metal::float2 tex_coord [[user(loc1), center_perspective]];
+        uint block_type [[user(loc2), flat]];
+    };
+    struct vb_15_type { metal::uchar data[24]; };
+    vertex vs_mainOutput vs_main(
+      constant CameraUniform& camera [[buffer(0)]]
+    , uint v_id [[vertex_id]]
+    , const device vb_15_type* vb_15_in [[buffer(15)]]
+    , constant _mslBufferSizes& _buffer_sizes [[buffer(1)]]
+    ) {
+        metal::float3 position = {};
+        metal::float2 tex_coord = {};
+        uint block_type = {};
+        if (v_id < (_buffer_sizes.buffer_size15 / 24)) {
+            const vb_15_type vb_15_elem = vb_15_in[v_id];
+            position = unpackFloat32x3_(vb_15_elem.data[0], vb_15_elem.data[1], vb_15_elem.data[2], vb_15_elem.data[3], vb_15_elem.data[4], vb_15_elem.data[5], vb_15_elem.data[6], vb_15_elem.data[7], vb_15_elem.data[8], vb_15_elem.data[9], vb_15_elem.data[10], vb_15_elem.data[11]);
+            tex_coord = unpackFloat32x2_(vb_15_elem.data[12], vb_15_elem.data[13], vb_15_elem.data[14], vb_15_elem.data[15], vb_15_elem.data[16], vb_15_elem.data[17], vb_15_elem.data[18], vb_15_elem.data[19]);
+            block_type = unpackUint32_(vb_15_elem.data[20], vb_15_elem.data[21], vb_15_elem.data[22], vb_15_elem.data[23]);
+        }
+        const VertexInput model = { position, tex_coord, block_type };
+        VertexOutput out = {};
+        out.tex_coord = model.tex_coord;
+        out.block_type = model.block_type;
+        metal::float4x4 _e9 = camera.view_proj;
+        out.clip_position = _e9 * metal::float4(model.position, 1.0);
+        VertexOutput _e14 = out;
+        const auto _tmp = _e14;
+        return vs_mainOutput { _tmp.clip_position, _tmp.color, _tmp.tex_coord, _tmp.block_type };
+    }
+    
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("block_textures"), space: Handle, binding: Some(ResourceBinding { group: 1, binding: 0 }), ty: [4], init: None }
+[2025-12-26T18:00:13Z DEBUG naga::valid::interface] var GlobalVariable { name: Some("sampler_block"), space: Handle, binding: Some(ResourceBinding { group: 1, binding: 1 }), ty: [5], init: None }
+[2025-12-26T18:00:13Z DEBUG wgpu_hal::metal::device] Naga generated shader for entry point 'fs_main' and stage Fragment
+    // language: metal3.1
+    #include <metal_stdlib>
+    #include <simd/simd.h>
+    
+    using metal::uint;
+    
+    struct VertexOutput {
+        metal::float4 clip_position;
+        metal::float4 color;
+        metal::float2 tex_coord;
+        uint block_type;
+        char _pad4[4];
+    };
+    
+    struct fs_mainInput {
+        metal::float4 color [[user(loc0), center_perspective]];
+        metal::float2 tex_coord [[user(loc1), center_perspective]];
+        uint block_type [[user(loc2), flat]];
+    };
+    struct fs_mainOutput {
+        metal::float4 member [[color(0)]];
+    };
+    fragment fs_mainOutput fs_main(
+      fs_mainInput varyings [[stage_in]]
+    , metal::float4 clip_position [[position]]
+    , metal::texture2d_array<float, metal::access::sample> block_textures [[texture(0)]]
+    , metal::sampler sampler_block [[sampler(0)]]
+    ) {
+        const VertexOutput in = { clip_position, varyings.color, varyings.tex_coord, varyings.block_type };
+        metal::float4 _e5 = block_textures.sample(sampler_block, in.tex_coord, in.block_type);
+        return fs_mainOutput { _e5 };
+    }
+    
+Generating chunk mesh...
+Chunk mesh generated.

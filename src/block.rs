@@ -1,5 +1,7 @@
 use glam::Vec4;
 
+use crate::graphics::textures::TextureHandle;
+
 // TODO: fancy optimizations for blocks
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -27,5 +29,25 @@ impl Block {
             Block::Dirt => Vec4::new(0.59, 0.29, 0.0, 1.0),
             Block::Stone => Vec4::new(0.5, 0.5, 0.5, 1.0),
         }
+    }
+}
+
+pub struct BlockTextureAtlas {
+    textures: [TextureHandle; 256],
+}
+
+impl BlockTextureAtlas {
+    pub fn new(default_texture: TextureHandle) -> Self {
+        Self {
+            textures: [default_texture; 256],
+        }
+    }
+
+    pub fn set_texture_handle(&mut self, block: Block, handle: TextureHandle) {
+        self.textures[block as usize] = handle;
+    }
+
+    pub fn get_texture_handle(&self, block: Block) -> &TextureHandle {
+        &self.textures[block as usize]
     }
 }

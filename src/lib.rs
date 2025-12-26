@@ -7,15 +7,17 @@ use log::info;
 use wgpu::{Color, PrimitiveState, TextureFormat, TextureUsages};
 
 use crate::{
-    block::Block,
+    block::{Block, BlockTextureAtlas},
     chunk::Chunk,
     graphics::{
         camera::Camera,
+        image::Image,
         lowlevel::{
             WgpuInstance,
             buf::{UniformBuffer, VertexLayout},
         },
         mesh::BlockVertex,
+        textures::Textures,
     },
     input::{
         camera::CameraController,
@@ -52,6 +54,8 @@ pub struct QuackCraft<'a> {
     depth_texture: graphics::lowlevel::depth::DepthTexture<'a>,
     camera: Rc<RefCell<CameraController<'a>>>,
     camera_bind_group: wgpu::BindGroup,
+    block_textures: Textures<'a>,
+    blocks_bind_group: wgpu::BindGroup,
 }
 
 impl<'a> QuackCraft<'a> {
@@ -69,21 +73,35 @@ impl<'a> QuackCraft<'a> {
         );
 
         let keyboard = Rc::new(RefCell::new(Keyboard::new()));
-
         let camera = Rc::new(RefCell::new(CameraController::new(wgpu.clone())));
+        let (camera_layout, camera_bind_group) = camera.borrow().bind_group(0);
 
         let closure_camera = camera.clone();
-
         CameraController::register_callback(closure_camera.clone(), &window);
 
         window.set_mouse_mode(glfw::CursorMode::Disabled);
 
-        let (camera_layout, camera_bind_group) = camera.borrow().bind_group(0);
+        let mut blocks = Textures::new(wgpu.clone(), Some("block textures"), (16, 16));
 
-        let layout = wgpu.pipeline_layout(None, &[&camera_layout]);
+        let handle = blocks.add_texture(
+            "dirt",
+            Image::from_mem(include_bytes!("../dirt.png"))
+                .expect("unable to read dirt")
+                .pixel_bytes()
+                .clone(),
+        );
+
+        let mut atlas = BlockTextureAtlas::new(0);
+        atlas.set_texture_handle(Block::Dirt, handle);
+
+        let texture = blocks.gpu_texture();
+
+        let (blocks_bind_layout, blocks_bind_group) =
+            texture.layout_and_bind_group(Some("block textures"), 1, 0);
 
         let depth_texture = wgpu.depth_texture();
 
+        let layout = wgpu.pipeline_layout(None, &[&camera_layout, &blocks_bind_layout]);
         let pipeline = wgpu.pipeline(
             Some("main pipeline"),
             &program,
@@ -115,8 +133,8 @@ impl<'a> QuackCraft<'a> {
             }
         }
 
-        for x in -32..32 {
-            for y in -32..32 {
+        for x in -16..16 {
+            for y in -8..8 {
                 for z in -16..16 {
                     world.push_chunk((x, y, z), chunk.clone());
                 }
@@ -125,7 +143,10 @@ impl<'a> QuackCraft<'a> {
 
         println!("Generating chunk mesh...");
 
-        world.render_state.borrow_mut().generate_mesh(&world);
+        world
+            .render_state
+            .borrow_mut()
+            .generate_mesh(&world, &atlas);
 
         println!("Chunk mesh generated.");
 
@@ -138,6 +159,8 @@ impl<'a> QuackCraft<'a> {
             camera_bind_group,
             depth_texture,
             world,
+            block_textures: blocks,
+            blocks_bind_group,
         })))
     }
 
@@ -206,6 +229,7 @@ impl<'a> QuackCraft<'a> {
             Some(self.depth_texture.attachment()),
         );
 
+        pass.set_bind_group(1, &self.blocks_bind_group, &[]);
         pass.set_bind_group(0, &self.camera_bind_group, &[]);
         pass.set_pipeline(&self.pipelines[0]);
 

@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    num::NonZeroU32,
     rc::{Rc, Weak},
     sync::Arc,
 };
@@ -14,12 +15,15 @@ use wgpu::{
     TextureView, util::DeviceExt,
 };
 
-use crate::graphics::{
-    image::Image,
-    lowlevel::{
-        buf::{IndexBuffer, IndexLayout, UniformBuffer, VertexBuffer, VertexLayout},
-        shader::ShaderProgram,
-        texture::Texture,
+use crate::{
+    ReadOnly,
+    graphics::{
+        image::Image,
+        lowlevel::{
+            buf::{IndexBuffer, IndexLayout, UniformBuffer, VertexBuffer, VertexLayout},
+            shader::ShaderProgram,
+            texture::Texture,
+        },
     },
 };
 
@@ -222,14 +226,17 @@ impl<'a> WgpuInstance<'a> {
         label: Option<&str>,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
-        image: &Image,
+        dims: (u32, u32),
+        image: &[ReadOnly<u8>],
     ) -> Texture<'a> {
+        assert!(!image.is_empty(), "Image slice must not be empty");
+        let (width, height) = dims;
         let size = wgpu::Extent3d {
-            width: image.width(),
-            height: image.height(),
-            depth_or_array_layers: 1,
+            width,
+            height,
+            depth_or_array_layers: image.len() as u32,
         };
-        // TODO: Mip level and sample count should probably be configurable.
+
         let text = self.create_texture(&wgpu::TextureDescriptor {
             label,
             size,
@@ -246,7 +253,7 @@ impl<'a> WgpuInstance<'a> {
             visibility: wgpu::ShaderStages::FRAGMENT,
             ty: wgpu::BindingType::Texture {
                 multisampled: false,
-                view_dimension: wgpu::TextureViewDimension::D2,
+                view_dimension: wgpu::TextureViewDimension::D2Array,
                 // TODO: Allow this to be configurable based on texture format.
                 // Minecraft clone probably means that using a integer format is easier.
                 sample_type: wgpu::TextureSampleType::Float { filterable: false },
@@ -254,23 +261,28 @@ impl<'a> WgpuInstance<'a> {
             count: None,
         };
 
-        self.queue.write_texture(
-            wgpu::TexelCopyTextureInfoBase {
-                texture: &text,
-                mip_level: 0,
-                origin: Origin3d::ZERO,
-                aspect: TextureAspect::All,
-            },
-            image.pixel_bytes(),
-            wgpu::TexelCopyBufferLayout {
-                offset: 0,
-                bytes_per_row: Some(4 * image.width()),
-                rows_per_image: Some(image.height()),
-            },
-            size,
-        );
+        for (i, image) in image.iter().enumerate() {
+            self.queue.write_texture(
+                wgpu::TexelCopyTextureInfoBase {
+                    texture: &text,
+                    mip_level: 0,
+                    origin: Origin3d::ZERO,
+                    aspect: TextureAspect::All,
+                },
+                image.as_ref(),
+                wgpu::TexelCopyBufferLayout {
+                    offset: (i * (4 * width as usize * height as usize)) as u64,
+                    bytes_per_row: Some(4 * width),
+                    rows_per_image: Some(height),
+                },
+                size,
+            );
+        }
 
-        let texture_view = text.create_view(&wgpu::TextureViewDescriptor::default());
+        let texture_view = text.create_view(&wgpu::TextureViewDescriptor {
+            dimension: Some(wgpu::TextureViewDimension::D2Array),
+            ..Default::default()
+        });
 
         let sampler = self.default_sampler.clone().expect("no default sampler!");
 
@@ -288,6 +300,7 @@ impl<'a> WgpuInstance<'a> {
             sampler,
             sampler_layout,
             texture_view,
+            image.len(),
         )
     }
 

@@ -7,6 +7,7 @@ use crate::{
     graphics::{
         CardinalDirection,
         lowlevel::buf::{IndexBuffer, VertexBuffer, VertexLayout},
+        textures::TextureHandle,
     },
 };
 #[derive(Clone, Debug)]
@@ -62,6 +63,9 @@ pub const FACE_TABLE: [[[f32; 3]; 4]; 6] = [
 
 pub const FACE_INDICES: [u16; 6] = [0, 1, 2, 2, 3, 0];
 
+/// Texture coordinates for a face (assuming a square texture)
+pub const TEX_COORDS: [[f32; 2]; 4] = [[1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]];
+
 impl BlockMesh {
     pub fn new(vertices: Vec<BlockVertex>, indices: Vec<u16>) -> Self {
         Self { vertices, indices }
@@ -89,7 +93,7 @@ impl BlockMesh {
     /// Emits a face for the given block position in the given direction.
     pub fn emit_face(
         &mut self,
-        block: &Block,
+        handle: &TextureHandle,
         position: BlockPosition,
         direction: CardinalDirection,
     ) {
@@ -102,10 +106,10 @@ impl BlockMesh {
             face[1] += position.1 as f32;
             face[2] += position.2 as f32;
 
-            let color = block.color();
             let vertex = BlockVertex {
                 position: *face,
-                color: [color.x, color.y, color.z, color.w],
+                tex_coord: TEX_COORDS[i],
+                block_type: *handle,
             };
 
             face_indices[i] = self.push_vertex(vertex);
@@ -171,7 +175,8 @@ impl BlockMesh {
 #[repr(C)]
 pub struct BlockVertex {
     position: [f32; 3],
-    color: [f32; 4],
+    tex_coord: [f32; 2],
+    block_type: u32,
 }
 
 impl BlockVertex {
@@ -182,9 +187,9 @@ impl BlockVertex {
             .zip(other.position.iter())
             .all(|(a, b)| (a - b).abs() < f32::EPSILON);
         let color_eq = self
-            .color
+            .tex_coord
             .iter()
-            .zip(other.color.iter())
+            .zip(other.tex_coord.iter())
             .all(|(a, b)| (a - b).abs() < f32::EPSILON);
         pos_eq && color_eq
     }
@@ -202,7 +207,8 @@ unsafe impl VertexLayout for BlockVertex {
         step_mode: wgpu::VertexStepMode::Vertex,
         attributes: &wgpu::vertex_attr_array![
             0 => Float32x3, // position
-            1 => Float32x4, // color
+            1 => Float32x2, // color
+            2 => Uint32,    // block type
         ],
     };
 }

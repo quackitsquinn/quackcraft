@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     BlockPosition, ChunkPosition,
-    block::Block,
+    block::{Block, BlockTextureAtlas},
     graphics::{
         CardinalDirection,
         lowlevel::{
@@ -88,7 +88,12 @@ impl<'a> ChunkRenderState<'a> {
     }
 
     /// Generates the mesh for the `chunk` `at`
-    pub fn generate_mesh(&mut self, chunk: &Chunk<'a>, at: ChunkPosition) -> &BlockMesh {
+    pub fn generate_mesh(
+        &mut self,
+        chunk: &Chunk<'a>,
+        at: ChunkPosition,
+        with: &BlockTextureAtlas,
+    ) -> &BlockMesh {
         let mut mesh = BlockMesh::empty();
 
         for x in 0..16 {
@@ -105,7 +110,7 @@ impl<'a> ChunkRenderState<'a> {
                             // For now, were just going to assume that out-of-bounds blocks are air.
                             // This is a bigger problem in this engine since chunks are only 16x16x16, rather than 16x256x16.
                             if !chunk.inspect_block(dir.offset_pos(true_pos)).is_solid() {
-                                mesh.emit_face(&block, true_pos, dir);
+                                mesh.emit_face(with.get_texture_handle(block), true_pos, dir);
                             }
                         });
                     }
