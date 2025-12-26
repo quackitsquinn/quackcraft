@@ -2,7 +2,7 @@ use std::{cell::RefCell, iter, rc::Rc, sync::Arc};
 
 use bytemuck::Pod;
 use glam::{Mat4, Vec2, Vec3, vec2};
-use glfw::WindowEvent;
+use glfw::{Action, Key, WindowEvent};
 use log::info;
 use wgpu::{Color, PrimitiveState, TextureFormat, TextureUsages};
 
@@ -67,27 +67,10 @@ impl<'a> QuackCraft<'a> {
         let camera = Rc::new(RefCell::new(CameraController::new(wgpu.clone())));
 
         let closure_camera = camera.clone();
-        let mut last = Vec2::ZERO;
-        let mut first_mouse = true;
 
-        window.register_mouse_pos_callback(Some("camera"), move |(x, y)| {
-            let container = closure_camera.clone();
-            let mut camera = container.borrow_mut();
-            let pos = vec2(x as f32, y as f32);
-            if first_mouse {
-                last = pos;
-                first_mouse = false;
-                return;
-            }
+        CameraController::register_callback(closure_camera.clone(), &window);
 
-            let mut offset = pos - last;
-            last = pos;
-
-            // Invert y-axis for typical FPS camera control
-            offset *= Vec2::NEG_Y;
-
-            camera.process_rot(offset);
-        });
+        window.set_mouse_mode(glfw::CursorMode::Disabled);
 
         let (camera_layout, camera_bind_group) = camera.borrow().bind_group(0);
 

@@ -1,9 +1,12 @@
 use std::sync::Arc;
 
-use glfw::{Glfw, GlfwReceiver, PWindow, Window};
+use glfw::{Context, Glfw, GlfwReceiver, PWindow, Window};
 use log::*;
 
-use crate::{ReadOnlyString, graphics::callback::GlfwCallbackProxy};
+use crate::{
+    ReadOnlyString,
+    graphics::callback::{GlfwCallbackProxy, TargetHandle},
+};
 
 #[derive(Debug)]
 pub struct GlfwWindow {
@@ -47,15 +50,31 @@ impl GlfwWindow {
         self.glfw.poll_events();
     }
 
+    /// Sets the mouse cursor mode.
+    pub fn set_mouse_mode(&self, mode: glfw::CursorMode) {
+        // So this isn't allowed.. but we have a way around it.
+        // Since glfw is a c library, we can just call the function directly.
+        // This is fine since a. GlfwWindow: !Send and b. we know the pointer is valid.
+        unsafe {
+            glfw::ffi::glfwSetInputMode(
+                self.window.window_ptr(),
+                glfw::ffi::GLFW_CURSOR,
+                mode as i32,
+            );
+        }
+    }
+
+    #[must_use = "The returned TargetHandle must be kept alive to keep the callback registered."]
     pub fn register_mouse_pos_callback<F>(
         &self,
         label: Option<impl Into<ReadOnlyString>>,
         callback: F,
-    ) where
+    ) -> TargetHandle<(f64, f64)>
+    where
         F: FnMut((f64, f64)) + 'static,
     {
         self.mouse_pos_proxy
-            .add_target(callback, label.map(|l| l.into()));
+            .add_target(callback, label.map(|l| l.into()))
     }
 }
 

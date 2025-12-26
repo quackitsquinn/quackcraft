@@ -15,6 +15,8 @@ pub struct GlfwCallbackProxy<T: Copy>(Arc<CallbackProxy<T>>);
 
 type RefVec<T> = RefCell<Vec<T>>;
 
+pub type TargetHandle<T> = Rc<RefCell<dyn FnMut(T)>>;
+
 struct CallbackProxy<Args>
 where
     Args: Copy,
@@ -38,7 +40,7 @@ where
         &self,
         callback: impl FnMut(Args) + 'static,
         label: Option<ReadOnlyString>,
-    ) -> Rc<RefCell<dyn FnMut(Args)>> {
+    ) -> TargetHandle<Args> {
         let rc_callback: Rc<RefCell<dyn FnMut(Args)>> = Rc::new(RefCell::new(callback));
         let weak_callback = Rc::downgrade(&rc_callback);
         let callback_target = Rc::new(CallbackTarget::new(weak_callback, label));

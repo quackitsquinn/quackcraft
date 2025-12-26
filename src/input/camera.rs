@@ -1,8 +1,15 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::RefCell,
+    rc::{Rc, Weak},
+};
 
-use glam::{Mat4, Vec2, Vec3};
+use glam::{Mat4, Vec2, Vec3, vec2};
+use log::info;
 
-use crate::graphics::{Wgpu, camera::Camera, lowlevel::buf::UniformBuffer};
+use crate::{
+    graphics::{Wgpu, callback::TargetHandle, camera::Camera, lowlevel::buf::UniformBuffer},
+    window::GlfwWindow,
+};
 
 pub struct CameraController<'a> {
     pub pos: Vec2,
@@ -10,6 +17,7 @@ pub struct CameraController<'a> {
     pub rot: Vec2,
     camera: Camera,
     uniform: UniformBuffer<'a, Mat4>,
+    callback_handle: Option<TargetHandle<(f64, f64)>>,
     wgpu: Wgpu<'a>,
 }
 
@@ -27,6 +35,7 @@ impl CameraController<'_> {
             camera,
             uniform,
             pos: Vec2::ZERO,
+            callback_handle: None,
             rot: Vec2::ZERO,
         }
     }
@@ -41,6 +50,11 @@ impl CameraController<'_> {
 
         let yaw_radians = self.rot.x.to_radians();
         let pitch_radians = self.rot.y.to_radians();
+
+        info!(
+            "Camera rotation updated: yaw = {}, pitch = {}",
+            yaw_radians, pitch_radians
+        );
 
         self.camera.set_orientation(yaw_radians, pitch_radians);
     }
@@ -104,5 +118,35 @@ impl CameraController<'_> {
             layout.clone(),
             self.bind_group_with_layout(&layout, binding),
         )
+    }
+
+    /// Registers mouse movement callbacks to control the camera rotation.
+    pub fn register_callback(this: Rc<RefCell<CameraController<'static>>>, window: &GlfwWindow) {
+        let closure_camera = this.clone();
+        let mut last = Vec2::ZERO;
+        let mut first_mouse = true;
+        let handle = window.register_mouse_pos_callback(Some("camera"), move |(x, y)| {
+            let container = closure_camera.clone();
+            let mut camera = container.borrow_mut();
+            println!("Mouse callback invoked: x = {}, y = {}", x, y);
+            let pos = vec2(x as f32, y as f32);
+            if first_mouse {
+                last = pos;
+                first_mouse = false;
+                return;
+            }
+
+            let mut offset = pos - last;
+            last = pos;
+
+            // Invert y-axis for typical FPS camera control
+            offset *= Vec2::NEG_Y + Vec2::X;
+
+            info!("Mouse moved: offset = {:?}", offset);
+
+            camera.process_rot(offset);
+        });
+
+        this.borrow_mut().callback_handle = Some(handle);
     }
 }
