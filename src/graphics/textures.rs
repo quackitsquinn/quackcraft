@@ -4,7 +4,7 @@ use wgpu::{TextureFormat, TextureUsages};
 
 use crate::{
     ReadOnly, ReadOnlyString,
-    graphics::{Wgpu, lowlevel::texture::Texture},
+    graphics::{Wgpu, image::Image, lowlevel::texture::Texture},
 };
 
 pub type TextureHandle = u32;
@@ -39,6 +39,47 @@ impl<'a> Textures<'a> {
         self.buf.push(data);
         self.textures.insert(name.to_string(), handle);
         handle
+    }
+
+    /// Loads a texture from a file path.
+    pub fn load_texture_from_file(
+        &mut self,
+        name: &str,
+        path: &str,
+    ) -> anyhow::Result<(TextureHandle, Image)> {
+        let img = Image::from_file(path)?;
+        let (width, height) = img.dimensions();
+        if width != self.dimensions.0 || height != self.dimensions.1 {
+            anyhow::bail!(
+                "Texture dimensions do not match atlas dimensions: expected {}x{}, got {}x{}",
+                self.dimensions.0,
+                self.dimensions.1,
+                width,
+                height
+            );
+        }
+
+        Ok((self.add_texture(name, img.pixel_bytes().clone()), img))
+    }
+
+    pub fn load_texture(
+        &mut self,
+        name: &str,
+        data: &[u8],
+    ) -> anyhow::Result<(TextureHandle, Image)> {
+        let img = Image::from_mem(data)?;
+        let (width, height) = img.dimensions();
+        if width != self.dimensions.0 || height != self.dimensions.1 {
+            anyhow::bail!(
+                "Texture dimensions do not match atlas dimensions: expected {}x{}, got {}x{}",
+                self.dimensions.0,
+                self.dimensions.1,
+                width,
+                height
+            );
+        }
+
+        Ok((self.add_texture(name, img.pixel_bytes().clone()), img))
     }
 
     /// Adds multiple textures from an iterator of (name, data) pairs.

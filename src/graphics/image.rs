@@ -12,13 +12,23 @@ pub struct Image {
 
 impl Image {
     /// Creates an Image from raw bytes.
-    pub fn from_mem(raw_bytes: &'static [u8]) -> anyhow::Result<Self> {
+    pub fn from_mem(raw_bytes: &[u8]) -> anyhow::Result<Self> {
         let image = image::load_from_memory(raw_bytes)?;
         let rgba_image = image.to_rgba8();
         let pixel_bytes: Arc<[u8]> = Arc::from(rgba_image.as_raw().as_slice());
         let image =
             ImageBuffer::from_raw(rgba_image.width(), rgba_image.height(), pixel_bytes.clone())
                 .ok_or(anyhow!("failed to create image buffer!"))?;
+
+        Ok(Self { image, pixel_bytes })
+    }
+
+    /// Creates an Image from a file path.
+    pub fn from_file(path: &str) -> anyhow::Result<Self> {
+        let image = image::open(path)?.to_rgba8();
+        let pixel_bytes: Arc<[u8]> = Arc::from(image.as_raw().as_slice());
+        let image = ImageBuffer::from_raw(image.width(), image.height(), pixel_bytes.clone())
+            .ok_or(anyhow!("failed to create image buffer!"))?;
 
         Ok(Self { image, pixel_bytes })
     }
@@ -31,6 +41,11 @@ impl Image {
     /// Returns the height of the image.
     pub fn height(&self) -> u32 {
         self.image.height()
+    }
+
+    /// Returns the dimensions of the image as (width, height).
+    pub fn dimensions(&self) -> (u32, u32) {
+        (self.image.width(), self.image.height())
     }
 
     /// Returns the raw pixel bytes of the image in RGBA format.

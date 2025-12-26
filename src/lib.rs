@@ -90,29 +90,14 @@ impl<'a> QuackCraft<'a> {
             "invalid texture not in slot zero"
         );
 
-        let dirt_handle = blocks.add_texture(
-            "dirt",
-            Image::from_mem(include_bytes!("../dirt.png"))
-                .expect("unable to read dirt")
-                .pixel_bytes()
-                .clone(),
-        );
+        let (dirt_handle, dirt_image) =
+            blocks.load_texture("dirt", include_bytes!("../dirt.png"))?;
 
-        let grass_top = blocks.add_texture(
-            "grass_top",
-            Image::from_mem(include_bytes!("../grass_block_top.png"))
-                .expect("unable to read grass_top")
-                .pixel_bytes()
-                .clone(),
-        );
+        let (grass_top, grass_top_image) =
+            blocks.load_texture("grass_top", include_bytes!("../grass_block_top.png"))?;
 
-        let grass_side = blocks.add_texture(
-            "grass_side",
-            Image::from_mem(include_bytes!("../grass_block_side.png"))
-                .expect("unable to read grass_side")
-                .pixel_bytes()
-                .clone(),
-        );
+        let (grass_side, grass_side_image) =
+            blocks.load_texture("grass_side", include_bytes!("../grass_block_side.png"))?;
 
         info!("grass_top handle: {}", grass_top);
         info!("grass_side handle: {}", grass_side);
