@@ -47,7 +47,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     return textureSample(
         block_textures,
         sampler_block,
-        in.tex_coord,
+        vec2<f32>(1.0) - in.tex_coord,
         in.block_type,
     );
 }

@@ -41,6 +41,39 @@ impl<'a> Textures<'a> {
         handle
     }
 
+    /// Adds multiple textures from an iterator of (name, data) pairs.
+    pub fn add_textures(
+        &mut self,
+        textures: impl IntoIterator<Item = (String, ReadOnly<u8>)>,
+    ) -> TextureHandle {
+        let base = self.buf.len() as TextureHandle;
+        for (name, data) in textures {
+            self.add_texture(&name, data);
+        }
+        base
+    }
+
+    pub fn push_invalid_texture(&mut self) -> TextureHandle {
+        let mut data = vec![0u8; (self.dimensions.0 * self.dimensions.1 * 4) as usize];
+        for (i, px) in data.chunks_mut(self.dimensions.0 as usize * 4).enumerate() {
+            let is_bottom_half = i >= (self.dimensions.1 as usize / 2);
+            for j in 0..(self.dimensions.0 as usize) {
+                let offset = j * 4;
+                let is_right_half = j >= (self.dimensions.0 as usize / 2);
+                if !(is_bottom_half ^ is_right_half) {
+                    px[offset + 3] = 255;
+                    continue;
+                }
+                px[offset] = 255;
+                px[offset + 1] = 0;
+                px[offset + 2] = 255;
+                px[offset + 3] = 255;
+            }
+        }
+
+        self.add_texture("invalid_texture", data.into())
+    }
+
     /// Retrieves a texture handle by name.
     pub fn get_texture(&self, name: &str) -> Option<&TextureHandle> {
         self.textures.get(name)

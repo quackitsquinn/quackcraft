@@ -9,6 +9,7 @@ pub enum Block {
     Air = 0,
     Dirt = 1,
     Stone = 2,
+    Grass = 3,
 }
 
 impl Block {
@@ -22,16 +23,11 @@ impl Block {
         // So, I decided to go with the match statement for now, as it seems to be the most efficient in both cases.
         !matches!(self, Block::Air)
     }
-
-    pub fn color(&self) -> Vec4 {
-        match self {
-            Block::Air => Vec4::new(0.0, 0.0, 0.0, 0.0),
-            Block::Dirt => Vec4::new(0.59, 0.29, 0.0, 1.0),
-            Block::Stone => Vec4::new(0.5, 0.5, 0.5, 1.0),
-        }
-    }
 }
 
+// TODO: The texture atlas being just a texture handle that you increment for unique side textures is... not great.
+// I think that it's a good solution in spirit, but the current lack of abstraction makes it super error-prone.
+// This can probably be made into just an actual TextureHandle struct that handles all of this internally.
 pub struct BlockTextureAtlas {
     textures: [TextureHandle; 256],
 }
@@ -47,7 +43,27 @@ impl BlockTextureAtlas {
         self.textures[block as usize] = handle;
     }
 
-    pub fn get_texture_handle(&self, block: Block) -> &TextureHandle {
-        &self.textures[block as usize]
+    pub fn get_base_handle(&self, block: Block) -> TextureHandle {
+        self.textures[block as usize]
+    }
+
+    /// Returns the texture index for the given face of the block.
+    pub fn face_texture_index(
+        &self,
+        block: Block,
+        direction: crate::graphics::CardinalDirection,
+    ) -> TextureHandle {
+        match block {
+            Block::Grass => {
+                let grass_base = self.get_base_handle(Block::Grass);
+                // Grass has different textures for top, bottom, and sides
+                match direction {
+                    crate::graphics::CardinalDirection::Up => grass_base, // Top texture
+                    crate::graphics::CardinalDirection::Down => self.get_base_handle(Block::Dirt), // Bottom texture
+                    _ => grass_base + 1, // Side texture
+                }
+            }
+            _ => self.get_base_handle(block),
+        }
     }
 }

@@ -10,6 +10,7 @@ use crate::{
     block::{Block, BlockTextureAtlas},
     chunk::Chunk,
     graphics::{
+        Wgpu,
         camera::Camera,
         image::Image,
         lowlevel::{
@@ -47,7 +48,7 @@ mod world;
 /// The main game structure.
 pub struct QuackCraft<'a> {
     window: window::GlfwWindow,
-    wgpu: Rc<graphics::lowlevel::WgpuInstance<'a>>,
+    wgpu: Wgpu<'a>,
     keyboard: Rc<RefCell<Keyboard>>,
     pipelines: Vec<wgpu::RenderPipeline>,
     world: World<'a>,
@@ -83,7 +84,13 @@ impl<'a> QuackCraft<'a> {
 
         let mut blocks = Textures::new(wgpu.clone(), Some("block textures"), (16, 16));
 
-        let handle = blocks.add_texture(
+        assert_eq!(
+            blocks.push_invalid_texture(),
+            0,
+            "invalid texture not in slot zero"
+        );
+
+        let dirt_handle = blocks.add_texture(
             "dirt",
             Image::from_mem(include_bytes!("../dirt.png"))
                 .expect("unable to read dirt")
@@ -91,8 +98,29 @@ impl<'a> QuackCraft<'a> {
                 .clone(),
         );
 
+        let grass_top = blocks.add_texture(
+            "grass_top",
+            Image::from_mem(include_bytes!("../grass_block_top.png"))
+                .expect("unable to read grass_top")
+                .pixel_bytes()
+                .clone(),
+        );
+
+        let grass_side = blocks.add_texture(
+            "grass_side",
+            Image::from_mem(include_bytes!("../grass_block_side.png"))
+                .expect("unable to read grass_side")
+                .pixel_bytes()
+                .clone(),
+        );
+
+        info!("grass_top handle: {}", grass_top);
+        info!("grass_side handle: {}", grass_side);
+        info!("dirt handle: {}", dirt_handle);
+
         let mut atlas = BlockTextureAtlas::new(0);
-        atlas.set_texture_handle(Block::Dirt, handle);
+        atlas.set_texture_handle(Block::Dirt, dirt_handle);
+        atlas.set_texture_handle(Block::Grass, grass_top);
 
         let texture = blocks.gpu_texture();
 
@@ -127,7 +155,7 @@ impl<'a> QuackCraft<'a> {
                     chunk.data[i + 4][j + 4][k + 4] = if (i + j + k) % 2 == 0 {
                         Block::Dirt
                     } else {
-                        Block::Stone
+                        Block::Grass
                     }
                 }
             }

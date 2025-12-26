@@ -8,6 +8,7 @@ use std::{
 use anyhow::Context;
 use bytemuck::Pod;
 use image::buffer;
+use log::debug;
 use wgpu::{
     self as w, Color, CommandBuffer, CommandEncoder, CompareFunction, Device, DeviceDescriptor,
     Instance, InstanceDescriptor, Origin3d, PowerPreference, Queue, RenderPass,
@@ -261,17 +262,28 @@ impl<'a> WgpuInstance<'a> {
             count: None,
         };
 
+        let size = wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        };
+
         for (i, image) in image.iter().enumerate() {
+            debug!("Uploading texture layer {} ({} bytes)", i, image.len());
             self.queue.write_texture(
                 wgpu::TexelCopyTextureInfoBase {
                     texture: &text,
                     mip_level: 0,
-                    origin: Origin3d::ZERO,
+                    origin: Origin3d {
+                        x: 0,
+                        y: 0,
+                        z: i as u32,
+                    },
                     aspect: TextureAspect::All,
                 },
                 image.as_ref(),
                 wgpu::TexelCopyBufferLayout {
-                    offset: (i * (4 * width as usize * height as usize)) as u64,
+                    offset: 0,
                     bytes_per_row: Some(4 * width),
                     rows_per_image: Some(height),
                 },

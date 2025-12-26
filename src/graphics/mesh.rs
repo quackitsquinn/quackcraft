@@ -16,55 +16,55 @@ pub struct BlockMesh {
     indices: Vec<u16>,
 }
 
-pub const FACE_TABLE: [[[f32; 3]; 4]; 6] = [
+pub const FACE_TABLE: [[([f32; 3], [f32; 2]); 4]; 6] = [
     // +X
     [
-        [1.0, 0.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 0.0],
-        [1.0, 0.0, 0.0],
+        ([1.0, 0.0, 1.0], [0.0, 0.0]),
+        ([1.0, 1.0, 1.0], [0.0, 1.0]),
+        ([1.0, 1.0, 0.0], [1.0, 1.0]),
+        ([1.0, 0.0, 0.0], [1.0, 0.0]),
     ],
     // -X
     [
-        [0.0, 0.0, 1.0],
-        [0.0, 1.0, 1.0],
-        [0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0],
+        ([0.0, 0.0, 1.0], [0.0, 0.0]),
+        ([0.0, 1.0, 1.0], [0.0, 1.0]),
+        ([0.0, 1.0, 0.0], [1.0, 1.0]),
+        ([0.0, 0.0, 0.0], [1.0, 0.0]),
     ],
     // +Y
     [
-        [1.0, 1.0, 0.0],
-        [0.0, 1.0, 0.0],
-        [0.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
+        ([1.0, 1.0, 0.0], [1.0, 0.0]),
+        ([0.0, 1.0, 0.0], [0.0, 0.0]),
+        ([0.0, 1.0, 1.0], [0.0, 1.0]),
+        ([1.0, 1.0, 1.0], [1.0, 1.0]),
     ],
     // -Y
     [
-        [0.0, 0.0, 1.0],
-        [1.0, 0.0, 1.0],
-        [1.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0],
+        ([0.0, 0.0, 1.0], [0.0, 1.0]),
+        ([1.0, 0.0, 1.0], [1.0, 1.0]),
+        ([1.0, 0.0, 0.0], [1.0, 0.0]),
+        ([0.0, 0.0, 0.0], [0.0, 0.0]),
     ],
     // +Z
     [
-        [0.0, 1.0, 1.0],
-        [0.0, 0.0, 1.0],
-        [1.0, 0.0, 1.0],
-        [1.0, 1.0, 1.0],
+        ([0.0, 1.0, 1.0], [0.0, 1.0]),
+        ([0.0, 0.0, 1.0], [0.0, 0.0]),
+        ([1.0, 0.0, 1.0], [1.0, 0.0]),
+        ([1.0, 1.0, 1.0], [1.0, 1.0]),
     ],
     // -Z
     [
-        [1.0, 0.0, 0.0],
-        [1.0, 1.0, 0.0],
-        [0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0],
+        ([1.0, 0.0, 0.0], [1.0, 0.0]),
+        ([1.0, 1.0, 0.0], [1.0, 1.0]),
+        ([0.0, 1.0, 0.0], [0.0, 1.0]),
+        ([0.0, 0.0, 0.0], [0.0, 0.0]),
     ],
 ];
 
 pub const FACE_INDICES: [u16; 6] = [0, 1, 2, 2, 3, 0];
 
 /// Texture coordinates for a face (assuming a square texture)
-pub const TEX_COORDS: [[f32; 2]; 4] = [[1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]];
+pub const TEX_COORDS: [[f32; 2]; 4] = [[0.0, 1.0], [0.0, 0.0], [1.0, 0.0], [1.0, 1.0]];
 
 impl BlockMesh {
     pub fn new(vertices: Vec<BlockVertex>, indices: Vec<u16>) -> Self {
@@ -101,14 +101,16 @@ impl BlockMesh {
 
         let mut face_indices = [0; 6];
 
-        for (i, face) in face.iter_mut().enumerate() {
+        for (i, vert) in face.iter_mut().enumerate() {
+            let face = &mut vert.0;
+            let tex_coords = &vert.1;
             face[0] += position.0 as f32;
             face[1] += position.1 as f32;
             face[2] += position.2 as f32;
 
             let vertex = BlockVertex {
                 position: *face,
-                tex_coord: TEX_COORDS[i],
+                tex_coord: *tex_coords,
                 block_type: *handle,
             };
 
@@ -207,7 +209,7 @@ unsafe impl VertexLayout for BlockVertex {
         step_mode: wgpu::VertexStepMode::Vertex,
         attributes: &wgpu::vertex_attr_array![
             0 => Float32x3, // position
-            1 => Float32x2, // color
+            1 => Float32x2, // tex_coord
             2 => Uint32,    // block type
         ],
     };

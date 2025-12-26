@@ -110,7 +110,7 @@ impl<'a> ChunkRenderState<'a> {
                             // For now, were just going to assume that out-of-bounds blocks are air.
                             // This is a bigger problem in this engine since chunks are only 16x16x16, rather than 16x256x16.
                             if !chunk.inspect_block(dir.offset_pos(true_pos)).is_solid() {
-                                mesh.emit_face(with.get_texture_handle(block), true_pos, dir);
+                                mesh.emit_face(&with.face_texture_index(block, dir), true_pos, dir);
                             }
                         });
                     }

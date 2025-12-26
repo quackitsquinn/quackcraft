@@ -21,7 +21,7 @@ struct CallbackProxy<Args>
 where
     Args: Copy,
 {
-    targets: RefVec<Rc<CallbackTarget<Args>>>,
+    targets: RefVec<CallbackTarget<Args>>,
     suspended: RefCell<bool>,
 }
 // TODO: Reduce Copy into Clone?
@@ -45,8 +45,10 @@ where
     ) -> TargetHandle<Args> {
         let rc_callback: Rc<RefCell<dyn FnMut(Args)>> = Rc::new(RefCell::new(callback));
         let weak_callback = Rc::downgrade(&rc_callback);
-        let callback_target = Rc::new(CallbackTarget::new(weak_callback, label));
-        self.0.targets.borrow_mut().push(callback_target);
+        self.0
+            .targets
+            .borrow_mut()
+            .push(CallbackTarget::new(weak_callback, label));
         rc_callback
     }
 
