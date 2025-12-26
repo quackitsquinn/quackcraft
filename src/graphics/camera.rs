@@ -97,6 +97,11 @@ impl Camera {
         self.view
     }
 
+    /// Returns the front direction vector of the camera.
+    pub fn front(&self) -> Vec3 {
+        self.direction_vector
+    }
+
     /// Returns the combined projection and view matrix of the camera.
     pub fn projection_view_matrix(&self) -> Mat4 {
         OPENGL_TO_WGPU_MATRIX * self.projection * self.view

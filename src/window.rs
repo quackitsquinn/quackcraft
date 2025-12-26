@@ -5,7 +5,7 @@ use log::*;
 
 use crate::{
     ReadOnlyString,
-    graphics::callback::{GlfwCallbackProxy, TargetHandle},
+    graphics::callback::{Proxy, TargetHandle},
 };
 
 #[derive(Debug)]
@@ -14,7 +14,7 @@ pub struct GlfwWindow {
     /// The underlying GLFW window.
     pub window: Arc<PWindow>,
     pub event_receiver: GlfwReceiver<(f64, glfw::WindowEvent)>,
-    pub mouse_pos_proxy: GlfwCallbackProxy<(f64, f64)>,
+    pub mouse_pos_proxy: Proxy<(f64, f64)>,
 }
 
 impl GlfwWindow {
@@ -26,7 +26,10 @@ impl GlfwWindow {
             .create_window(width, height, title, glfw::WindowMode::Windowed)
             .ok_or_else(|| anyhow::anyhow!("Failed to create GLFW window"))?;
 
-        let proxy = GlfwCallbackProxy::new();
+        window.set_key_polling(true);
+        window.make_current();
+
+        let proxy = Proxy::new();
 
         let closure_proxy = proxy.clone();
         window.set_cursor_pos_callback(move |_, x, y| {
@@ -55,6 +58,7 @@ impl GlfwWindow {
         // So this isn't allowed.. but we have a way around it.
         // Since glfw is a c library, we can just call the function directly.
         // This is fine since a. GlfwWindow: !Send and b. we know the pointer is valid.
+        debug!("Setting mouse mode to {:?}", mode);
         unsafe {
             glfw::ffi::glfwSetInputMode(
                 self.window.window_ptr(),
@@ -62,6 +66,10 @@ impl GlfwWindow {
                 mode as i32,
             );
         }
+    }
+
+    pub fn get_mouse_mode(&self) -> glfw::CursorMode {
+        self.window.get_cursor_mode()
     }
 
     #[must_use = "The returned TargetHandle must be kept alive to keep the callback registered."]

@@ -9,9 +9,9 @@ use log::info;
 
 use crate::ReadOnlyString;
 
-/// A proxy for GLFW callbacks that allows multiple targets to be registered.
+/// A general purpose callback proxy for managing and invoking callbacks.
 #[derive(Clone)]
-pub struct GlfwCallbackProxy<T: Copy>(Arc<CallbackProxy<T>>);
+pub struct Proxy<T: Copy>(Arc<CallbackProxy<T>>);
 
 type RefVec<T> = RefCell<Vec<T>>;
 
@@ -22,9 +22,10 @@ where
     Args: Copy,
 {
     targets: RefVec<Rc<CallbackTarget<Args>>>,
+    suspended: RefCell<bool>,
 }
 // TODO: Reduce Copy into Clone?
-impl<Args> GlfwCallbackProxy<Args>
+impl<Args> Proxy<Args>
 where
     Args: Copy,
 {
@@ -32,6 +33,7 @@ where
     pub fn new() -> Self {
         Self(Arc::new(CallbackProxy {
             targets: RefCell::new(Vec::new()),
+            suspended: RefCell::new(false),
         }))
     }
 
@@ -50,6 +52,9 @@ where
 
     /// Invokes all registered target callbacks with the given arguments.
     pub fn invoke(&self, args: Args) {
+        if *self.0.suspended.borrow() {
+            return;
+        }
         let mut targets = self.0.targets.borrow_mut();
         targets.retain(|target| {
             if let Some(callback_rc) = target.callback.upgrade() {
@@ -65,9 +70,17 @@ where
             }
         });
     }
+
+    pub fn suspend(&self) {
+        *self.0.suspended.borrow_mut() = true;
+    }
+
+    pub fn unsuspend(&self) {
+        *self.0.suspended.borrow_mut() = false;
+    }
 }
 
-impl<T> Debug for GlfwCallbackProxy<T>
+impl<T> Debug for Proxy<T>
 where
     T: 'static + Copy,
 {

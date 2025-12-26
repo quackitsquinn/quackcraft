@@ -17,7 +17,10 @@ use crate::{
         },
         mesh::BlockVertex,
     },
-    input::camera::CameraController,
+    input::{
+        camera::CameraController,
+        keyboard::{self, Keyboard},
+    },
     world::World,
 };
 
@@ -43,6 +46,7 @@ mod world;
 pub struct QuackCraft<'a> {
     window: window::GlfwWindow,
     wgpu: Rc<graphics::lowlevel::WgpuInstance<'a>>,
+    keyboard: Rc<RefCell<Keyboard>>,
     pipelines: Vec<wgpu::RenderPipeline>,
     world: World<'a>,
     depth_texture: graphics::lowlevel::depth::DepthTexture<'a>,
@@ -63,6 +67,8 @@ impl<'a> QuackCraft<'a> {
             Some("fs_main"),
             wgpu::PipelineCompilationOptions::default(),
         );
+
+        let keyboard = Rc::new(RefCell::new(Keyboard::new()));
 
         let camera = Rc::new(RefCell::new(CameraController::new(wgpu.clone())));
 
@@ -127,6 +133,7 @@ impl<'a> QuackCraft<'a> {
             window,
             wgpu: wgpu.clone(),
             pipelines: vec![pipeline],
+            keyboard,
             camera,
             camera_bind_group,
             depth_texture,
@@ -146,6 +153,25 @@ impl<'a> QuackCraft<'a> {
 
     fn update_camera(&mut self, frame: u64) {
         let mut camera = self.camera.borrow_mut();
+        let keyboard = self.keyboard.borrow();
+        let speed = 0.2;
+        let front = camera.front();
+        if keyboard.is_key_held(Key::W) {
+            let front = camera.front();
+            camera.update_position(|c| c + front * speed);
+        }
+        if keyboard.is_key_held(Key::S) {
+            let front = camera.front();
+            camera.update_position(|c| c - front * speed);
+        }
+        if keyboard.is_key_held(Key::A) {
+            let right = front.cross(Vec3::Y).normalize();
+            camera.update_position(|c| c - right * speed);
+        }
+        if keyboard.is_key_held(Key::D) {
+            let right = front.cross(Vec3::Y).normalize();
+            camera.update_position(|c| c + right * speed);
+        }
         camera.flush();
     }
 
@@ -154,6 +180,22 @@ impl<'a> QuackCraft<'a> {
 
         let mut encoder = wgpu.create_encoder(None);
         let (surface, view) = wgpu.current_view()?;
+
+        if self.keyboard.borrow().is_key_pressed(Key::Escape) {
+            match self.window.get_mouse_mode() {
+                glfw::CursorMode::Disabled => {
+                    // unpause
+                    self.window.set_mouse_mode(glfw::CursorMode::Normal);
+                    self.window.mouse_pos_proxy.suspend();
+                }
+                glfw::CursorMode::Normal => {
+                    // pause
+                    self.window.set_mouse_mode(glfw::CursorMode::Disabled);
+                    self.window.mouse_pos_proxy.unsuspend();
+                }
+                _ => {}
+            }
+        }
 
         self.update_camera(frame);
 
@@ -182,21 +224,29 @@ pub fn run_game() -> anyhow::Result<()> {
     info!("Starting quackcraft");
     let window = window::GlfwWindow::new(800, 600, "Quackcraft")?;
     let wgpu = smol::block_on(WgpuInstance::new(window.window.clone()))?;
-    let mut qc = QuackCraft::new(window, wgpu)?;
+    let qc = QuackCraft::new(window, wgpu)?;
     let mut frame: u64 = 0;
     while !qc.window.should_close() {
         qc.window.poll_events();
-        if let Some((_, event)) = qc.window.event_receiver.receive() {
-            info!("Event: {:?}", event);
+        let mut keyboard = qc.keyboard.borrow_mut();
+        keyboard.update_keys();
+        while let Some((_, event)) = qc.window.event_receiver.receive() {
             match event {
                 WindowEvent::Close => break,
                 WindowEvent::Size(x, y) => {
                     qc.wgpu.resize((x, y));
                 }
+                WindowEvent::Key(key, _, Action::Press, _) => {
+                    keyboard.press_key(key);
+                }
 
+                WindowEvent::Key(key, _, Action::Release, _) => {
+                    keyboard.release_key(key);
+                }
                 _ => {}
             }
         }
+        drop(keyboard);
         qc.render(frame)?;
         frame += 1;
     }

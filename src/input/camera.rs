@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub struct CameraController<'a> {
-    pub pos: Vec2,
+    pos: Vec3,
     /// Pitch and yaw rotation.
     pub rot: Vec2,
     camera: Camera,
@@ -26,7 +26,7 @@ impl CameraController<'_> {
         let camera = Camera::new(
             wgpu.config.borrow().width as f32 / wgpu.config.borrow().height as f32,
             0.1,
-            100.0, // TODO: render distance setting? i think this is in world units
+            16.0 * 32.0, // TODO: render distance setting? i think this is in world units
         );
 
         let uniform = wgpu.uniform_buffer(&camera.projection_view_matrix(), Some("Camera Uniform"));
@@ -34,7 +34,7 @@ impl CameraController<'_> {
             wgpu,
             camera,
             uniform,
-            pos: Vec2::ZERO,
+            pos: Vec3::ZERO,
             callback_handle: None,
             rot: Vec2::ZERO,
         }
@@ -50,11 +50,6 @@ impl CameraController<'_> {
 
         let yaw_radians = self.rot.x.to_radians();
         let pitch_radians = self.rot.y.to_radians();
-
-        info!(
-            "Camera rotation updated: yaw = {}, pitch = {}",
-            yaw_radians, pitch_radians
-        );
 
         self.camera.set_orientation(yaw_radians, pitch_radians);
     }
@@ -128,7 +123,6 @@ impl CameraController<'_> {
         let handle = window.register_mouse_pos_callback(Some("camera"), move |(x, y)| {
             let container = closure_camera.clone();
             let mut camera = container.borrow_mut();
-            println!("Mouse callback invoked: x = {}, y = {}", x, y);
             let pos = vec2(x as f32, y as f32);
             if first_mouse {
                 last = pos;
@@ -142,11 +136,25 @@ impl CameraController<'_> {
             // Invert y-axis for typical FPS camera control
             offset *= Vec2::NEG_Y + Vec2::X;
 
-            info!("Mouse moved: offset = {:?}", offset);
-
             camera.process_rot(offset);
         });
 
         this.borrow_mut().callback_handle = Some(handle);
+    }
+
+    pub fn front(&self) -> Vec3 {
+        self.camera.front()
+    }
+
+    /// Sets the position of the camera.
+    pub fn update_position(&mut self, f: impl FnOnce(Vec3) -> Vec3) {
+        let new = f(self.pos);
+        self.pos = new;
+        self.camera.pos(new);
+    }
+
+    /// Returns the position of the camera.
+    pub fn position(&self) -> Vec3 {
+        self.pos
     }
 }
