@@ -31,10 +31,10 @@ impl CameraController<'_> {
         }
     }
 
-    fn process_rot(&mut self, direction: Vec2, delta: f32) {
+    pub fn process_rot(&mut self, direction: Vec2) {
         let sensitivity = 0.1;
-        self.rot.x += direction.x * sensitivity * delta;
-        self.rot.y += direction.y * sensitivity * delta;
+        self.rot.x += direction.x * sensitivity;
+        self.rot.y += direction.y * sensitivity;
 
         // Clamp the pitch to avoid flipping
         self.rot.y = self.rot.y.clamp(-89.0, 89.0);
@@ -43,12 +43,6 @@ impl CameraController<'_> {
         let pitch_radians = self.rot.y.to_radians();
 
         self.camera.set_orientation(yaw_radians, pitch_radians);
-    }
-
-    pub fn update(&mut self, delta: f32, mouse_vector: Vec2) {
-        // Update rotation based on mouse movement
-        self.process_rot(mouse_vector, delta);
-        self.flush();
     }
 
     /// Returns a clone of the camera's uniform buffer.

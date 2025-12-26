@@ -1,7 +1,7 @@
 use std::{cell::RefCell, iter, rc::Rc, sync::Arc};
 
 use bytemuck::Pod;
-use glam::{Mat4, Vec3};
+use glam::{Mat4, Vec2, Vec3, vec2};
 use glfw::WindowEvent;
 use log::info;
 use wgpu::{Color, PrimitiveState, TextureFormat, TextureUsages};
@@ -52,7 +52,10 @@ pub struct QuackCraft<'a> {
 
 impl<'a> QuackCraft<'a> {
     /// Creates a new game instance.
-    pub fn new(window: window::GlfwWindow, wgpu: Rc<WgpuInstance<'a>>) -> anyhow::Result<Self> {
+    pub fn new(
+        window: window::GlfwWindow,
+        wgpu: Rc<WgpuInstance<'static>>,
+    ) -> anyhow::Result<&'static mut QuackCraft<'static>> {
         let program = wgpu.load_shader(
             include_str!("../shaders/test.wgsl"),
             Some("test_shader"),
@@ -61,9 +64,32 @@ impl<'a> QuackCraft<'a> {
             wgpu::PipelineCompilationOptions::default(),
         );
 
-        let mut camera = CameraController::new(wgpu.clone());
+        let camera = Rc::new(RefCell::new(CameraController::new(wgpu.clone())));
 
-        let (camera_layout, camera_bind_group) = camera.bind_group(0);
+        let closure_camera = camera.clone();
+        let mut last = Vec2::ZERO;
+        let mut first_mouse = true;
+
+        window.register_mouse_pos_callback(Some("camera"), move |(x, y)| {
+            let container = closure_camera.clone();
+            let mut camera = container.borrow_mut();
+            let pos = vec2(x as f32, y as f32);
+            if first_mouse {
+                last = pos;
+                first_mouse = false;
+                return;
+            }
+
+            let mut offset = pos - last;
+            last = pos;
+
+            // Invert y-axis for typical FPS camera control
+            offset *= Vec2::NEG_Y;
+
+            camera.process_rot(offset);
+        });
+
+        let (camera_layout, camera_bind_group) = camera.borrow().bind_group(0);
 
         let layout = wgpu.pipeline_layout(None, &[&camera_layout]);
 
@@ -114,15 +140,15 @@ impl<'a> QuackCraft<'a> {
 
         println!("Chunk mesh generated.");
 
-        Ok(QuackCraft {
+        Ok(Box::leak(Box::new(QuackCraft {
             window,
             wgpu: wgpu.clone(),
             pipelines: vec![pipeline],
-            camera: Rc::new(RefCell::new(camera)),
+            camera,
             camera_bind_group,
             depth_texture,
             world,
-        })
+        })))
     }
 
     fn rainbow(frame: u64) -> Color {
@@ -137,7 +163,7 @@ impl<'a> QuackCraft<'a> {
 
     fn update_camera(&mut self, frame: u64) {
         let mut camera = self.camera.borrow_mut();
-        camera.update(1.0 / 60.0, glam::Vec2::new(0.0, 0.0));
+        camera.flush();
     }
 
     pub fn render(&mut self, frame: u64) -> anyhow::Result<()> {

@@ -4,6 +4,7 @@ use glam::Vec3;
 
 use crate::BlockPosition;
 
+pub mod callback;
 pub mod camera;
 pub mod image;
 pub mod lowlevel;
