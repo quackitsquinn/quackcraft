@@ -370,7 +370,7 @@ impl<'a> WgpuInstance<'a> {
             address_mode_w: address_mode,
             mag_filter: wgpu::FilterMode::Nearest, // gotta love the n64
             min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::MipmapFilterMode::Nearest,
             ..Default::default()
         })
     }
@@ -384,7 +384,7 @@ impl<'a> WgpuInstance<'a> {
             address_mode_w: wgpu::AddressMode::ClampToEdge,
             mag_filter: wgpu::FilterMode::Linear,
             min_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::MipmapFilterMode::Linear,
             compare: Some(func),
             lod_max_clamp: 100.0,
             lod_min_clamp: 0.0,
@@ -409,7 +409,7 @@ impl<'a> WgpuInstance<'a> {
         self.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label,
             bind_group_layouts,
-            push_constant_ranges: &[],
+            immediate_size: 0,
         })
     }
 
@@ -438,7 +438,7 @@ impl<'a> WgpuInstance<'a> {
             primitive,
             depth_stencil,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         })
     }
