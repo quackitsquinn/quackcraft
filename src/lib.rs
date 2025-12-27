@@ -18,7 +18,7 @@ use crate::{
             buf::{UniformBuffer, VertexLayout},
         },
         mesh::BlockVertex,
-        textures::Textures,
+        textures::TextureCollection,
     },
     input::{
         camera::CameraController,
@@ -55,7 +55,8 @@ pub struct QuackCraft<'a> {
     depth_texture: graphics::lowlevel::depth::DepthTexture<'a>,
     camera: Rc<RefCell<CameraController<'a>>>,
     camera_bind_group: wgpu::BindGroup,
-    block_textures: Textures<'a>,
+    #[allow(dead_code)] // This is used, but through weird chains of Rc borrows.
+    block_textures: TextureCollection<'a>,
     blocks_bind_group: wgpu::BindGroup,
 }
 
@@ -65,24 +66,19 @@ impl<'a> QuackCraft<'a> {
         window: window::GlfwWindow,
         wgpu: Rc<WgpuInstance<'static>>,
     ) -> anyhow::Result<&'static mut QuackCraft<'static>> {
-        let program = wgpu.load_shader(
-            include_str!("../shaders/test.wgsl"),
-            Some("test_shader"),
+        let block_shader = wgpu.load_shader(
+            include_str!("../shaders/block.wgsl"),
+            Some("block_shader"),
             Some("vs_main"),
             Some("fs_main"),
             wgpu::PipelineCompilationOptions::default(),
         );
 
         let keyboard = Rc::new(RefCell::new(Keyboard::new()));
-        let camera = Rc::new(RefCell::new(CameraController::new(wgpu.clone())));
-        let (camera_layout, camera_bind_group) = camera.borrow().bind_group(0);
+        let (camera, camera_layout, camera_bind_group) =
+            CameraController::create_main_camera(&wgpu, &window, 0);
 
-        let closure_camera = camera.clone();
-        CameraController::register_callback(closure_camera.clone(), &window);
-
-        window.set_mouse_mode(glfw::CursorMode::Disabled);
-
-        let mut blocks = Textures::new(wgpu.clone(), Some("block textures"), (16, 16));
+        let mut blocks = TextureCollection::new(wgpu.clone(), Some("block textures"), (16, 16));
 
         assert_eq!(
             blocks.push_invalid_texture(),
@@ -90,13 +86,12 @@ impl<'a> QuackCraft<'a> {
             "invalid texture not in slot zero"
         );
 
-        let (dirt_handle, dirt_image) =
-            blocks.load_texture("dirt", include_bytes!("../dirt.png"))?;
+        let (dirt_handle, _) = blocks.load_texture("dirt", include_bytes!("../dirt.png"))?;
 
-        let (grass_top, grass_top_image) =
+        let (grass_top, _) =
             blocks.load_texture("grass_top", include_bytes!("../grass_block_top.png"))?;
 
-        let (grass_side, grass_side_image) =
+        let (grass_side, _) =
             blocks.load_texture("grass_side", include_bytes!("../grass_block_side.png"))?;
 
         info!("grass_top handle: {}", grass_top);
@@ -117,7 +112,7 @@ impl<'a> QuackCraft<'a> {
         let layout = wgpu.pipeline_layout(None, &[&camera_layout, &blocks_bind_layout]);
         let pipeline = wgpu.pipeline(
             Some("main pipeline"),
-            &program,
+            &block_shader,
             &layout,
             &[BlockVertex::LAYOUT],
             PrimitiveState {
@@ -131,28 +126,7 @@ impl<'a> QuackCraft<'a> {
             Some(depth_texture.state()),
         );
 
-        let mut world = World::empty(wgpu.clone());
-
-        let mut chunk = Chunk::empty(wgpu.clone());
-        for i in 0..2 {
-            for j in 0..2 {
-                for k in 0..2 {
-                    chunk.data[i + 4][j + 4][k + 4] = if (i + j + k) % 2 == 0 {
-                        Block::Dirt
-                    } else {
-                        Block::Grass
-                    }
-                }
-            }
-        }
-
-        for x in -16..16 {
-            for y in -8..8 {
-                for z in -16..16 {
-                    world.push_chunk((x, y, z), chunk.clone());
-                }
-            }
-        }
+        let world = World::test(wgpu.clone());
 
         println!("Generating chunk mesh...");
 

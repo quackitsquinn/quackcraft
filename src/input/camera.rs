@@ -116,6 +116,26 @@ impl CameraController<'_> {
         )
     }
 
+    /// Creates the main camera controller and sets up mouse callbacks.
+    pub fn create_main_camera(
+        wgpu: &Wgpu<'static>,
+        window: &GlfwWindow,
+        binding: u32,
+    ) -> (
+        Rc<RefCell<CameraController<'static>>>,
+        wgpu::BindGroupLayout,
+        wgpu::BindGroup,
+    ) {
+        let camera = Rc::new(RefCell::new(CameraController::new(wgpu.clone())));
+        let (camera_layout, camera_bind_group) = camera.borrow().bind_group(binding);
+
+        let closure_camera = camera.clone();
+        CameraController::register_callback(closure_camera.clone(), &window);
+        window.set_mouse_mode(glfw::CursorMode::Disabled);
+
+        (camera, camera_layout, camera_bind_group)
+    }
+
     /// Registers mouse movement callbacks to control the camera rotation.
     pub fn register_callback(this: Rc<RefCell<CameraController<'static>>>, window: &GlfwWindow) {
         let closure_camera = this.clone();

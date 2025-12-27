@@ -32,6 +32,30 @@ impl<'a> World<'a> {
         }
     }
 
+    /// Creates a test world with some simple terrain.
+    pub fn test(wgpu: Wgpu<'a>) -> Self {
+        let mut chunks = HashMap::new();
+        for x in 0..5 {
+            for z in 0..5 {
+                let mut chunk = Chunk::empty(wgpu.clone());
+                for i in 0..16 {
+                    for j in 0..16 {
+                        chunk.data[i][3][j] = crate::Block::Grass;
+                        chunk.data[i][2][j] = crate::Block::Dirt;
+                        chunk.data[i][2][j] = crate::Block::Dirt;
+                        chunk.data[i][1][j] = crate::Block::Stone;
+                    }
+                }
+                chunks.insert((x, 0, z), chunk);
+            }
+        }
+
+        Self {
+            chunks,
+            render_state: RefCell::new(WorldRenderState::new(wgpu)),
+        }
+    }
+
     /// Inserts a chunk at the given position.
     pub fn push_chunk(&mut self, position: BlockPosition, chunk: Chunk<'a>) {
         self.chunks.insert(position, chunk);

@@ -8,7 +8,12 @@ use crate::{
 };
 
 pub type TextureHandle = u32;
-pub struct Textures<'a> {
+
+/// A structure managing a collection of textures.
+/// This is effectively a texture atlas, packing multiple textures into a single GPU texture. The difference
+/// is that this uses texture arrays instead of a single large texture, which greatly simplifies everything. The only limitation
+/// is that all textures must have the same dimensions.
+pub struct TextureCollection<'a> {
     textures: HashMap<String, TextureHandle>,
     buf: Vec<ReadOnly<u8>>,
     gpu_texture: Option<Texture<'a>>,
@@ -17,7 +22,7 @@ pub struct Textures<'a> {
     wgpu: Wgpu<'a>,
 }
 
-impl<'a> Textures<'a> {
+impl<'a> TextureCollection<'a> {
     pub fn new(
         wgpu: Wgpu<'a>,
         label: Option<impl Into<ReadOnlyString>>,
