@@ -52,6 +52,7 @@ impl CameraController<'_> {
         let pitch_radians = self.rot.y.to_radians();
 
         self.camera.set_orientation(yaw_radians, pitch_radians);
+        self.camera.pos(self.pos);
     }
 
     /// Returns a clone of the camera's uniform buffer.
