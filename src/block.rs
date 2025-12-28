@@ -10,6 +10,8 @@ pub enum Block {
     Dirt = 1,
     Stone = 2,
     Grass = 3,
+    OakWood = 4,
+    OakLeaves = 5,
 }
 
 impl Block {
@@ -21,7 +23,14 @@ impl Block {
         // I was curious about what happened when optimizations are enabled, so I checked that too.
         // and, incredibly, one of the functions was completely optimized away and replaced with a single comparison instruction!
         // So, I decided to go with the match statement for now, as it seems to be the most efficient in both cases.
-        !matches!(self, Block::Air)
+        !matches!(self, Block::Air | Block::OakLeaves)
+    }
+
+    pub fn bottom_texture(&self) -> Option<Block> {
+        match self {
+            Block::Grass => Some(Block::Dirt),
+            _ => None,
+        }
     }
 }
 
@@ -54,13 +63,22 @@ impl BlockTextureAtlas {
         direction: crate::graphics::CardinalDirection,
     ) -> TextureHandle {
         match block {
-            Block::Grass => {
-                let grass_base = self.get_base_handle(Block::Grass);
+            // Generate column like textures for grass and leaves
+            Block::Grass | Block::OakWood => {
+                let column_base = self.get_base_handle(block);
                 // Grass has different textures for top, bottom, and sides
                 match direction {
-                    crate::graphics::CardinalDirection::Up => grass_base, // Top texture
-                    crate::graphics::CardinalDirection::Down => self.get_base_handle(Block::Dirt), // Bottom texture
-                    _ => grass_base + 1, // Side texture
+                    crate::graphics::CardinalDirection::Up => column_base, // Top texture
+                    crate::graphics::CardinalDirection::Down => {
+                        // If the block overrides the bottom texture, use that.
+                        // Otherwise, use the default bottom texture.
+                        if let Some(bottom) = block.bottom_texture() {
+                            self.get_base_handle(bottom)
+                        } else {
+                            column_base
+                        }
+                    }
+                    _ => column_base + 1, // Side texture
                 }
             }
             _ => self.get_base_handle(block),

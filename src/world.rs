@@ -51,6 +51,11 @@ impl<'a> World<'a> {
                 let mut chunk = Chunk::empty(wgpu.clone());
                 for i in 0..16 {
                     for j in 0..16 {
+                        if (i + j) % 2 == 0 {
+                            chunk.data[i][14][j] = crate::Block::OakWood;
+                        } else {
+                            chunk.data[i][15][j] = crate::Block::OakLeaves;
+                        }
                         chunk.data[i][3][j] = crate::Block::Grass;
                         chunk.data[i][2][j] = crate::Block::Dirt;
                         chunk.data[i][2][j] = crate::Block::Dirt;

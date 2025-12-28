@@ -89,21 +89,42 @@ impl<'a> QuackCraft<'a> {
             "invalid texture not in slot zero"
         );
 
-        let (dirt_handle, _) = blocks.load_texture("dirt", include_bytes!("../dirt.png"))?;
+        let (dirt_handle, _) =
+            blocks.load_texture("dirt", include_minecraft_texture!("block/dirt"))?;
 
-        let (grass_top, _) =
-            blocks.load_texture("grass_top", include_bytes!("../grass_block_top.png"))?;
+        let (grass_top, _) = blocks.load_texture(
+            "grass_top",
+            include_minecraft_texture!("block/grass_block_top"),
+        )?;
 
-        let (grass_side, _) =
-            blocks.load_texture("grass_side", include_bytes!("../grass_block_side.png"))?;
+        let (grass_side, _) = blocks.load_texture(
+            "grass_side",
+            include_minecraft_texture!("block/grass_block_side"),
+        )?;
+
+        let (oak_leaves, _) =
+            blocks.load_texture("oak_leaves", include_minecraft_texture!("block/oak_leaves"))?;
+
+        let (oak_log_top, _) = blocks.load_texture(
+            "oak_log_top",
+            include_minecraft_texture!("block/oak_log_top"),
+        )?;
+
+        let (oak_log_side, _) =
+            blocks.load_texture("oak_log_side", include_minecraft_texture!("block/oak_log"))?;
 
         info!("grass_top handle: {}", grass_top);
         info!("grass_side handle: {}", grass_side);
         info!("dirt handle: {}", dirt_handle);
+        info!("oak_leaves handle: {}", oak_leaves);
+        info!("oak_log_top handle: {}", oak_log_top);
+        info!("oak_log_side handle: {}", oak_log_side);
 
         let mut atlas = BlockTextureAtlas::new(0);
         atlas.set_texture_handle(Block::Dirt, dirt_handle);
         atlas.set_texture_handle(Block::Grass, grass_top);
+        atlas.set_texture_handle(Block::OakLeaves, oak_leaves);
+        atlas.set_texture_handle(Block::OakWood, oak_log_top);
 
         let texture = blocks.gpu_texture();
 
@@ -277,4 +298,13 @@ pub fn run_game() -> anyhow::Result<()> {
         frame += 1;
     }
     Ok(())
+}
+
+/// Includes a Minecraft resource file at the given path.
+/// The path should be relative to the `res/assets/minecraft/textures` directory.
+#[macro_export]
+macro_rules! include_minecraft_texture {
+    ($res: literal) => {
+        include_bytes!(concat!("../res/assets/minecraft/textures/", $res, ".png"))
+    };
 }
