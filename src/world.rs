@@ -1,19 +1,23 @@
 use std::{cell::RefCell, collections::HashMap};
 
+use log::info;
+
 use crate::{
     BlockPosition,
     block::Block,
     chunk::Chunk,
+    coords::bp,
     debug::{self, DebugProvider},
     graphics::{
-        Wgpu,
+        CardinalDirection, Wgpu,
         lowlevel::buf::{IndexBuffer, VertexBuffer},
         mesh::{BlockMesh, BlockVertex},
     },
+    resource::Resource,
 };
 
 pub struct World<'a> {
-    pub chunks: HashMap<BlockPosition, Chunk<'a>>,
+    pub chunks: HashMap<BlockPosition, Resource<Chunk<'a>>>,
     pub render_state: RefCell<WorldRenderState<'a>>,
     face_count: Option<DebugProvider>,
 }
@@ -31,7 +35,10 @@ impl<'a> World<'a> {
     /// Creates a new World from the given chunks.
     pub fn new(chunks: Vec<((i64, i64, i64), Chunk<'a>)>, wgpu: Wgpu<'a>) -> Self {
         Self {
-            chunks: chunks.into_iter().collect(),
+            chunks: chunks
+                .into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect(),
             render_state: RefCell::new(WorldRenderState::new(wgpu)),
             face_count: None,
         }
@@ -46,7 +53,7 @@ impl<'a> World<'a> {
 
     /// Creates a test world with some simple terrain.
     pub fn test(wgpu: Wgpu<'a>) -> Self {
-        let mut chunks = HashMap::new();
+        let mut world = Self::empty(wgpu.clone());
         for x in 0..5 {
             for z in 0..5 {
                 let mut chunk = Chunk::empty(wgpu.clone());
@@ -63,15 +70,11 @@ impl<'a> World<'a> {
                         chunk.data[i][1][j] = crate::Block::Stone;
                     }
                 }
-                chunks.insert((x, 0, z), chunk);
+                world.push_chunk(bp(x, 0, z), chunk);
             }
         }
 
-        Self {
-            chunks,
-            render_state: RefCell::new(WorldRenderState::new(wgpu)),
-            face_count: None,
-        }
+        world
     }
 
     /// Creates a test world with a single block of the given type.
@@ -82,7 +85,7 @@ impl<'a> World<'a> {
             chunk
         };
         let mut chunks = HashMap::new();
-        chunks.insert((0, 0, 0), chunk);
+        chunks.insert(bp(0, 0, 0), chunk.into());
         Self {
             chunks,
             render_state: RefCell::new(WorldRenderState::new(wgpu)),
@@ -92,7 +95,24 @@ impl<'a> World<'a> {
 
     /// Inserts a chunk at the given position.
     pub fn push_chunk(&mut self, position: BlockPosition, chunk: Chunk<'a>) {
-        self.chunks.insert(position, chunk);
+        self.chunks.insert(position, chunk.into());
+    }
+
+    /// Populates neighbor references for all chunks in the world.
+    /// TODO: populate_neighbors(pos: ChunkPosition)
+    pub fn populate_neighbors(&mut self) {
+        for (pos, chunk) in self.chunks.iter() {
+            CardinalDirection::iter().for_each(|dir| {
+                let neighbor_pos = pos.offset(dir);
+                if let Some(neighbor) = self.chunks.get(&neighbor_pos) {
+                    info!(
+                        "Setting neighbor for chunk at {:?} towards {:?} (neighbor at {:?})",
+                        pos, dir, neighbor_pos
+                    );
+                    chunk.get_mut().set_neighbor(dir, Some(neighbor.clone()));
+                }
+            });
+        }
     }
 }
 
@@ -117,8 +137,9 @@ impl<'a> WorldRenderState<'a> {
         let mut meshes = HashMap::new();
 
         for (pos, chunk) in world.chunks.iter() {
+            let chunk = chunk.get();
             let mut render_state = chunk.render_state.borrow_mut();
-            let mesh = render_state.generate_mesh(chunk, *pos, with);
+            let mesh = render_state.generate_mesh(&chunk, *pos, with);
             meshes
                 .entry((pos.0, pos.2))
                 .and_modify(|f: &mut BlockMesh| f.combine(mesh))

@@ -1,8 +1,11 @@
 use std::{cell::RefCell, rc::Rc};
 
+use log::{info, warn};
+
 use crate::{
     BlockPosition, ChunkPosition,
     block::{Block, BlockTextureAtlas},
+    coords::bp,
     graphics::{
         CardinalDirection,
         lowlevel::{
@@ -11,6 +14,7 @@ use crate::{
         },
         mesh::{BlockMesh, BlockVertex},
     },
+    resource::Resource,
 };
 
 pub const CHUNK_SIZE: usize = 16;
@@ -18,6 +22,7 @@ pub const CHUNK_SIZE: usize = 16;
 #[derive(Clone, Debug)]
 pub struct Chunk<'a> {
     pub data: [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+    neighbors: [Option<Resource<Chunk<'a>>>; 6],
     pub render_state: RefCell<ChunkRenderState<'a>>,
 }
 
@@ -25,23 +30,48 @@ impl<'a> Chunk<'a> {
     pub fn empty(wgpu: Rc<WgpuInstance<'a>>) -> Self {
         Self {
             data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+            neighbors: [None, None, None, None, None, None],
             render_state: RefCell::new(ChunkRenderState::new(wgpu.clone())),
         }
     }
 
-    /// Inspects a block at the given world position.
-    /// This can be in the range of [-1, CHUNK_SIZE + 1], where out-of-bounds positions return the neighboring chunk's block. (in the future)
-    pub fn inspect_block(&self, position: BlockPosition) -> Block {
-        if position.0 < 0
-            || position.0 >= CHUNK_SIZE as i64
-            || position.1 < 0
-            || position.1 >= CHUNK_SIZE as i64
-            || position.2 < 0
-            || position.2 >= CHUNK_SIZE as i64
-        {
-            return Block::Air; // Out of bounds for now
-        }
+    pub fn set_neighbor(
+        &mut self,
+        direction: CardinalDirection,
+        neighbor: Option<Resource<Chunk<'a>>>,
+    ) {
+        self.neighbors[direction as usize] = neighbor;
+    }
+
+    /// Inspects a block at the given local chunk position.
+    pub fn inspect_block_exact(&self, position: BlockPosition) -> Block {
         self.data[position.0 as usize][position.1 as usize][position.2 as usize]
+    }
+
+    /// Inspects a block at the given world position + direction.
+    pub fn inspect_block(&self, base: BlockPosition, direction: CardinalDirection) -> Block {
+        // We need to return the block (if present) in the given direction from the base position.
+        let true_pos = base.offset(direction);
+        if true_pos.all(|c| c > CHUNK_SIZE as i64 * 2) {
+            warn!(
+                "Inspecting block at very large positive position {:?}",
+                true_pos
+            );
+            return Block::Air;
+        }
+        let local_pos = true_pos.chunk_normalize();
+        if true_pos == local_pos {
+            // Still in this chunk
+            self.inspect_block_exact(local_pos)
+        } else {
+            // In a neighbor chunk
+            if let Some(neighbor) = &self.neighbors[direction as usize] {
+                // We now just need to make sure that the true pos was only offset by one chunk in the given direction.
+                neighbor.get().inspect_block_exact(local_pos)
+            } else {
+                Block::Air // Out of bounds, assume air
+            }
+        }
     }
 }
 
@@ -97,18 +127,18 @@ impl<'a> ChunkRenderState<'a> {
             for y in 0..16 {
                 for z in 0..16 {
                     let block = chunk.data[x][y][z];
-                    let true_pos = (
+                    let true_pos = bp(
                         x as i64 + (at.0 * CHUNK_SIZE as i64),
                         y as i64 + (at.1 * CHUNK_SIZE as i64),
                         z as i64 + (at.2 * CHUNK_SIZE as i64),
                     );
-                    let rel_pos = (x as i64, y as i64, z as i64);
+                    let rel_pos = bp(x as i64, y as i64, z as i64);
                     if block != Block::Air {
                         // TODO.. in the probably distant future: greedy meshing
                         CardinalDirection::iter().for_each(|dir| {
                             // For now, were just going to assume that out-of-bounds blocks are air.
                             // This is a bigger problem in this engine since chunks are only 16x16x16, rather than 16x256x16.
-                            if !chunk.inspect_block(dir.offset_pos(rel_pos)).is_solid() {
+                            if !chunk.inspect_block(rel_pos, dir).is_solid() {
                                 mesh.emit_face(&with.face_texture_index(block, dir), true_pos, dir);
                             }
                         });

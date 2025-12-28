@@ -56,12 +56,6 @@ impl CardinalDirection {
         }
     }
 
-    /// Offsets the given block position by one unit in the direction of the cardinal direction.
-    pub fn offset_pos(&self, pos: BlockPosition) -> BlockPosition {
-        let (dx, dy, dz) = self.normal_i64();
-        (pos.0 + dx, pos.1 + dy, pos.2 + dz)
-    }
-
     pub fn iter() -> impl Iterator<Item = CardinalDirection> {
         [
             CardinalDirection::North,

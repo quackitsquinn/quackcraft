@@ -25,14 +25,15 @@ pub type ReadOnlyString = Arc<str>;
 /// A read-only slice type.
 pub type ReadOnly<T> = Arc<[T]>;
 /// A position in the world, in chunk coordinates.
-pub type ChunkPosition = (i64, i64, i64);
+pub type ChunkPosition = coords::BlockPosition;
 /// A position in the world, in chunk coordinates.
-pub type BlockPosition = (i64, i64, i64);
+pub type BlockPosition = coords::BlockPosition;
 /// A position in the world, in floating-point coordinates.
 pub type FloatPosition = Vec3;
 
 mod block;
 mod chunk;
+pub mod coords;
 mod debug;
 pub mod graphics;
 mod input;
@@ -153,6 +154,8 @@ impl<'a> QuackCraft<'a> {
         );
 
         let mut world = World::test(wgpu.clone());
+
+        world.populate_neighbors();
 
         let post_process_pass = PostProcessingPass::new(wgpu.clone());
 
