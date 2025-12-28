@@ -14,6 +14,7 @@ use crate::{
 pub struct BlockMesh {
     vertices: Vec<BlockVertex>,
     indices: Vec<u16>,
+    face_count: usize,
 }
 
 pub const FACE_TABLE: [[([f32; 3], [f32; 2]); 4]; 6] = [
@@ -67,14 +68,11 @@ pub const FACE_INDICES: [u16; 6] = [0, 1, 2, 2, 3, 0];
 pub const TEX_COORDS: [[f32; 2]; 4] = [[0.0, 1.0], [0.0, 0.0], [1.0, 0.0], [1.0, 1.0]];
 
 impl BlockMesh {
-    pub fn new(vertices: Vec<BlockVertex>, indices: Vec<u16>) -> Self {
-        Self { vertices, indices }
-    }
-
     pub fn empty() -> Self {
         Self {
             vertices: Vec::new(),
             indices: Vec::new(),
+            face_count: 0,
         }
     }
 
@@ -97,6 +95,8 @@ impl BlockMesh {
         position: BlockPosition,
         direction: CardinalDirection,
     ) {
+        self.face_count += 1;
+
         let mut face = FACE_TABLE[direction as usize];
 
         let mut face_indices = [0; 6];
@@ -141,6 +141,8 @@ impl BlockMesh {
             .indices
             .extend(other.indices.iter().map(|&i| i + index_offset));
 
+        combined.face_count += other.face_count;
+
         combined
     }
 
@@ -152,6 +154,8 @@ impl BlockMesh {
 
         self.indices
             .extend(other.indices.iter().map(|&i| i + index_offset));
+
+        self.face_count += other.face_count;
     }
 
     /// Creates the vertex and index buffers for the mesh.
@@ -170,6 +174,11 @@ impl BlockMesh {
         );
 
         (vertex_buffer, index_buffer)
+    }
+
+    /// Returns the number of faces in the mesh.
+    pub fn face_count(&self) -> usize {
+        self.face_count
     }
 }
 

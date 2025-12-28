@@ -129,9 +129,11 @@ impl<'a> QuackCraft<'a> {
             Some(depth_texture.state()),
         );
 
-        let world = World::test(wgpu.clone());
+        let mut world = World::single(wgpu.clone(), Block::Grass);
 
         let mut debug_renderer = debug::DebugRenderer::new(wgpu.clone())?;
+
+        world.create_debug_providers(&mut debug_renderer);
 
         println!("Generating chunk mesh...");
 

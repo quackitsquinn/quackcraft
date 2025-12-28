@@ -20,6 +20,9 @@ pub struct DebugRenderer<'a> {
     wgpu: Wgpu<'a>,
 }
 
+/// A type alias for a reference-counted debug statistic.
+pub type DebugProvider = Rc<DebugStatistic>;
+
 impl<'a> DebugRenderer<'a> {
     /// Creates a new debug renderer.
     pub fn new(wgpu: Wgpu<'a>) -> anyhow::Result<Self> {
@@ -112,7 +115,7 @@ impl DebugStatistic {
     }
 
     /// Updates the value of the debug statistic.
-    pub fn update_value(&self, new_value: impl Into<String>) {
-        *self.value.borrow_mut() = new_value.into();
+    pub fn update_value(&self, new_value: impl ToString) {
+        *self.value.borrow_mut() = new_value.to_string();
     }
 }
