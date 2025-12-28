@@ -10,9 +10,11 @@ use wgpu_text::{
     glyph_brush::{Layout, Section, Text, ab_glyph::FontRef},
 };
 
-use crate::{ReadOnlyString, graphics::Wgpu};
+use crate::{ReadOnlyString, graphics::Wgpu, resource::Resource};
 
-pub struct DebugRenderer<'a> {
+pub type DebugRenderer<'a> = Resource<DebugRendererState<'a>>;
+
+pub struct DebugRendererState<'a> {
     pub enabled: bool,
     brush: TextBrush<FontRef<'static>>,
     stats: Vec<Weak<DebugStatistic>>,
@@ -22,11 +24,11 @@ pub struct DebugRenderer<'a> {
 /// A type alias for a reference-counted debug statistic.
 pub type DebugProvider = Rc<DebugStatistic>;
 
-impl<'a> DebugRenderer<'a> {
+impl<'a> DebugRendererState<'a> {
     /// Creates a new debug renderer.
-    pub fn new(wgpu: Wgpu<'a>) -> anyhow::Result<Self> {
+    pub fn new(wgpu: Wgpu<'a>) -> anyhow::Result<DebugRenderer<'a>> {
         let (render_width, render_height) = wgpu.dimensions();
-        let render_format = wgpu.config.borrow().format;
+        let render_format = wgpu.config.get().format;
         Ok(Self {
             brush: BrushBuilder::using_font_bytes(include_bytes!("../FiraCode-Regular.ttf"))
                 .expect("failed to create debug brush")
@@ -34,7 +36,8 @@ impl<'a> DebugRenderer<'a> {
             enabled: false,
             stats: Vec::new(),
             wgpu,
-        })
+        }
+        .into())
     }
 
     /// Adds a new debug statistic to be displayed.

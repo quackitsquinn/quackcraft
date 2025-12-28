@@ -14,7 +14,7 @@ pub struct DepthTexture<'a> {
 impl<'a> DepthTexture<'a> {
     pub const TEXTURE_FORMAT: TextureFormat = TextureFormat::Depth32Float;
     pub fn new(wgpu: Rc<WgpuInstance<'a>>) -> Self {
-        let config = wgpu.config.borrow();
+        let config = wgpu.config.get();
         let size = wgpu::Extent3d {
             width: config.width,
             height: config.height,
@@ -46,7 +46,7 @@ impl<'a> DepthTexture<'a> {
     }
 
     pub fn resize(&mut self) {
-        let config = self.wgpu.config.borrow();
+        let config = self.wgpu.config.get();
         let size = wgpu::Extent3d {
             width: config.width,
             height: config.height,

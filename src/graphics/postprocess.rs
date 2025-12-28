@@ -43,7 +43,7 @@ impl<'a> PostProcessingPass<'a> {
             Default::default(),
         );
 
-        let output_format = wgpu.config.borrow().format;
+        let output_format = wgpu.config.get().format;
 
         let render_dim = wgpu.dimensions();
 

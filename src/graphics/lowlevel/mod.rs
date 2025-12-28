@@ -21,6 +21,7 @@ use crate::{
         shader::ShaderProgram,
         texture::Texture,
     },
+    resource::Resource,
 };
 
 pub mod buf;
@@ -34,7 +35,7 @@ pub struct WgpuInstance<'a> {
     pub surface: Surface<'a>,
     pub device: Device,
     pub queue: Queue,
-    pub config: RefCell<SurfaceConfiguration>,
+    pub config: Resource<SurfaceConfiguration>,
     pub default_sampler: Option<wgpu::Sampler>,
     this: Weak<WgpuInstance<'a>>,
 }
@@ -98,7 +99,7 @@ impl<'a> WgpuInstance<'a> {
                 surface,
                 device,
                 queue,
-                config: RefCell::new(config),
+                config: Resource::new(config),
                 default_sampler: None,
                 this: weak.clone(),
             };
@@ -122,11 +123,11 @@ impl<'a> WgpuInstance<'a> {
     /// Panics if the new size has a width or height less than or equal to zero.
     pub fn resize(&self, new_size: (i32, i32)) {
         debug_assert!(new_size.0 > 0 && new_size.1 > 0, "Window size <= 0");
-        let mut cfg = self.config.borrow_mut();
+        let mut cfg = self.config.get_mut();
         cfg.width = new_size.0 as u32;
         cfg.height = new_size.1 as u32;
         drop(cfg);
-        self.surface.configure(&self.device, &self.config.borrow());
+        self.surface.configure(&self.device, &self.config.get());
     }
 
     /// Creates a command encoder.
@@ -557,7 +558,7 @@ impl<'a> WgpuInstance<'a> {
 
     /// Returns the current dimensions of the surface.
     pub fn dimensions(&self) -> (u32, u32) {
-        let cfg = self.config.borrow();
+        let cfg = self.config.get();
         (cfg.width, cfg.height)
     }
 }

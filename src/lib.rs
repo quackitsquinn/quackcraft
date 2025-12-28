@@ -7,7 +7,7 @@ use wgpu::{Color, PrimitiveState};
 
 use crate::{
     block::{Block, BlockTextureAtlas},
-    debug::DebugProvider,
+    debug::{DebugProvider, DebugRenderer},
     graphics::{
         Wgpu,
         lowlevel::{WgpuInstance, buf::VertexLayout},
@@ -16,6 +16,7 @@ use crate::{
         textures::TextureCollection,
     },
     input::{camera::CameraController, keyboard::Keyboard},
+    resource::Resource,
     world::World,
 };
 
@@ -35,6 +36,7 @@ mod chunk;
 mod debug;
 pub mod graphics;
 mod input;
+pub mod resource;
 mod window;
 mod world;
 
@@ -46,12 +48,12 @@ pub struct QuackCraft<'a> {
     pipelines: Vec<wgpu::RenderPipeline>,
     world: World<'a>,
     depth_texture: graphics::lowlevel::depth::DepthTexture<'a>,
-    camera: Rc<RefCell<CameraController<'a>>>,
+    camera: Resource<CameraController<'a>>,
     camera_bind_group: wgpu::BindGroup,
     #[allow(dead_code)] // This is used, but through weird chains of Rc borrows.
     block_textures: TextureCollection<'a>,
     blocks_bind_group: wgpu::BindGroup,
-    debug_renderer: debug::DebugRenderer<'a>,
+    debug_renderer: DebugRenderer<'a>,
     post_process_pass: PostProcessingPass<'a>,
     fps: DebugProvider,
     frametime_ms: DebugProvider,
@@ -71,13 +73,15 @@ impl<'a> QuackCraft<'a> {
             wgpu::PipelineCompilationOptions::default(),
         );
 
-        let mut debug_renderer = debug::DebugRenderer::new(wgpu.clone())?;
+        let debug_renderer_res = debug::DebugRendererState::new(wgpu.clone())?;
+        let mut debug_renderer = debug_renderer_res.get_mut();
         let fps = debug_renderer.add_statistic("fps", "0");
         let frametime_stat = debug_renderer.add_statistic("frametime (ms)", "0.0");
 
+        drop(debug_renderer);
         let keyboard = Rc::new(RefCell::new(Keyboard::new()));
         let (camera, camera_layout, camera_bind_group) =
-            CameraController::create_main_camera(&wgpu, &window, &mut debug_renderer, 0);
+            CameraController::create_main_camera(&wgpu, &window, &debug_renderer_res, 0);
 
         let mut blocks = TextureCollection::new(wgpu.clone(), Some("block textures"), (16, 16));
 
@@ -141,7 +145,7 @@ impl<'a> QuackCraft<'a> {
                 ..Default::default()
             },
             &[Some(wgpu::ColorTargetState {
-                format: wgpu.config.borrow().format,
+                format: wgpu.config.get().format,
                 blend: Some(wgpu::BlendState::REPLACE),
                 write_mask: wgpu::ColorWrites::ALL,
             })],
@@ -152,7 +156,7 @@ impl<'a> QuackCraft<'a> {
 
         let post_process_pass = PostProcessingPass::new(wgpu.clone());
 
-        world.create_debug_providers(&mut debug_renderer);
+        world.create_debug_providers(&debug_renderer_res);
 
         println!("Generating chunk mesh...");
 
@@ -173,7 +177,7 @@ impl<'a> QuackCraft<'a> {
             depth_texture,
             world,
             block_textures: blocks,
-            debug_renderer,
+            debug_renderer: debug_renderer_res,
             blocks_bind_group,
             post_process_pass,
             frametime_ms: frametime_stat,
@@ -192,7 +196,7 @@ impl<'a> QuackCraft<'a> {
     }
 
     fn update_camera(&mut self, _frame: u64) {
-        let mut camera = self.camera.borrow_mut();
+        let mut camera = self.camera.get_mut();
         let keyboard = self.keyboard.borrow();
         let speed = 0.2;
         let front = camera.front();
@@ -214,13 +218,14 @@ impl<'a> QuackCraft<'a> {
         }
 
         if keyboard.is_key_pressed(Key::F3) {
-            self.debug_renderer.toggle();
+            self.debug_renderer.get_mut().toggle();
         }
 
         camera.flush();
     }
 
     pub fn render(&mut self, frame: u64) -> anyhow::Result<()> {
+        let frame_start = std::time::Instant::now();
         let wgpu = self.wgpu.clone();
 
         let mut encoder = wgpu.create_encoder(None);
@@ -260,13 +265,17 @@ impl<'a> QuackCraft<'a> {
 
         drop(pass);
 
-        self.debug_renderer.render(&mut encoder, &view);
+        self.debug_renderer.get_mut().render(&mut encoder, &view);
 
         let surface = self.post_process_pass.render(&mut encoder);
 
         wgpu.submit_single(encoder.finish());
         surface.present();
 
+        let frametime = frame_start.elapsed().as_secs_f32() * 1000.0;
+        self.frametime_ms.update_value(format!("{:.2}", frametime));
+        let fps = 1000.0 / frametime;
+        self.fps.update_value(format!("{:.2}", fps));
         Ok(())
     }
 }

@@ -38,7 +38,8 @@ impl<'a> World<'a> {
     }
 
     /// Creates debug providers for this world.
-    pub fn create_debug_providers<'b>(&mut self, debug_renderer: &mut debug::DebugRenderer<'b>) {
+    pub fn create_debug_providers<'b>(&mut self, debug_renderer: &debug::DebugRenderer<'b>) {
+        let mut debug_renderer = debug_renderer.get_mut();
         let face_count = debug_renderer.add_statistic("Face Count", "0");
         self.face_count = Some(face_count);
     }
