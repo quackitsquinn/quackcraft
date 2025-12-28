@@ -479,6 +479,29 @@ impl<'a> WgpuInstance<'a> {
         })
     }
 
+    /// Starts a secondary render pass that loads the existing contents of the texture view.
+    pub fn start_secondary_pass<'b>(
+        &self,
+        encoder: &'b mut CommandEncoder,
+        view: &TextureView,
+        depth_stencil_attachment: Option<wgpu::RenderPassDepthStencilAttachment>,
+    ) -> RenderPass<'b> {
+        encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("secondary render pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: StoreOp::Store,
+                },
+                depth_slice: None,
+            })],
+            depth_stencil_attachment,
+            ..Default::default()
+        })
+    }
+
     /// Submits a single command encoder to the queue. This is a direct wrapper around `Queue::submit`.
     pub fn submit_single(&self, encoder: CommandBuffer) {
         self.queue.submit(std::iter::once(encoder));
@@ -487,5 +510,11 @@ impl<'a> WgpuInstance<'a> {
     /// Submits multiple command buffers to the queue.
     pub fn submit<I: IntoIterator<Item = CommandBuffer>>(&self, bufs: I) {
         self.queue.submit(bufs);
+    }
+
+    /// Returns the current dimensions of the surface.
+    pub fn dimensions(&self) -> (u32, u32) {
+        let cfg = self.config.borrow();
+        (cfg.width, cfg.height)
     }
 }

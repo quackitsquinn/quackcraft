@@ -9,6 +9,7 @@ use wgpu::{Color, PrimitiveState, TextureFormat, TextureUsages};
 use crate::{
     block::{Block, BlockTextureAtlas},
     chunk::Chunk,
+    debug::DebugStatistic,
     graphics::{
         Wgpu,
         camera::Camera,
@@ -40,6 +41,7 @@ pub type FloatPosition = Vec3;
 
 mod block;
 mod chunk;
+mod debug;
 mod graphics;
 mod input;
 mod window;
@@ -58,6 +60,7 @@ pub struct QuackCraft<'a> {
     #[allow(dead_code)] // This is used, but through weird chains of Rc borrows.
     block_textures: TextureCollection<'a>,
     blocks_bind_group: wgpu::BindGroup,
+    debug_renderer: debug::DebugRenderer<'a>,
 }
 
 impl<'a> QuackCraft<'a> {
@@ -128,6 +131,8 @@ impl<'a> QuackCraft<'a> {
 
         let world = World::test(wgpu.clone());
 
+        let mut debug_renderer = debug::DebugRenderer::new(wgpu.clone())?;
+
         println!("Generating chunk mesh...");
 
         world
@@ -147,6 +152,7 @@ impl<'a> QuackCraft<'a> {
             depth_texture,
             world,
             block_textures: blocks,
+            debug_renderer,
             blocks_bind_group,
         })))
     }
@@ -182,6 +188,11 @@ impl<'a> QuackCraft<'a> {
             let right = front.cross(Vec3::Y).normalize();
             camera.update_position(|c| c + right * speed);
         }
+
+        if keyboard.is_key_pressed(Key::F3) {
+            self.debug_renderer.toggle();
+        }
+
         camera.flush();
     }
 
@@ -223,6 +234,8 @@ impl<'a> QuackCraft<'a> {
         self.world.render_state.borrow().render(&mut pass);
 
         drop(pass);
+
+        self.debug_renderer.render(&mut encoder, &view);
 
         wgpu.submit_single(encoder.finish());
         surface.present();

@@ -56,10 +56,8 @@ impl Keyboard {
     pub fn update_keys(&mut self) {
         for state in self.states.values_mut() {
             if *state == KeyState::Pressed {
-                info!("Key pressed: {:?}", state);
                 *state = KeyState::Held;
             } else if *state == KeyState::Released {
-                info!("Key released: {:?}", state);
                 *state = KeyState::Up;
             }
         }
