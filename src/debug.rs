@@ -4,7 +4,7 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use log::error;
+use log::info;
 use wgpu_text::{
     BrushBuilder, TextBrush,
     glyph_brush::{Layout, Section, Text, ab_glyph::FontRef},
@@ -45,6 +45,7 @@ impl<'a> DebugRenderer<'a> {
     ) -> Rc<DebugStatistic> {
         let stat = Rc::new(DebugStatistic::new(label, initial_value));
         self.stats.push(Rc::downgrade(&stat.clone()));
+        info!("Added debug statistic: {}", stat.label);
         stat
     }
 
@@ -62,44 +63,54 @@ impl<'a> DebugRenderer<'a> {
             wgpu::LoadOp::Load,
         );
 
-        let mut text_strings = Vec::new();
-        let mut vertical_offset = 0;
+        let mut section = Section {
+            screen_position: (0.0, 0.0),
+            bounds: (f32::INFINITY, f32::INFINITY),
+            layout: Layout::default_wrap(),
+            text: vec![],
+        };
+
+        // So i'll be the first to admit that this is a massive hack.
+        // Im sure theres a better way to do this, but for now, this works.
+        // We leak the boxes so that the Text objects can hold references to them.
+        // Then after drawing, we reclaim the boxes and drop them.
+        let mut leaked_boxes: Vec<&'static str> = Vec::new();
+
         for stat_weak in &self.stats {
             let stat = match stat_weak.upgrade() {
                 Some(s) => s,
                 None => continue,
             };
 
-            let text = format!("{}: {}", stat.label, stat.value.borrow().as_str());
-            text_strings.push(text);
-            let text_ref = text_strings.last().unwrap();
+            let text = Box::leak(
+                format!("{}: {}\n", stat.label, stat.value.borrow().as_str()).into_boxed_str(),
+            );
+            leaked_boxes.push(text);
 
-            let _ = self
-                .brush
-                .queue(
-                    &self.wgpu.device,
-                    &self.wgpu.queue,
-                    iter::once(Section {
-                        screen_position: (0.0, vertical_offset as f32),
-                        bounds: (f32::INFINITY, f32::INFINITY),
-                        layout: Layout::default_single_line(),
-                        text: vec![
-                            Text::new(text_ref)
-                                .with_color([1.0, 1.0, 1.0, 1.0])
-                                .with_scale(16.0),
-                        ],
-                    }),
-                )
-                .inspect_err(|f| error!("Failed to draw debug line: {}", f));
-
-            vertical_offset += 18;
+            section
+                .text
+                .push(Text::new(text).with_color([1.0, 1.0, 1.0, 1.0]));
         }
 
+        self.brush
+            .queue(&self.wgpu.device, &self.wgpu.queue, iter::once(section))
+            .expect("failed to queue debug text");
+
         self.brush.draw(&mut pass);
+
+        for text in leaked_boxes {
+            unsafe {
+                let _ = Box::from_raw(text as *const str as *mut str);
+            }
+        }
     }
 
     /// Toggles the debug renderer on or off.
     pub fn toggle(&mut self) {
+        info!(
+            "Debug renderer {}",
+            if self.enabled { "disabled" } else { "enabled" }
+        );
         self.enabled = !self.enabled;
     }
 }

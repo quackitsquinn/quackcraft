@@ -7,6 +7,7 @@ use wgpu::{Color, PrimitiveState};
 
 use crate::{
     block::{Block, BlockTextureAtlas},
+    debug::DebugProvider,
     graphics::{
         Wgpu,
         lowlevel::{WgpuInstance, buf::VertexLayout},
@@ -32,7 +33,7 @@ pub type FloatPosition = Vec3;
 mod block;
 mod chunk;
 mod debug;
-mod graphics;
+pub mod graphics;
 mod input;
 mod window;
 mod world;
@@ -52,6 +53,8 @@ pub struct QuackCraft<'a> {
     blocks_bind_group: wgpu::BindGroup,
     debug_renderer: debug::DebugRenderer<'a>,
     post_process_pass: PostProcessingPass<'a>,
+    fps: DebugProvider,
+    frametime_ms: DebugProvider,
 }
 
 impl<'a> QuackCraft<'a> {
@@ -68,9 +71,13 @@ impl<'a> QuackCraft<'a> {
             wgpu::PipelineCompilationOptions::default(),
         );
 
+        let mut debug_renderer = debug::DebugRenderer::new(wgpu.clone())?;
+        let fps = debug_renderer.add_statistic("fps", "0");
+        let frametime_stat = debug_renderer.add_statistic("frametime (ms)", "0.0");
+
         let keyboard = Rc::new(RefCell::new(Keyboard::new()));
         let (camera, camera_layout, camera_bind_group) =
-            CameraController::create_main_camera(&wgpu, &window, 0);
+            CameraController::create_main_camera(&wgpu, &window, &mut debug_renderer, 0);
 
         let mut blocks = TextureCollection::new(wgpu.clone(), Some("block textures"), (16, 16));
 
@@ -143,8 +150,6 @@ impl<'a> QuackCraft<'a> {
 
         let mut world = World::test(wgpu.clone());
 
-        let mut debug_renderer = debug::DebugRenderer::new(wgpu.clone())?;
-
         let post_process_pass = PostProcessingPass::new(wgpu.clone());
 
         world.create_debug_providers(&mut debug_renderer);
@@ -171,6 +176,8 @@ impl<'a> QuackCraft<'a> {
             debug_renderer,
             blocks_bind_group,
             post_process_pass,
+            frametime_ms: frametime_stat,
+            fps,
         })))
     }
 

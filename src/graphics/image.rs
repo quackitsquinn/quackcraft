@@ -33,16 +33,6 @@ impl Image {
         Ok(Self { image, pixel_bytes })
     }
 
-    /// Returns the width of the image.
-    pub fn width(&self) -> u32 {
-        self.image.width()
-    }
-
-    /// Returns the height of the image.
-    pub fn height(&self) -> u32 {
-        self.image.height()
-    }
-
     /// Returns the dimensions of the image as (width, height).
     pub fn dimensions(&self) -> (u32, u32) {
         (self.image.width(), self.image.height())

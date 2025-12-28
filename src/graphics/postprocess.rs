@@ -14,6 +14,7 @@ use crate::graphics::{
 /// copying the full screen texture to the swap chain, or
 /// applying post-processing effects.
 pub struct PostProcessingPass<'a> {
+    #[allow(dead_code)] // If we drop this wgpu will panic on render.
     shader: ShaderProgram<'a>,
     display_texture: Texture<'a>,
     display_bind_group: wgpu::BindGroup,

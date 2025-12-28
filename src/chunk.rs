@@ -1,7 +1,4 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     BlockPosition, ChunkPosition,
@@ -107,6 +104,7 @@ impl<'a> ChunkRenderState<'a> {
                     );
                     let rel_pos = (x as i64, y as i64, z as i64);
                     if block != Block::Air {
+                        // TODO.. in the probably distant future: greedy meshing
                         CardinalDirection::iter().for_each(|dir| {
                             // For now, were just going to assume that out-of-bounds blocks are air.
                             // This is a bigger problem in this engine since chunks are only 16x16x16, rather than 16x256x16.
@@ -122,25 +120,5 @@ impl<'a> ChunkRenderState<'a> {
         self.block_mesh = Some(mesh);
         self.buffers = None; // Invalidate buffers
         self.block_mesh.as_ref().unwrap()
-    }
-    /// Returns the vertex and index buffers for the chunk.
-    pub fn buffers(&self) -> (VertexBuffer<BlockVertex>, IndexBuffer<u16>) {
-        let mesh = self.block_mesh.as_ref().expect("Mesh not generated");
-
-        if let Some((vbuf, ibuf)) = &self.buffers {
-            return (vbuf.clone(), ibuf.clone());
-        }
-
-        let vertex_buffer = self.wgpu.vertex_buffer::<BlockVertex>(
-            bytemuck::cast_slice::<_, BlockVertex>(mesh.vertices()),
-            Some("Chunk Vertex Buffer"),
-        );
-
-        let index_buffer = self.wgpu.index_buffer::<u16>(
-            bytemuck::cast_slice::<_, u16>(mesh.indices()),
-            Some("Chunk Index Buffer"),
-        );
-
-        (vertex_buffer, index_buffer)
     }
 }

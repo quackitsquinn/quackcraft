@@ -93,6 +93,15 @@ where
     }
 }
 
+impl<T> Default for Proxy<T>
+where
+    T: Copy,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub struct CallbackTarget<T>
 where
     T: Copy,

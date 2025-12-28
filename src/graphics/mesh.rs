@@ -3,7 +3,7 @@ use bytemuck::{Pod, Zeroable};
 use crate::{
     BlockPosition,
     graphics::{
-        CardinalDirection,
+        CardinalDirection, FACE_INDICES, FACE_TABLE,
         lowlevel::buf::{IndexBuffer, VertexBuffer, VertexLayout},
         textures::TextureHandle,
     },
@@ -15,56 +15,6 @@ pub struct BlockMesh {
     face_count: usize,
 }
 
-pub const FACE_TABLE: [[([f32; 3], [f32; 2]); 4]; 6] = [
-    // +X
-    [
-        ([1.0, 0.0, 1.0], [0.0, 0.0]),
-        ([1.0, 1.0, 1.0], [0.0, 1.0]),
-        ([1.0, 1.0, 0.0], [1.0, 1.0]),
-        ([1.0, 0.0, 0.0], [1.0, 0.0]),
-    ],
-    // -X
-    [
-        ([0.0, 0.0, 1.0], [0.0, 0.0]),
-        ([0.0, 1.0, 1.0], [0.0, 1.0]),
-        ([0.0, 1.0, 0.0], [1.0, 1.0]),
-        ([0.0, 0.0, 0.0], [1.0, 0.0]),
-    ],
-    // +Y
-    [
-        ([1.0, 1.0, 0.0], [1.0, 0.0]),
-        ([0.0, 1.0, 0.0], [0.0, 0.0]),
-        ([0.0, 1.0, 1.0], [0.0, 1.0]),
-        ([1.0, 1.0, 1.0], [1.0, 1.0]),
-    ],
-    // -Y
-    [
-        ([0.0, 0.0, 1.0], [0.0, 1.0]),
-        ([1.0, 0.0, 1.0], [1.0, 1.0]),
-        ([1.0, 0.0, 0.0], [1.0, 0.0]),
-        ([0.0, 0.0, 0.0], [0.0, 0.0]),
-    ],
-    // +Z
-    [
-        ([0.0, 1.0, 1.0], [0.0, 1.0]),
-        ([0.0, 0.0, 1.0], [0.0, 0.0]),
-        ([1.0, 0.0, 1.0], [1.0, 0.0]),
-        ([1.0, 1.0, 1.0], [1.0, 1.0]),
-    ],
-    // -Z
-    [
-        ([1.0, 0.0, 0.0], [1.0, 0.0]),
-        ([1.0, 1.0, 0.0], [1.0, 1.0]),
-        ([0.0, 1.0, 0.0], [0.0, 1.0]),
-        ([0.0, 0.0, 0.0], [0.0, 0.0]),
-    ],
-];
-
-pub const FACE_INDICES: [u16; 6] = [0, 1, 2, 2, 3, 0];
-
-/// Texture coordinates for a face (assuming a square texture)
-pub const TEX_COORDS: [[f32; 2]; 4] = [[0.0, 1.0], [0.0, 0.0], [1.0, 0.0], [1.0, 1.0]];
-
 impl BlockMesh {
     pub fn empty() -> Self {
         Self {
@@ -72,12 +22,6 @@ impl BlockMesh {
             indices: Vec::new(),
             face_count: 0,
         }
-    }
-
-    /// Checks if the mesh already contains the given vertex.
-    /// Returns the index of the vertex if it exists.
-    pub fn contains_vertex(&self, vertex: &BlockVertex) -> Option<usize> {
-        self.vertices.iter().position(|v| v.round_eq(vertex))
     }
 
     /// Pushes a vertex to the mesh and returns its index.
@@ -126,22 +70,6 @@ impl BlockMesh {
 
     pub fn indices(&self) -> &Vec<u16> {
         &self.indices
-    }
-
-    /// Combines this mesh with another mesh and returns the result.
-    pub fn combine_with(&self, other: &BlockMesh) -> BlockMesh {
-        let mut combined = self.clone();
-        let index_offset = combined.vertices.len() as u16;
-
-        combined.vertices.extend_from_slice(&other.vertices);
-
-        combined
-            .indices
-            .extend(other.indices.iter().map(|&i| i + index_offset));
-
-        combined.face_count += other.face_count;
-
-        combined
     }
 
     /// Combines another mesh into this mesh.

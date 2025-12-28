@@ -1,11 +1,9 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
+use std::{cell::RefCell, rc::Rc};
 
 use glam::{Mat4, Vec2, Vec3, vec2};
 
 use crate::{
+    debug::{DebugProvider, DebugRenderer},
     graphics::{Wgpu, callback::TargetHandle, camera::Camera, lowlevel::buf::UniformBuffer},
     window::GlfwWindow,
 };
@@ -17,11 +15,16 @@ pub struct CameraController<'a> {
     camera: Camera,
     uniform: UniformBuffer<'a, Mat4>,
     callback_handle: Option<TargetHandle<(f64, f64)>>,
+    position_entry: DebugProvider,
+    rotation_entry: DebugProvider,
     wgpu: Wgpu<'a>,
 }
 
 impl CameraController<'_> {
-    pub fn new<'a>(wgpu: Wgpu<'a>) -> CameraController<'a> {
+    pub fn new<'a, 'b>(
+        wgpu: Wgpu<'a>,
+        debug_renderer: &mut DebugRenderer<'b>,
+    ) -> CameraController<'a> {
         let camera = Camera::new(
             wgpu.config.borrow().width as f32 / wgpu.config.borrow().height as f32,
             0.1,
@@ -36,6 +39,10 @@ impl CameraController<'_> {
             pos: Vec3::ZERO,
             callback_handle: None,
             rot: Vec2::ZERO,
+            position_entry: debug_renderer
+                .add_statistic("Camera Position", format!("{:?}", Vec3::ZERO)),
+            rotation_entry: debug_renderer
+                .add_statistic("Camera Rotation", format!("{:?}", Vec2::ZERO)),
         }
     }
 
@@ -80,6 +87,10 @@ impl CameraController<'_> {
     pub fn flush(&mut self) {
         let matrix = self.camera.projection_view_matrix();
         self.uniform.write(&matrix);
+        self.position_entry
+            .update_value(format!("{:.2?}", self.pos));
+        self.rotation_entry
+            .update_value(format!("{:.2?}", self.rot));
     }
 
     /// Sets the camera to look at a specific target point.
@@ -119,17 +130,21 @@ impl CameraController<'_> {
     pub fn create_main_camera(
         wgpu: &Wgpu<'static>,
         window: &GlfwWindow,
+        debug_renderer: &mut DebugRenderer<'static>,
         binding: u32,
     ) -> (
         Rc<RefCell<CameraController<'static>>>,
         wgpu::BindGroupLayout,
         wgpu::BindGroup,
     ) {
-        let camera = Rc::new(RefCell::new(CameraController::new(wgpu.clone())));
+        let camera = Rc::new(RefCell::new(CameraController::new(
+            wgpu.clone(),
+            debug_renderer,
+        )));
         let (camera_layout, camera_bind_group) = camera.borrow().bind_group(binding);
 
         let closure_camera = camera.clone();
-        CameraController::register_callback(closure_camera.clone(), &window);
+        CameraController::register_callback(closure_camera.clone(), window);
         window.set_mouse_mode(glfw::CursorMode::Disabled);
 
         (camera, camera_layout, camera_bind_group)
