@@ -105,11 +105,12 @@ impl<'a> ChunkRenderState<'a> {
                         y as i64 + (at.1 * CHUNK_SIZE as i64),
                         z as i64 + (at.2 * CHUNK_SIZE as i64),
                     );
+                    let rel_pos = (x as i64, y as i64, z as i64);
                     if block != Block::Air {
                         CardinalDirection::iter().for_each(|dir| {
                             // For now, were just going to assume that out-of-bounds blocks are air.
                             // This is a bigger problem in this engine since chunks are only 16x16x16, rather than 16x256x16.
-                            if !chunk.inspect_block(dir.offset_pos(true_pos)).is_solid() {
+                            if !chunk.inspect_block(dir.offset_pos(rel_pos)).is_solid() {
                                 mesh.emit_face(&with.face_texture_index(block, dir), true_pos, dir);
                             }
                         });
