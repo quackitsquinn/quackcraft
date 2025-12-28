@@ -19,6 +19,7 @@ use crate::{
             buf::{UniformBuffer, VertexLayout},
         },
         mesh::BlockVertex,
+        postprocess::PostProcessingPass,
         textures::TextureCollection,
     },
     input::{
@@ -61,6 +62,7 @@ pub struct QuackCraft<'a> {
     block_textures: TextureCollection<'a>,
     blocks_bind_group: wgpu::BindGroup,
     debug_renderer: debug::DebugRenderer<'a>,
+    post_process_pass: PostProcessingPass<'a>,
 }
 
 impl<'a> QuackCraft<'a> {
@@ -154,6 +156,8 @@ impl<'a> QuackCraft<'a> {
 
         let mut debug_renderer = debug::DebugRenderer::new(wgpu.clone())?;
 
+        let post_process_pass = PostProcessingPass::new(wgpu.clone());
+
         world.create_debug_providers(&mut debug_renderer);
 
         println!("Generating chunk mesh...");
@@ -177,6 +181,7 @@ impl<'a> QuackCraft<'a> {
             block_textures: blocks,
             debug_renderer,
             blocks_bind_group,
+            post_process_pass,
         })))
     }
 
@@ -223,7 +228,7 @@ impl<'a> QuackCraft<'a> {
         let wgpu = self.wgpu.clone();
 
         let mut encoder = wgpu.create_encoder(None);
-        let (surface, view) = wgpu.current_view()?;
+        let view = self.post_process_pass.create_display_texture_view();
 
         if self.keyboard.borrow().is_key_pressed(Key::Escape) {
             match self.window.get_mouse_mode() {
@@ -259,6 +264,8 @@ impl<'a> QuackCraft<'a> {
         drop(pass);
 
         self.debug_renderer.render(&mut encoder, &view);
+
+        let surface = self.post_process_pass.render(&mut encoder);
 
         wgpu.submit_single(encoder.finish());
         surface.present();

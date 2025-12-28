@@ -316,6 +316,71 @@ impl<'a> WgpuInstance<'a> {
         )
     }
 
+    /// Creates a texture from the given parameters, sized to the current surface configuration. The given image data is uninitialized.
+    pub fn texture_uninit(
+        &self,
+        label: Option<&str>,
+        format: wgpu::TextureFormat,
+        usage: wgpu::TextureUsages,
+        dims: (u32, u32),
+        layers: u32,
+    ) -> Texture<'a> {
+        let (width, height) = dims;
+        let size = wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: layers,
+        };
+
+        let text = self.create_texture(&wgpu::TextureDescriptor {
+            label,
+            size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format,
+            usage,
+            view_formats: &[],
+        });
+
+        let text_layout = wgpu::BindGroupLayoutEntry {
+            binding: 0,
+            visibility: wgpu::ShaderStages::FRAGMENT,
+            ty: wgpu::BindingType::Texture {
+                multisampled: false,
+                view_dimension: wgpu::TextureViewDimension::D2Array,
+                // TODO: Allow this to be configurable based on texture format.
+                // Minecraft clone probably means that using a integer format is easier.
+                sample_type: wgpu::TextureSampleType::Float { filterable: false },
+            },
+            count: None,
+        };
+
+        let texture_view = text.create_view(&wgpu::TextureViewDescriptor {
+            dimension: Some(wgpu::TextureViewDimension::D2Array),
+            ..Default::default()
+        });
+
+        let sampler = self.default_sampler.clone().expect("no default sampler!");
+
+        let sampler_layout = wgpu::BindGroupLayoutEntry {
+            binding: 1,
+            visibility: wgpu::ShaderStages::FRAGMENT,
+            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+            count: None,
+        };
+
+        Texture::new(
+            self.instance(),
+            text,
+            text_layout,
+            sampler,
+            sampler_layout,
+            texture_view,
+            layers as usize,
+        )
+    }
+
     pub fn depth_texture(&self) -> depth::DepthTexture<'a> {
         depth::DepthTexture::new(self.instance())
     }

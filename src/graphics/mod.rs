@@ -10,6 +10,7 @@ pub mod image;
 pub mod lowlevel;
 pub mod mesh;
 pub mod model;
+pub mod postprocess;
 pub mod renderer;
 pub mod textures;
 
