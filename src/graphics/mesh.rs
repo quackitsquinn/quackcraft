@@ -1,9 +1,7 @@
 use bytemuck::{Pod, Zeroable};
-use glam::Vec3;
 
 use crate::{
     BlockPosition,
-    block::Block,
     graphics::{
         CardinalDirection,
         lowlevel::buf::{IndexBuffer, VertexBuffer, VertexLayout},

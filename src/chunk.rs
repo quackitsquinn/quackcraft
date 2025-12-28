@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    rc::{Rc, Weak},
+    rc::Rc,
 };
 
 use crate::{

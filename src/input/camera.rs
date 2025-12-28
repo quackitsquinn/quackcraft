@@ -1,10 +1,9 @@
 use std::{
     cell::RefCell,
-    rc::{Rc, Weak},
+    rc::Rc,
 };
 
 use glam::{Mat4, Vec2, Vec3, vec2};
-use log::info;
 
 use crate::{
     graphics::{Wgpu, callback::TargetHandle, camera::Camera, lowlevel::buf::UniformBuffer},

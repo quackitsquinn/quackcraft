@@ -105,6 +105,11 @@ impl<'a> Texture<'a> {
         let bind_group = self.bind_group(label, &layout, sampler_binding, texture_binding);
         (layout, bind_group)
     }
+
+    /// Returns the number of images in this texture (for array textures).
+    pub fn image_count(&self) -> usize {
+        self.image_count
+    }
 }
 
 impl Debug for Texture<'_> {

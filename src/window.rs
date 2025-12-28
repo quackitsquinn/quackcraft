@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use glfw::{Context, Glfw, GlfwReceiver, PWindow, Window};
+use glfw::{Context, Glfw, GlfwReceiver, PWindow};
 use log::*;
 
 use crate::{

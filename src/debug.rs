@@ -1,6 +1,5 @@
 use std::{
-    cell::{Cell, RefCell},
-    fmt::Debug,
+    cell::RefCell,
     iter,
     rc::{Rc, Weak},
 };
@@ -55,7 +54,13 @@ impl<'a> DebugRenderer<'a> {
             return;
         }
 
-        let mut pass = self.wgpu.start_secondary_pass(encoder, view, None);
+        let mut pass = self.wgpu.render_pass(
+            Some("Debug Renderer Pass"),
+            encoder,
+            view,
+            None,
+            wgpu::LoadOp::Load,
+        );
 
         let mut text_strings = Vec::new();
         let mut vertical_offset = 0;

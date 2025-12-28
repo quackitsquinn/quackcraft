@@ -1,13 +1,11 @@
 use std::{
     cell::RefCell,
-    num::NonZeroU32,
     rc::{Rc, Weak},
     sync::Arc,
 };
 
 use anyhow::Context;
 use bytemuck::Pod;
-use image::buffer;
 use log::debug;
 use wgpu::{
     self as w, Color, CommandBuffer, CommandEncoder, CompareFunction, Device, DeviceDescriptor,
@@ -18,13 +16,10 @@ use wgpu::{
 
 use crate::{
     ReadOnly,
-    graphics::{
-        image::Image,
-        lowlevel::{
-            buf::{IndexBuffer, IndexLayout, UniformBuffer, VertexBuffer, VertexLayout},
-            shader::ShaderProgram,
-            texture::Texture,
-        },
+    graphics::lowlevel::{
+        buf::{IndexBuffer, IndexLayout, UniformBuffer, VertexBuffer, VertexLayout},
+        shader::ShaderProgram,
+        texture::Texture,
     },
 };
 
@@ -232,6 +227,11 @@ impl<'a> WgpuInstance<'a> {
     ) -> Texture<'a> {
         assert!(!image.is_empty(), "Image slice must not be empty");
         let (width, height) = dims;
+
+        // TODO: So we have a dilemma here.. we currently treat all textures as texture arrays.
+        // This is nice because a. concrete type and b. is simple to implement. However, this means
+        // that single-layer textures are still treated as arrays.
+        // This is not a *huge* issue, but it can be confusing for users expecting a 2D texture.
         let size = wgpu::Extent3d {
             width,
             height,
@@ -521,43 +521,21 @@ impl<'a> WgpuInstance<'a> {
     }
 
     /// Clears the given texture view with the specified color using the provided command encoder.
-    pub fn start_main_pass<'b>(
+    pub fn render_pass<'b>(
         &self,
-        color: Color,
+        label: Option<&str>,
         encoder: &'b mut CommandEncoder,
         view: &TextureView,
         depth_stencil_attachment: Option<wgpu::RenderPassDepthStencilAttachment>,
+        color_load_op: wgpu::LoadOp<Color>,
     ) -> RenderPass<'b> {
         encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("clear render pass"),
+            label,
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(color),
-                    store: StoreOp::Store,
-                },
-                depth_slice: None,
-            })],
-            depth_stencil_attachment,
-            ..Default::default()
-        })
-    }
-
-    /// Starts a secondary render pass that loads the existing contents of the texture view.
-    pub fn start_secondary_pass<'b>(
-        &self,
-        encoder: &'b mut CommandEncoder,
-        view: &TextureView,
-        depth_stencil_attachment: Option<wgpu::RenderPassDepthStencilAttachment>,
-    ) -> RenderPass<'b> {
-        encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("secondary render pass"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
+                    load: color_load_op,
                     store: StoreOp::Store,
                 },
                 depth_slice: None,

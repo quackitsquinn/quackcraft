@@ -1,5 +1,5 @@
 use glam::{Vec2, vec2};
-use wgpu::{ColorTargetState, PrimitiveState, SurfaceTarget, SurfaceTexture, TextureUsages};
+use wgpu::{ColorTargetState, PrimitiveState, SurfaceTexture, TextureUsages};
 
 use crate::graphics::{
     Wgpu,

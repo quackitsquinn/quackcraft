@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use wgpu::{CompareFunction, StoreOp, TextureFormat, naga::back::msl::sampler};
+use wgpu::{CompareFunction, StoreOp, TextureFormat};
 
 use crate::graphics::lowlevel::WgpuInstance;
 
@@ -80,7 +80,7 @@ impl<'a> DepthTexture<'a> {
         }
     }
 
-    pub fn attachment(&self) -> wgpu::RenderPassDepthStencilAttachment {
+    pub fn attachment(&self) -> wgpu::RenderPassDepthStencilAttachment<'_> {
         wgpu::RenderPassDepthStencilAttachment {
             view: &self.view,
             depth_ops: Some(wgpu::Operations {

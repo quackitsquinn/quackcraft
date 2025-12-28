@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use glfw::Key;
-use log::info;
 
 pub struct Keyboard {
     states: HashMap<Key, KeyState>,

@@ -1,31 +1,20 @@
-use std::{cell::RefCell, iter, rc::Rc, sync::Arc};
+use std::{cell::RefCell, rc::Rc, sync::Arc};
 
-use bytemuck::Pod;
-use glam::{Mat4, Vec2, Vec3, vec2};
+use glam::Vec3;
 use glfw::{Action, Key, WindowEvent};
 use log::info;
-use wgpu::{Color, PrimitiveState, TextureFormat, TextureUsages};
+use wgpu::{Color, PrimitiveState};
 
 use crate::{
     block::{Block, BlockTextureAtlas},
-    chunk::Chunk,
-    debug::DebugStatistic,
     graphics::{
         Wgpu,
-        camera::Camera,
-        image::Image,
-        lowlevel::{
-            WgpuInstance,
-            buf::{UniformBuffer, VertexLayout},
-        },
+        lowlevel::{WgpuInstance, buf::VertexLayout},
         mesh::BlockVertex,
         postprocess::PostProcessingPass,
         textures::TextureCollection,
     },
-    input::{
-        camera::CameraController,
-        keyboard::{self, Keyboard},
-    },
+    input::{camera::CameraController, keyboard::Keyboard},
     world::World,
 };
 
@@ -195,7 +184,7 @@ impl<'a> QuackCraft<'a> {
         }
     }
 
-    fn update_camera(&mut self, frame: u64) {
+    fn update_camera(&mut self, _frame: u64) {
         let mut camera = self.camera.borrow_mut();
         let keyboard = self.keyboard.borrow();
         let speed = 0.2;
@@ -248,11 +237,12 @@ impl<'a> QuackCraft<'a> {
 
         self.update_camera(frame);
 
-        let mut pass = wgpu.start_main_pass(
-            Self::rainbow(frame),
+        let mut pass = wgpu.render_pass(
+            Some("World Pass"),
             &mut encoder,
             &view,
             Some(self.depth_texture.attachment()),
+            wgpu::LoadOp::Clear(Self::rainbow(frame)),
         );
 
         pass.set_bind_group(1, &self.blocks_bind_group, &[]);
