@@ -66,11 +66,11 @@ impl<'a> QuackCraft<'a> {
         window: window::GlfwWindow,
         wgpu: Rc<WgpuInstance<'static>>,
     ) -> anyhow::Result<&'static mut QuackCraft<'static>> {
-        let block_shader = wgpu.load_shader(
-            include_str!("../shaders/block.wgsl"),
-            Some("block_shader"),
-            Some("vs_main"),
-            Some("fs_main"),
+        let solid_block_chunk_shader = wgpu.load_shader(
+            include_str!("../shaders/chunk_solid.wgsl"),
+            Some("Chunk Solid Block Shader"),
+            Some("vs"),
+            Some("fs"),
             wgpu::PipelineCompilationOptions::default(),
         );
 
@@ -139,7 +139,7 @@ impl<'a> QuackCraft<'a> {
         let layout = wgpu.pipeline_layout(None, &[&camera_layout, &blocks_bind_layout]);
         let pipeline = wgpu.pipeline(
             Some("main pipeline"),
-            &block_shader,
+            &solid_block_chunk_shader,
             &layout,
             &[BlockVertex::LAYOUT],
             PrimitiveState {

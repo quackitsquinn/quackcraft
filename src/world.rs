@@ -60,17 +60,18 @@ impl<'a> World<'a> {
                 for i in 0..16 {
                     for j in 0..16 {
                         if (i + j) % 2 == 0 {
-                            chunk.data[i][14][j] = crate::Block::OakWood;
+                            chunk.data[i][15][j] = crate::Block::OakWood;
                         } else {
-                            chunk.data[i][15][j] = crate::Block::OakLeaves;
+                            chunk.data[i][14][j] = crate::Block::OakLeaves;
                         }
                         chunk.data[i][3][j] = crate::Block::Grass;
                         chunk.data[i][2][j] = crate::Block::Dirt;
-                        chunk.data[i][2][j] = crate::Block::Dirt;
-                        chunk.data[i][1][j] = crate::Block::Stone;
+                        chunk.data[i][1][j] = crate::Block::Dirt;
+                        chunk.data[i][0][j] = crate::Block::Stone;
                     }
                 }
-                world.push_chunk(bp(x, 0, z), chunk);
+                world.push_chunk(bp(x, 0, z), chunk.clone());
+                world.push_chunk(bp(x, 1, z), chunk);
             }
         }
 
@@ -105,10 +106,6 @@ impl<'a> World<'a> {
             CardinalDirection::iter().for_each(|dir| {
                 let neighbor_pos = pos.offset(dir);
                 if let Some(neighbor) = self.chunks.get(&neighbor_pos) {
-                    info!(
-                        "Setting neighbor for chunk at {:?} towards {:?} (neighbor at {:?})",
-                        pos, dir, neighbor_pos
-                    );
                     chunk.get_mut().set_neighbor(dir, Some(neighbor.clone()));
                 }
             });
@@ -118,7 +115,7 @@ impl<'a> World<'a> {
 
 pub struct WorldRenderState<'a> {
     pub wgpu: Wgpu<'a>,
-    meshes: HashMap<(i64, i64), BlockMesh>,
+    meshes: HashMap<BlockPosition, BlockMesh>,
     buffers: Option<Vec<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>>,
 }
 
@@ -141,8 +138,8 @@ impl<'a> WorldRenderState<'a> {
             let mut render_state = chunk.render_state.borrow_mut();
             let mesh = render_state.generate_mesh(&chunk, *pos, with);
             meshes
-                .entry((pos.0, pos.2))
-                .and_modify(|f: &mut BlockMesh| f.combine(mesh))
+                .entry(*pos)
+                .and_modify(|f: &mut BlockMesh| *f = mesh.clone())
                 .or_insert_with(|| mesh.clone());
         }
 

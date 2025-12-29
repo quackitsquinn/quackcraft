@@ -53,7 +53,7 @@ impl BlockMesh {
             let vertex = BlockVertex {
                 position: *face,
                 tex_coord: *tex_coords,
-                block_type: *handle,
+                texture_id: *handle,
             };
 
             face_indices[i] = self.push_vertex(vertex);
@@ -113,7 +113,7 @@ impl BlockMesh {
 pub struct BlockVertex {
     position: [f32; 3],
     tex_coord: [f32; 2],
-    block_type: u32,
+    texture_id: u32,
 }
 
 impl BlockVertex {

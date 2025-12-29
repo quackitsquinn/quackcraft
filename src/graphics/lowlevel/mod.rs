@@ -9,7 +9,7 @@ use bytemuck::Pod;
 use log::debug;
 use wgpu::{
     self as w, Color, CommandBuffer, CommandEncoder, CompareFunction, Device, DeviceDescriptor,
-    Instance, InstanceDescriptor, Origin3d, PowerPreference, Queue, RenderPass,
+    Instance, InstanceDescriptor, Origin3d, PowerPreference, PresentMode, Queue, RenderPass,
     RequestAdapterOptions, StoreOp, Surface, SurfaceConfiguration, SurfaceTexture, TextureAspect,
     TextureView, util::DeviceExt,
 };
@@ -85,7 +85,7 @@ impl<'a> WgpuInstance<'a> {
             format: surface_format,
             width: size.0 as u32,
             height: size.1 as u32,
-            present_mode: surface_caps.present_modes[0],
+            present_mode: PresentMode::Immediate,
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
