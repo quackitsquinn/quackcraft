@@ -1,30 +1,18 @@
 use std::{
     cell::{Cell, Ref, RefCell, RefMut},
-    rc::{Rc, Weak},
     sync::Arc,
 };
 
 use glam::Vec3;
 use glfw::{Action, Key, WindowEvent};
 use log::info;
-use wgpu::{Color, PrimitiveState};
 
 use crate::{
     assets::AssetStore,
-    block::{Block, BlockTextureAtlas},
-    debug::{DebugProvider, DebugRenderer},
-    graphics::{
-        Wgpu,
-        lowlevel::{WgpuInstance, buf::VertexLayout},
-        mesh::BlockVertex,
-        postprocess::PostProcessingPass,
-        render::RenderState,
-        textures::TextureCollection,
-    },
-    input::{camera::CameraController, keyboard::Keyboard},
-    resource::{ImmutableResource, Resource, WeakImmutableResource, WeakResource},
-    window::GlfwWindow,
-    world::World,
+    block::Block,
+    graphics::render::RenderState,
+    input::keyboard::Keyboard,
+    resource::{ImmutableResource, WeakImmutableResource},
 };
 
 /// A read-only string type.

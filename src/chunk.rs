@@ -1,21 +1,17 @@
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
 
-use log::{info, warn};
+use log::warn;
 
 use crate::{
-    BlockPosition, ChunkPosition, GameRef, GameState,
+    BlockPosition, ChunkPosition, GameRef,
     block::{Block, BlockTextureAtlas},
     coords::bp,
     graphics::{
-        CardinalDirection, Wgpu,
-        lowlevel::{
-            WgpuInstance,
-            buf::{IndexBuffer, VertexBuffer},
-        },
+        CardinalDirection,
+        lowlevel::buf::{IndexBuffer, VertexBuffer},
         mesh::{BlockMesh, BlockVertex},
-        render::RenderState,
     },
-    resource::{ImmutableResource, Resource},
+    resource::Resource,
 };
 
 pub const CHUNK_SIZE: usize = 16;

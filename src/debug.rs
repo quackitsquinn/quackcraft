@@ -11,7 +11,7 @@ use wgpu_text::{
     glyph_brush::{Layout, Section, Text, ab_glyph::FontRef},
 };
 
-use crate::{ReadOnlyString, graphics::Wgpu, resource::Resource};
+use crate::{ReadOnlyString, graphics::Wgpu};
 
 pub struct DebugRenderer {
     pub enabled: bool,

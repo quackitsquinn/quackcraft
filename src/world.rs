@@ -1,18 +1,16 @@
 use std::{cell::RefCell, collections::HashMap};
 
-use log::info;
 
 use crate::{
     BlockPosition, GameRef, GameState,
-    block::{self, Block},
+    block::Block,
     chunk::Chunk,
     coords::bp,
-    debug::{self, DebugProvider},
+    debug::DebugProvider,
     graphics::{
-        CardinalDirection, Wgpu,
+        CardinalDirection,
         lowlevel::buf::{IndexBuffer, VertexBuffer},
         mesh::{BlockMesh, BlockVertex},
-        render::RenderState,
     },
     resource::{ImmutableResource, Resource},
 };

@@ -75,5 +75,5 @@ impl RenderStateDebugInformation {
         }
     }
 
-    pub fn update(&self, state: &GameState) {}
+    pub fn update(&self, _state: &GameState) {}
 }

@@ -1,6 +1,5 @@
 use std::rc::Rc;
 
-use crate::BlockPosition;
 
 pub mod callback;
 pub mod camera;
