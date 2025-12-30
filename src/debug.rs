@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    fmt::Debug,
     iter,
     rc::{Rc, Weak},
 };
@@ -17,6 +18,15 @@ pub struct DebugRenderer {
     brush: TextBrush<FontRef<'static>>,
     stats: Vec<Weak<DebugStatistic>>,
     wgpu: Wgpu,
+}
+
+impl Debug for DebugRenderer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DebugRenderer")
+            .field("enabled", &self.enabled)
+            .field("stats_count", &self.stats.len())
+            .finish()
+    }
 }
 
 /// A type alias for a reference-counted debug statistic.
@@ -120,6 +130,14 @@ impl DebugRenderer {
 pub struct DebugStatistic {
     pub label: ReadOnlyString,
     pub value: RefCell<String>,
+}
+
+impl Debug for DebugStatistic {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DebugStatistic")
+            .field("label", &self.label)
+            .finish()
+    }
 }
 
 impl DebugStatistic {

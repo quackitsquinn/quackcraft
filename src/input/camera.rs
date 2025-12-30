@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use glam::{Mat4, Vec2, Vec3, vec2};
 
@@ -9,6 +9,7 @@ use crate::{
     window::GlfwWindow,
 };
 
+#[derive(Clone)]
 pub struct CameraController {
     pos: Vec3,
     /// Pitch and yaw rotation.
@@ -19,6 +20,16 @@ pub struct CameraController {
     position_entry: DebugProvider,
     rotation_entry: DebugProvider,
     wgpu: Wgpu,
+}
+
+impl Debug for CameraController {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CameraController")
+            .field("pos", &self.pos)
+            .field("rot", &self.rot)
+            .field("inner_camera", &self.camera)
+            .finish()
+    }
 }
 
 impl CameraController {

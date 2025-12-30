@@ -4,6 +4,7 @@ use crate::{
     graphics::{
         Wgpu,
         lowlevel::{WgpuInstance, depth::DepthTexture},
+        postprocess::PostProcessingPass,
     },
     input::camera::CameraController,
     resource::Resource,
@@ -11,18 +12,22 @@ use crate::{
 };
 
 /// Module for rendering-related structures and functions.
+#[derive(Debug)]
 pub struct RenderState {
+    // TODO: Move to GameState when it's cleaned up.
     pub window: Resource<GlfwWindow>,
     // INFO: `window` must outlive `wgpu`!
     pub wgpu: Wgpu,
     pub depth_texture: DepthTexture,
     // TODO: CameraController should really own BindGroupLayout and BindGroup
+    // This needs to be a resource so that it can be borrowed by GlfwWindow event handlers.
     pub camera: (
         Resource<CameraController>,
         wgpu::BindGroupLayout,
         wgpu::BindGroup,
     ),
-    pub debug_renderer: Resource<DebugRenderer>,
+    pub debug_renderer: DebugRenderer,
+    pub post_process_pass: PostProcessingPass,
 }
 
 impl RenderState {
@@ -42,12 +47,15 @@ impl RenderState {
 
         let depth_texture = DepthTexture::new(wgpu.clone());
 
+        let post_process_pass = PostProcessingPass::new(wgpu.clone());
+
         Ok(RenderState {
             window: window.into(),
             wgpu,
             depth_texture,
             camera,
-            debug_renderer: debug_renderer.into(),
+            debug_renderer,
+            post_process_pass,
         })
     }
 }

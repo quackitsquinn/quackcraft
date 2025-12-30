@@ -2,6 +2,7 @@ use std::f32::consts;
 
 use glam::{Mat4, Vec3, Vec4};
 
+#[derive(Clone, Debug)]
 pub struct Camera {
     projection: Mat4,
     view: Mat4,

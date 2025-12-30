@@ -13,9 +13,10 @@ use crate::graphics::{
 /// Module for anything past the main rendering pipeline, such as
 /// copying the full screen texture to the swap chain, or
 /// applying post-processing effects.
-pub struct PostProcessingPass<'a> {
+#[derive(Debug)]
+pub struct PostProcessingPass {
     #[allow(dead_code)] // If we drop this wgpu will panic on render.
-    shader: ShaderProgram<'a>,
+    shader: ShaderProgram,
     display_texture: Texture,
     display_bind_group: wgpu::BindGroup,
     pipeline: wgpu::RenderPipeline,
@@ -33,14 +34,13 @@ const UV_VERTICES: &[Uv] = &[
 
 const UV_INDICES: &[u16] = &[0, 1, 2, 2, 1, 3];
 
-impl<'a> PostProcessingPass<'a> {
+impl PostProcessingPass {
     pub fn new(wgpu: Wgpu) -> Self {
         let shader = wgpu.load_shader(
             include_str!("../../shaders/postprocess.wgsl"),
             Some("Post processing Shader"),
             Some("vs"),
             Some("fs"),
-            Default::default(),
         );
 
         let output_format = wgpu.config.get().format;
@@ -124,7 +124,7 @@ impl<'a> PostProcessingPass<'a> {
     }
 }
 
-#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable, Debug)]
 #[repr(C)]
 struct Uv(Vec2, Vec2);
 

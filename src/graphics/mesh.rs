@@ -5,6 +5,7 @@ use crate::{
     graphics::{
         CardinalDirection, FACE_INDICES, FACE_TABLE,
         lowlevel::buf::{IndexBuffer, VertexBuffer, VertexLayout},
+        render::RenderState,
         textures::TextureHandle,
     },
 };
@@ -87,8 +88,9 @@ impl BlockMesh {
     /// Creates the vertex and index buffers for the mesh.
     pub fn create_buffers(
         &self,
-        wgpu: &crate::graphics::Wgpu,
+        wgpu: &RenderState,
     ) -> (VertexBuffer<BlockVertex>, IndexBuffer<u16>) {
+        let wgpu = &wgpu.wgpu;
         let vertex_buffer = wgpu.vertex_buffer::<BlockVertex>(
             bytemuck::cast_slice::<_, BlockVertex>(self.vertices()),
             Some("BlockMesh Vertex Buffer"),

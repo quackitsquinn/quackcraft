@@ -3,8 +3,8 @@ use std::{cell::RefCell, collections::HashMap};
 use log::info;
 
 use crate::{
-    BlockPosition,
-    block::Block,
+    BlockPosition, GameRef, GameState,
+    block::{self, Block},
     chunk::Chunk,
     coords::bp,
     debug::{self, DebugProvider},
@@ -12,46 +12,41 @@ use crate::{
         CardinalDirection, Wgpu,
         lowlevel::buf::{IndexBuffer, VertexBuffer},
         mesh::{BlockMesh, BlockVertex},
+        render::RenderState,
     },
-    resource::Resource,
+    resource::{ImmutableResource, Resource},
 };
 
 pub struct World {
     pub chunks: HashMap<BlockPosition, Resource<Chunk>>,
     pub render_state: RefCell<WorldRenderState>,
-    face_count: Option<DebugProvider>,
+    debug_state: Resource<WorldDebugState>,
 }
 
 impl World {
     /// Creates an empty World.
-    pub fn empty(wgpu: Wgpu) -> Self {
+    pub fn empty(resource_state: GameRef) -> Self {
         Self {
             chunks: HashMap::new(),
-            render_state: RefCell::new(WorldRenderState::new(wgpu)),
-            face_count: None,
+            render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
+            debug_state: WorldDebugState::new(&resource_state).into(),
         }
     }
 
     /// Creates a new World from the given chunks.
-    pub fn new(chunks: Vec<((i64, i64, i64), Chunk)>, wgpu: Wgpu) -> Self {
+    pub fn new(chunks: Vec<((i64, i64, i64), Chunk)>, resource_state: GameRef) -> Self {
         Self {
             chunks: chunks
                 .into_iter()
                 .map(|(k, v)| (k.into(), v.into()))
                 .collect(),
-            render_state: RefCell::new(WorldRenderState::new(wgpu)),
-            face_count: None,
+            render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
+            debug_state: WorldDebugState::new(&resource_state).into(),
         }
     }
 
-    /// Creates debug providers for this world.
-    pub fn create_debug_providers(&mut self, debug_renderer: &mut debug::DebugRenderer) {
-        let face_count = debug_renderer.add_statistic("Face Count", "0");
-        self.face_count = Some(face_count);
-    }
-
     /// Creates a test world with some simple terrain.
-    pub fn test(wgpu: Wgpu) -> Self {
+    pub fn test(wgpu: GameRef) -> Self {
         let mut world = Self::empty(wgpu.clone());
         for x in 0..5 {
             for z in 0..5 {
@@ -78,9 +73,9 @@ impl World {
     }
 
     /// Creates a test world with a single block of the given type.
-    pub fn single(wgpu: Wgpu, block: Block) -> Self {
+    pub fn single(resource_state: GameRef, block: Block) -> Self {
         let chunk = {
-            let mut chunk = Chunk::empty(wgpu.clone());
+            let mut chunk = Chunk::empty(resource_state.clone());
             chunk.data[8][8][8] = block;
             chunk
         };
@@ -88,8 +83,8 @@ impl World {
         chunks.insert(bp(0, 0, 0), chunk.into());
         Self {
             chunks,
-            render_state: RefCell::new(WorldRenderState::new(wgpu)),
-            face_count: None,
+            render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
+            debug_state: WorldDebugState::new(&resource_state).into(),
         }
     }
 
@@ -113,15 +108,15 @@ impl World {
 }
 
 pub struct WorldRenderState {
-    pub wgpu: Wgpu,
+    pub game_state: GameRef,
     meshes: HashMap<BlockPosition, BlockMesh>,
     buffers: Option<Vec<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>>,
 }
 
 impl WorldRenderState {
-    pub fn new(wgpu: Wgpu) -> Self {
+    pub fn new(game_state: GameRef) -> Self {
         Self {
-            wgpu,
+            game_state,
             meshes: HashMap::new(),
             buffers: None,
         }
@@ -131,6 +126,7 @@ impl WorldRenderState {
     pub fn generate_mesh(&mut self, world: &World, with: &crate::block::BlockTextureAtlas) {
         // Ok so, rather than generate area^3, we merge all buffers in y axis only.
         let mut meshes = HashMap::new();
+        let render_state = &self.game_state.render_state();
 
         for (pos, chunk) in world.chunks.iter() {
             let chunk = chunk.get();
@@ -150,13 +146,11 @@ impl WorldRenderState {
             .values()
             .map(|mesh| {
                 total_faces += mesh.face_count();
-                mesh.create_buffers(&self.wgpu)
+                mesh.create_buffers(render_state)
             })
             .collect();
 
-        if let Some(face_count) = &world.face_count {
-            face_count.update_value(total_faces.to_string());
-        }
+        world.debug_state.get_mut().update_face_count(total_faces);
 
         self.buffers = Some(buffers);
     }
@@ -169,5 +163,28 @@ impl WorldRenderState {
                 render_pass.draw_indexed(0..ibuf.count() as u32, 0, 0..1);
             }
         }
+    }
+}
+
+struct WorldDebugState {
+    /// Current number of faces being rendered.
+    face_count: usize,
+    /// Debug provider for the face count.
+    face_count_provider: DebugProvider,
+}
+
+impl WorldDebugState {
+    pub fn new(game_state: &ImmutableResource<GameState>) -> Self {
+        let mut render_state = game_state.render_state_mut();
+        let face_count_provider = render_state.debug_renderer.add_statistic("Face Count", "0");
+        Self {
+            face_count: 0,
+            face_count_provider,
+        }
+    }
+
+    pub fn update_face_count(&mut self, new_count: usize) {
+        self.face_count = new_count;
+        self.face_count_provider.update_value(self.face_count);
     }
 }

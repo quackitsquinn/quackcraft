@@ -7,6 +7,7 @@ pub mod camera;
 pub mod image;
 pub mod lowlevel;
 pub mod mesh;
+pub mod pipelines;
 pub mod postprocess;
 pub mod render;
 pub mod textures;

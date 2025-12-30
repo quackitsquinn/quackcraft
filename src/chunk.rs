@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use log::{info, warn};
 
 use crate::{
-    BlockPosition, ChunkPosition,
+    BlockPosition, ChunkPosition, GameRef, GameState,
     block::{Block, BlockTextureAtlas},
     coords::bp,
     graphics::{
@@ -13,8 +13,9 @@ use crate::{
             buf::{IndexBuffer, VertexBuffer},
         },
         mesh::{BlockMesh, BlockVertex},
+        render::RenderState,
     },
-    resource::Resource,
+    resource::{ImmutableResource, Resource},
 };
 
 pub const CHUNK_SIZE: usize = 16;
@@ -27,11 +28,11 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn empty(wgpu: Rc<WgpuInstance>) -> Self {
+    pub fn empty(game_ref: GameRef) -> Self {
         Self {
             data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
             neighbors: [None, None, None, None, None, None],
-            render_state: RefCell::new(ChunkRenderState::new(wgpu.clone())),
+            render_state: RefCell::new(ChunkRenderState::new(game_ref.clone())),
         }
     }
 
@@ -102,15 +103,15 @@ impl std::ops::IndexMut<(usize, usize, usize)> for Chunk {
 pub struct ChunkRenderState {
     block_mesh: Option<BlockMesh>,
     buffers: Option<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>,
-    wgpu: Wgpu,
+    game_state: GameRef,
 }
 
 impl ChunkRenderState {
-    pub fn new(wgpu: Rc<WgpuInstance>) -> Self {
+    pub fn new(game_state: GameRef) -> Self {
         Self {
             block_mesh: None,
             buffers: None,
-            wgpu,
+            game_state,
         }
     }
 
@@ -159,7 +160,7 @@ impl ChunkRenderState {
                 .block_mesh
                 .as_ref()
                 .expect("Mesh must be generated before buffers");
-            self.buffers = Some(mesh.create_buffers(&self.wgpu));
+            self.buffers = Some(mesh.create_buffers(&self.game_state.render_state()));
         }
         let (vb, ib) = self.buffers.as_ref().unwrap();
         (vb, ib)

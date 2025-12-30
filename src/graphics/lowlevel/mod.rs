@@ -187,14 +187,13 @@ impl WgpuInstance {
     }
 
     /// Loads a shader module from WGSL source code.
-    pub fn load_shader<'a>(
+    pub fn load_shader(
         &self,
         shader_source: &str,
         label: Option<&str>,
         vs_entry: Option<&str>,
         fs_entry: Option<&str>,
-        compilation_options: wgpu::PipelineCompilationOptions<'a>,
-    ) -> ShaderProgram<'a> {
+    ) -> ShaderProgram {
         let module = self
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -202,12 +201,7 @@ impl WgpuInstance {
                 source: wgpu::ShaderSource::Wgsl(shader_source.into()),
             });
 
-        ShaderProgram::from_raw_parts(
-            module,
-            vs_entry.map(Arc::from),
-            fs_entry.map(Arc::from),
-            compilation_options,
-        )
+        ShaderProgram::from_raw_parts(module, vs_entry.map(Arc::from), fs_entry.map(Arc::from))
     }
 
     /// Creates a texture with the given descriptor.
@@ -499,8 +493,8 @@ impl WgpuInstance {
         self.create_pipeline(&wgpu::RenderPipelineDescriptor {
             label,
             layout: Some(layout),
-            vertex: shader.vertex_state(buffers),
-            fragment: shader.fragment_state(targets.as_ref()),
+            vertex: shader.vertex_state(buffers, None),
+            fragment: shader.fragment_state(targets.as_ref(), None),
             primitive,
             depth_stencil,
             multisample: wgpu::MultisampleState::default(),

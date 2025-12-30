@@ -4,6 +4,7 @@ use wgpu::{CompareFunction, StoreOp, TextureFormat};
 
 use crate::graphics::lowlevel::WgpuInstance;
 
+#[derive(Clone, Debug)]
 pub struct DepthTexture {
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,

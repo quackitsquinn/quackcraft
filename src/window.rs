@@ -84,6 +84,16 @@ impl GlfwWindow {
         self.mouse_pos_proxy
             .add_target(callback, label.map(|l| l.into()))
     }
+
+    /// Toggles the mouse cursor mode between Normal and Disabled.
+    pub fn toggle_mouse_mode(&self) {
+        let current_mode = self.get_mouse_mode();
+        let new_mode = match current_mode {
+            glfw::CursorMode::Normal => glfw::CursorMode::Disabled,
+            _ => glfw::CursorMode::Normal,
+        };
+        self.set_mouse_mode(new_mode);
+    }
 }
 
 fn handle_glfw_error(error: glfw::Error, description: String) {

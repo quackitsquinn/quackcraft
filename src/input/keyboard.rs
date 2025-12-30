@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use glfw::Key;
 
+#[derive(Debug)]
 pub struct Keyboard {
     states: HashMap<Key, KeyState>,
 }
