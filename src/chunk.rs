@@ -151,4 +151,17 @@ impl<'a> ChunkRenderState<'a> {
         self.buffers = None; // Invalidate buffers
         self.block_mesh.as_ref().unwrap()
     }
+
+    /// Generates the vertex and index buffers for the current mesh, if not already generated.
+    pub fn generate_buffers(&mut self) -> (&VertexBuffer<BlockVertex>, &IndexBuffer<u16>) {
+        if self.buffers.is_none() {
+            let mesh = self
+                .block_mesh
+                .as_ref()
+                .expect("Mesh must be generated before buffers");
+            self.buffers = Some(mesh.create_buffers(&self.wgpu));
+        }
+        let (vb, ib) = self.buffers.as_ref().unwrap();
+        (vb, ib)
+    }
 }

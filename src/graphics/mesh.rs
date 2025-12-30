@@ -33,7 +33,7 @@ impl BlockMesh {
     /// Emits a face for the given block position in the given direction.
     pub fn emit_face(
         &mut self,
-        handle: &TextureHandle,
+        texture: &TextureHandle,
         position: BlockPosition,
         direction: CardinalDirection,
     ) {
@@ -53,7 +53,7 @@ impl BlockMesh {
             let vertex = BlockVertex {
                 position: *face,
                 tex_coord: *tex_coords,
-                texture_id: *handle,
+                texture_id: *texture,
             };
 
             face_indices[i] = self.push_vertex(vertex);
