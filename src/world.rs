@@ -16,15 +16,15 @@ use crate::{
     resource::Resource,
 };
 
-pub struct World<'a> {
-    pub chunks: HashMap<BlockPosition, Resource<Chunk<'a>>>,
-    pub render_state: RefCell<WorldRenderState<'a>>,
+pub struct World {
+    pub chunks: HashMap<BlockPosition, Resource<Chunk>>,
+    pub render_state: RefCell<WorldRenderState>,
     face_count: Option<DebugProvider>,
 }
 
-impl<'a> World<'a> {
+impl World {
     /// Creates an empty World.
-    pub fn empty(wgpu: Wgpu<'a>) -> Self {
+    pub fn empty(wgpu: Wgpu) -> Self {
         Self {
             chunks: HashMap::new(),
             render_state: RefCell::new(WorldRenderState::new(wgpu)),
@@ -33,7 +33,7 @@ impl<'a> World<'a> {
     }
 
     /// Creates a new World from the given chunks.
-    pub fn new(chunks: Vec<((i64, i64, i64), Chunk<'a>)>, wgpu: Wgpu<'a>) -> Self {
+    pub fn new(chunks: Vec<((i64, i64, i64), Chunk)>, wgpu: Wgpu) -> Self {
         Self {
             chunks: chunks
                 .into_iter()
@@ -45,14 +45,13 @@ impl<'a> World<'a> {
     }
 
     /// Creates debug providers for this world.
-    pub fn create_debug_providers<'b>(&mut self, debug_renderer: &debug::DebugRenderer<'b>) {
-        let mut debug_renderer = debug_renderer.get_mut();
+    pub fn create_debug_providers(&mut self, debug_renderer: &mut debug::DebugRenderer) {
         let face_count = debug_renderer.add_statistic("Face Count", "0");
         self.face_count = Some(face_count);
     }
 
     /// Creates a test world with some simple terrain.
-    pub fn test(wgpu: Wgpu<'a>) -> Self {
+    pub fn test(wgpu: Wgpu) -> Self {
         let mut world = Self::empty(wgpu.clone());
         for x in 0..5 {
             for z in 0..5 {
@@ -79,7 +78,7 @@ impl<'a> World<'a> {
     }
 
     /// Creates a test world with a single block of the given type.
-    pub fn single(wgpu: Wgpu<'a>, block: Block) -> Self {
+    pub fn single(wgpu: Wgpu, block: Block) -> Self {
         let chunk = {
             let mut chunk = Chunk::empty(wgpu.clone());
             chunk.data[8][8][8] = block;
@@ -95,7 +94,7 @@ impl<'a> World<'a> {
     }
 
     /// Inserts a chunk at the given position.
-    pub fn push_chunk(&mut self, position: BlockPosition, chunk: Chunk<'a>) {
+    pub fn push_chunk(&mut self, position: BlockPosition, chunk: Chunk) {
         self.chunks.insert(position, chunk.into());
     }
 
@@ -113,14 +112,14 @@ impl<'a> World<'a> {
     }
 }
 
-pub struct WorldRenderState<'a> {
-    pub wgpu: Wgpu<'a>,
+pub struct WorldRenderState {
+    pub wgpu: Wgpu,
     meshes: HashMap<BlockPosition, BlockMesh>,
     buffers: Option<Vec<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>>,
 }
 
-impl<'a> WorldRenderState<'a> {
-    pub fn new(wgpu: Wgpu<'a>) -> Self {
+impl WorldRenderState {
+    pub fn new(wgpu: Wgpu) -> Self {
         Self {
             wgpu,
             meshes: HashMap::new(),
@@ -129,7 +128,7 @@ impl<'a> WorldRenderState<'a> {
     }
 
     /// Generates the mesh for all chunks in the world.
-    pub fn generate_mesh(&mut self, world: &World<'a>, with: &crate::block::BlockTextureAtlas) {
+    pub fn generate_mesh(&mut self, world: &World, with: &crate::block::BlockTextureAtlas) {
         // Ok so, rather than generate area^3, we merge all buffers in y axis only.
         let mut meshes = HashMap::new();
 
@@ -162,7 +161,7 @@ impl<'a> WorldRenderState<'a> {
         self.buffers = Some(buffers);
     }
 
-    pub fn render(&self, render_pass: &mut wgpu::RenderPass<'a>) {
+    pub fn render(&self, render_pass: &mut wgpu::RenderPass) {
         if let Some(buffers) = &self.buffers {
             for (vbuf, ibuf) in buffers.iter() {
                 render_pass.set_vertex_buffer(0, vbuf.buffer().slice(..));

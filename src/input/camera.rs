@@ -3,34 +3,32 @@ use std::{cell::RefCell, rc::Rc};
 use glam::{Mat4, Vec2, Vec3, vec2};
 
 use crate::{
-    debug::{DebugProvider, DebugRenderer, DebugRendererState},
+    debug::{DebugProvider, DebugRenderer},
     graphics::{Wgpu, callback::TargetHandle, camera::Camera, lowlevel::buf::UniformBuffer},
     resource::Resource,
     window::GlfwWindow,
 };
 
-pub struct CameraController<'a> {
+pub struct CameraController {
     pos: Vec3,
     /// Pitch and yaw rotation.
     pub rot: Vec2,
     camera: Camera,
-    uniform: UniformBuffer<'a, Mat4>,
+    uniform: UniformBuffer<Mat4>,
     callback_handle: Option<TargetHandle<(f64, f64)>>,
     position_entry: DebugProvider,
     rotation_entry: DebugProvider,
-    wgpu: Wgpu<'a>,
+    wgpu: Wgpu,
 }
 
-impl CameraController<'_> {
-    pub fn new<'a, 'b>(wgpu: Wgpu<'a>, debug_renderer: &DebugRenderer<'b>) -> CameraController<'a> {
+impl CameraController {
+    pub fn new<'b>(wgpu: Wgpu, debug_renderer: &mut DebugRenderer) -> CameraController {
         let (width, height) = wgpu.dimensions();
         let camera = Camera::new(
             width as f32 / height as f32,
             0.1,
             16.0 * 32.0, // TODO: render distance setting? i think this is in world units
         );
-
-        let mut debug = debug_renderer.get_mut();
 
         let uniform = wgpu.uniform_buffer(&camera.projection_view_matrix(), Some("Camera Uniform"));
         CameraController {
@@ -40,8 +38,10 @@ impl CameraController<'_> {
             pos: Vec3::ZERO,
             callback_handle: None,
             rot: Vec2::ZERO,
-            position_entry: debug.add_statistic("Camera Position", format!("{:?}", Vec3::ZERO)),
-            rotation_entry: debug.add_statistic("Camera Rotation", format!("{:?}", Vec2::ZERO)),
+            position_entry: debug_renderer
+                .add_statistic("Camera Position", format!("{:?}", Vec3::ZERO)),
+            rotation_entry: debug_renderer
+                .add_statistic("Camera Rotation", format!("{:?}", Vec2::ZERO)),
         }
     }
 
@@ -61,7 +61,7 @@ impl CameraController<'_> {
     }
 
     /// Returns a clone of the camera's uniform buffer.
-    pub fn uniform(&self) -> UniformBuffer<'_, Mat4> {
+    pub fn uniform(&self) -> UniformBuffer<Mat4> {
         self.uniform.clone()
     }
 
@@ -127,16 +127,16 @@ impl CameraController<'_> {
 
     /// Creates the main camera controller and sets up mouse callbacks.
     pub fn create_main_camera(
-        wgpu: &Wgpu<'static>,
+        wgpu: &Wgpu,
         window: &GlfwWindow,
-        debug_renderer: &DebugRenderer<'static>,
+        debug_renderer: &mut DebugRenderer,
         binding: u32,
     ) -> (
-        Resource<CameraController<'static>>,
+        Resource<CameraController>,
         wgpu::BindGroupLayout,
         wgpu::BindGroup,
     ) {
-        let camera: Resource<CameraController<'static>> =
+        let camera: Resource<CameraController> =
             CameraController::new(wgpu.clone(), debug_renderer).into();
         let (camera_layout, camera_bind_group) = camera.get().bind_group(binding);
 
@@ -148,7 +148,7 @@ impl CameraController<'_> {
     }
 
     /// Registers mouse movement callbacks to control the camera rotation.
-    pub fn register_callback(this: Resource<CameraController<'static>>, window: &GlfwWindow) {
+    pub fn register_callback(this: Resource<CameraController>, window: &GlfwWindow) {
         let closure_camera = this.clone();
         let mut last = Vec2::ZERO;
         let mut first_mouse = true;

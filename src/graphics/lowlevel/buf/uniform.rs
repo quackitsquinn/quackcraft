@@ -2,20 +2,20 @@ use std::rc::Rc;
 
 use bytemuck::Pod;
 
-use crate::graphics::lowlevel::WgpuInstance;
+use crate::graphics::{Wgpu, lowlevel::WgpuInstance};
 
 /// A buffer for uniform data.
 #[derive(Clone, Debug)]
-pub struct UniformBuffer<'a, T>
+pub struct UniformBuffer<T>
 where
     T: Pod,
 {
     buffer: wgpu::Buffer,
-    wgpu: Rc<WgpuInstance<'a>>,
+    wgpu: Wgpu,
     _marker: std::marker::PhantomData<T>,
 }
 
-impl<'a, T: Pod> UniformBuffer<'a, T> {
+impl<T: Pod> UniformBuffer<T> {
     /// Creates a new UniformBuffer from a wgpu::Buffer.
     ///
     /// This function will panic if the buffer size is smaller than the size of type T.
@@ -23,7 +23,7 @@ impl<'a, T: Pod> UniformBuffer<'a, T> {
     /// see also: [`crate::graphics::WgpuInstance::create_buffer`]
     /// # Safety
     /// The caller must ensure that the provided buffer is valid for the type T.
-    pub unsafe fn from_raw_parts(buffer: wgpu::Buffer, wgpu: Rc<WgpuInstance<'a>>) -> Self {
+    pub unsafe fn from_raw_parts(buffer: wgpu::Buffer, wgpu: Rc<WgpuInstance>) -> Self {
         assert!(
             buffer.size() as usize >= std::mem::size_of::<T>(),
             "Buffer size is smaller than type T"

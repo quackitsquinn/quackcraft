@@ -1,4 +1,8 @@
-use std::{cell::RefCell, rc::Rc, sync::Arc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+    sync::Arc,
+};
 
 use glam::Vec3;
 use glfw::{Action, Key, WindowEvent};
@@ -42,30 +46,19 @@ mod window;
 mod world;
 
 /// The main game structure.
-pub struct QuackCraft<'a> {
-    window: window::GlfwWindow,
-    wgpu: Wgpu<'a>,
+pub struct GameState {
     keyboard: Rc<RefCell<Keyboard>>,
-    pipelines: Vec<wgpu::RenderPipeline>,
-    world: World<'a>,
-    depth_texture: graphics::lowlevel::depth::DepthTexture<'a>,
-    camera: Resource<CameraController<'a>>,
-    camera_bind_group: wgpu::BindGroup,
-    #[allow(dead_code)] // This is used, but through weird chains of Rc borrows.
-    block_textures: TextureCollection<'a>,
+    world: World,
+    block_textures: TextureCollection,
     blocks_bind_group: wgpu::BindGroup,
-    debug_renderer: DebugRenderer<'a>,
-    post_process_pass: PostProcessingPass<'a>,
-    fps: DebugProvider,
-    frametime_ms: DebugProvider,
+    debug_renderer: DebugRenderer,
+    post_process_pass: PostProcessingPass<'static>,
+    delta_time: Cell<f32>,
 }
 
-impl<'a> QuackCraft<'a> {
+impl GameState {
     /// Creates a new game instance.
-    pub fn new(
-        window: window::GlfwWindow,
-        wgpu: Rc<WgpuInstance<'static>>,
-    ) -> anyhow::Result<&'static mut QuackCraft<'static>> {
+    pub fn new(window: window::GlfwWindow, wgpu: Rc<WgpuInstance>) -> anyhow::Result<GameState> {
         let solid_block_chunk_shader = wgpu.load_shader(
             include_str!("../shaders/chunk_solid.wgsl"),
             Some("Chunk Solid Block Shader"),
@@ -74,15 +67,14 @@ impl<'a> QuackCraft<'a> {
             wgpu::PipelineCompilationOptions::default(),
         );
 
-        let debug_renderer_res = debug::DebugRendererState::new(wgpu.clone())?;
-        let mut debug_renderer = debug_renderer_res.get_mut();
+        let mut debug_renderer = debug::DebugRenderer::new(wgpu.clone())?;
         let fps = debug_renderer.add_statistic("fps", "0");
         let frametime_stat = debug_renderer.add_statistic("frametime (ms)", "0.0");
 
         drop(debug_renderer);
         let keyboard = Rc::new(RefCell::new(Keyboard::new()));
         let (camera, camera_layout, camera_bind_group) =
-            CameraController::create_main_camera(&wgpu, &window, &debug_renderer_res, 0);
+            CameraController::create_main_camera(&wgpu, &window, &mut debug_renderer, 0);
 
         let mut blocks = TextureCollection::new(wgpu.clone(), Some("block textures"), (16, 16));
 
@@ -159,7 +151,7 @@ impl<'a> QuackCraft<'a> {
 
         let post_process_pass = PostProcessingPass::new(wgpu.clone());
 
-        world.create_debug_providers(&debug_renderer_res);
+        world.create_debug_providers(&mut debug_renderer);
 
         println!("Generating chunk mesh...");
 
@@ -170,22 +162,15 @@ impl<'a> QuackCraft<'a> {
 
         println!("Chunk mesh generated.");
 
-        Ok(Box::leak(Box::new(QuackCraft {
-            window,
-            wgpu: wgpu.clone(),
-            pipelines: vec![pipeline],
+        Ok(GameState {
             keyboard,
-            camera,
-            camera_bind_group,
-            depth_texture,
             world,
             block_textures: blocks,
-            debug_renderer: debug_renderer_res,
             blocks_bind_group,
+            debug_renderer,
             post_process_pass,
-            frametime_ms: frametime_stat,
-            fps,
-        })))
+            delta_time: Cell::new(0.0),
+        })
     }
 
     fn rainbow(frame: u64) -> Color {
@@ -287,7 +272,7 @@ pub fn run_game() -> anyhow::Result<()> {
     info!("Starting quackcraft");
     let window = window::GlfwWindow::new(800, 600, "Quackcraft")?;
     let wgpu = smol::block_on(WgpuInstance::new(window.window.clone()))?;
-    let qc = QuackCraft::new(window, wgpu)?;
+    let qc = GameState::new(window, wgpu)?;
     let mut frame: u64 = 0;
     while !qc.window.should_close() {
         qc.window.poll_events();

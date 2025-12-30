@@ -7,7 +7,7 @@ use crate::{
     block::{Block, BlockTextureAtlas},
     coords::bp,
     graphics::{
-        CardinalDirection,
+        CardinalDirection, Wgpu,
         lowlevel::{
             WgpuInstance,
             buf::{IndexBuffer, VertexBuffer},
@@ -20,14 +20,14 @@ use crate::{
 pub const CHUNK_SIZE: usize = 16;
 
 #[derive(Clone, Debug)]
-pub struct Chunk<'a> {
+pub struct Chunk {
     pub data: [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
-    neighbors: [Option<Resource<Chunk<'a>>>; 6],
-    pub render_state: RefCell<ChunkRenderState<'a>>,
+    neighbors: [Option<Resource<Chunk>>; 6],
+    pub render_state: RefCell<ChunkRenderState>,
 }
 
-impl<'a> Chunk<'a> {
-    pub fn empty(wgpu: Rc<WgpuInstance<'a>>) -> Self {
+impl Chunk {
+    pub fn empty(wgpu: Rc<WgpuInstance>) -> Self {
         Self {
             data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
             neighbors: [None, None, None, None, None, None],
@@ -38,7 +38,7 @@ impl<'a> Chunk<'a> {
     pub fn set_neighbor(
         &mut self,
         direction: CardinalDirection,
-        neighbor: Option<Resource<Chunk<'a>>>,
+        neighbor: Option<Resource<Chunk>>,
     ) {
         self.neighbors[direction as usize] = neighbor;
     }
@@ -75,7 +75,7 @@ impl<'a> Chunk<'a> {
     }
 }
 
-impl<'a> std::ops::Deref for Chunk<'a> {
+impl std::ops::Deref for Chunk {
     type Target = [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE];
 
     fn deref(&self) -> &Self::Target {
@@ -83,7 +83,7 @@ impl<'a> std::ops::Deref for Chunk<'a> {
     }
 }
 
-impl<'a> std::ops::Index<(usize, usize, usize)> for Chunk<'a> {
+impl std::ops::Index<(usize, usize, usize)> for Chunk {
     type Output = Block;
 
     fn index(&self, index: (usize, usize, usize)) -> &Self::Output {
@@ -91,7 +91,7 @@ impl<'a> std::ops::Index<(usize, usize, usize)> for Chunk<'a> {
     }
 }
 
-impl<'a> std::ops::IndexMut<(usize, usize, usize)> for Chunk<'a> {
+impl std::ops::IndexMut<(usize, usize, usize)> for Chunk {
     fn index_mut(&mut self, index: (usize, usize, usize)) -> &mut Self::Output {
         &mut self.data[index.0][index.1][index.2]
     }
@@ -99,14 +99,14 @@ impl<'a> std::ops::IndexMut<(usize, usize, usize)> for Chunk<'a> {
 
 /// Render state for a chunk.
 #[derive(Debug, Clone)]
-pub struct ChunkRenderState<'a> {
+pub struct ChunkRenderState {
     block_mesh: Option<BlockMesh>,
     buffers: Option<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>,
-    wgpu: Rc<WgpuInstance<'a>>,
+    wgpu: Wgpu,
 }
 
-impl<'a> ChunkRenderState<'a> {
-    pub fn new(wgpu: Rc<WgpuInstance<'a>>) -> Self {
+impl ChunkRenderState {
+    pub fn new(wgpu: Rc<WgpuInstance>) -> Self {
         Self {
             block_mesh: None,
             buffers: None,
@@ -117,7 +117,7 @@ impl<'a> ChunkRenderState<'a> {
     /// Generates the mesh for the `chunk` `at`
     pub fn generate_mesh(
         &mut self,
-        chunk: &Chunk<'a>,
+        chunk: &Chunk,
         at: ChunkPosition,
         with: &BlockTextureAtlas,
     ) -> &BlockMesh {

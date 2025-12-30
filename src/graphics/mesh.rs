@@ -85,9 +85,9 @@ impl BlockMesh {
     }
 
     /// Creates the vertex and index buffers for the mesh.
-    pub fn create_buffers<'a>(
+    pub fn create_buffers(
         &self,
-        wgpu: &crate::graphics::Wgpu<'a>,
+        wgpu: &crate::graphics::Wgpu,
     ) -> (VertexBuffer<BlockVertex>, IndexBuffer<u16>) {
         let vertex_buffer = wgpu.vertex_buffer::<BlockVertex>(
             bytemuck::cast_slice::<_, BlockVertex>(self.vertices()),

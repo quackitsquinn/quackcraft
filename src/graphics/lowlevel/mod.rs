@@ -30,17 +30,17 @@ pub mod shader;
 pub mod texture;
 
 #[derive(Debug)]
-pub struct WgpuInstance<'a> {
+pub struct WgpuInstance {
     pub instance: Instance,
-    pub surface: Surface<'a>,
+    pub surface: Surface<'static>,
     pub device: Device,
     pub queue: Queue,
     pub config: Resource<SurfaceConfiguration>,
     pub default_sampler: Option<wgpu::Sampler>,
-    this: Weak<WgpuInstance<'a>>,
+    this: Weak<WgpuInstance>,
 }
 
-impl<'a> WgpuInstance<'a> {
+impl WgpuInstance {
     pub async fn new(window: Arc<glfw::PWindow>) -> anyhow::Result<Rc<Self>> {
         let size = window.get_size();
 
@@ -113,7 +113,7 @@ impl<'a> WgpuInstance<'a> {
         Ok(this)
     }
 
-    fn instance(&self) -> Rc<WgpuInstance<'a>> {
+    fn instance(&self) -> Rc<WgpuInstance> {
         self.this.upgrade().expect("WgpuInstance dropped!").clone()
     }
 
@@ -170,7 +170,7 @@ impl<'a> WgpuInstance<'a> {
         unsafe { IndexBuffer::from_raw_parts(buffer, data.len()) }
     }
 
-    pub fn uniform_buffer<T>(&self, data: &T, label: Option<&str>) -> UniformBuffer<'a, T>
+    pub fn uniform_buffer<T>(&self, data: &T, label: Option<&str>) -> UniformBuffer<T>
     where
         T: Pod,
     {
@@ -187,7 +187,7 @@ impl<'a> WgpuInstance<'a> {
     }
 
     /// Loads a shader module from WGSL source code.
-    pub fn load_shader(
+    pub fn load_shader<'a>(
         &self,
         shader_source: &str,
         label: Option<&str>,
@@ -225,7 +225,7 @@ impl<'a> WgpuInstance<'a> {
         usage: wgpu::TextureUsages,
         dims: (u32, u32),
         image: &[ReadOnly<u8>],
-    ) -> Texture<'a> {
+    ) -> Texture {
         assert!(!image.is_empty(), "Image slice must not be empty");
         let (width, height) = dims;
 
@@ -325,7 +325,7 @@ impl<'a> WgpuInstance<'a> {
         usage: wgpu::TextureUsages,
         dims: (u32, u32),
         layers: u32,
-    ) -> Texture<'a> {
+    ) -> Texture {
         let (width, height) = dims;
         let size = wgpu::Extent3d {
             width,
@@ -382,7 +382,7 @@ impl<'a> WgpuInstance<'a> {
         )
     }
 
-    pub fn depth_texture(&self) -> depth::DepthTexture<'a> {
+    pub fn depth_texture(&self) -> depth::DepthTexture {
         depth::DepthTexture::new(self.instance())
     }
 
@@ -486,8 +486,8 @@ impl<'a> WgpuInstance<'a> {
 
     /// Creates a render pipeline from the given parts.
     #[allow(clippy::too_many_arguments)] // self is essentially invisible
-    pub fn pipeline(
-        &'a self,
+    pub fn pipeline<'a>(
+        &self,
         label: Option<&str>,
         shader: &ShaderProgram,
         layout: &wgpu::PipelineLayout,

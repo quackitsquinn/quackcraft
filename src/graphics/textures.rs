@@ -13,18 +13,18 @@ pub type TextureHandle = u32;
 /// This is effectively a texture atlas, packing multiple textures into a single GPU texture. The difference
 /// is that this uses texture arrays instead of a single large texture, which greatly simplifies everything. The only limitation
 /// is that all textures must have the same dimensions.
-pub struct TextureCollection<'a> {
+pub struct TextureCollection {
     textures: HashMap<String, TextureHandle>,
     buf: Vec<ReadOnly<u8>>,
-    gpu_texture: Option<Texture<'a>>,
+    gpu_texture: Option<Texture>,
     label: Option<ReadOnlyString>,
     dimensions: (u32, u32),
-    wgpu: Wgpu<'a>,
+    wgpu: Wgpu,
 }
 
-impl<'a> TextureCollection<'a> {
+impl TextureCollection {
     pub fn new(
-        wgpu: Wgpu<'a>,
+        wgpu: Wgpu,
         label: Option<impl Into<ReadOnlyString>>,
         dimensions: (u32, u32),
     ) -> Self {
@@ -126,7 +126,7 @@ impl<'a> TextureCollection<'a> {
     }
 
     /// Returns the GPU texture, creating it if it doesn't exist.
-    pub fn gpu_texture(&mut self) -> Texture<'a> {
+    pub fn gpu_texture(&mut self) -> Texture {
         if self.gpu_texture.is_some() {
             return self.gpu_texture.as_ref().unwrap().clone();
         }

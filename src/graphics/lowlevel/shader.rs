@@ -4,6 +4,7 @@ use wgpu::VertexBufferLayout;
 
 use crate::ReadOnlyString;
 
+// TODO: Remove this stupid lifetime parameter
 pub struct ShaderProgram<'a> {
     /// The shader module containing the shader code.
     pub module: wgpu::ShaderModule,

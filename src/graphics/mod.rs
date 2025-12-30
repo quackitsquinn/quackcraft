@@ -8,11 +8,12 @@ pub mod image;
 pub mod lowlevel;
 pub mod mesh;
 pub mod postprocess;
+pub mod render;
 pub mod textures;
 
 /// A reference-counted WGPU instance.
 // TODO: WgpuInstance should be renamed and probably placed in a Rc wrapper here.
-pub type Wgpu<'a> = Rc<lowlevel::WgpuInstance<'a>>;
+pub type Wgpu = Rc<lowlevel::WgpuInstance>;
 
 /// Cardinal directions in 3D space.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

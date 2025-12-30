@@ -4,16 +4,16 @@ use wgpu::{CompareFunction, StoreOp, TextureFormat};
 
 use crate::graphics::lowlevel::WgpuInstance;
 
-pub struct DepthTexture<'a> {
+pub struct DepthTexture {
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,
     pub sampler: wgpu::Sampler,
-    wgpu: Rc<WgpuInstance<'a>>,
+    wgpu: Rc<WgpuInstance>,
 }
 
-impl<'a> DepthTexture<'a> {
+impl DepthTexture {
     pub const TEXTURE_FORMAT: TextureFormat = TextureFormat::Depth32Float;
-    pub fn new(wgpu: Rc<WgpuInstance<'a>>) -> Self {
+    pub fn new(wgpu: Rc<WgpuInstance>) -> Self {
         let config = wgpu.config.get();
         let size = wgpu::Extent3d {
             width: config.width,

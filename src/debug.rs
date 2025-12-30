@@ -12,21 +12,19 @@ use wgpu_text::{
 
 use crate::{ReadOnlyString, graphics::Wgpu, resource::Resource};
 
-pub type DebugRenderer<'a> = Resource<DebugRendererState<'a>>;
-
-pub struct DebugRendererState<'a> {
+pub struct DebugRenderer {
     pub enabled: bool,
     brush: TextBrush<FontRef<'static>>,
     stats: Vec<Weak<DebugStatistic>>,
-    wgpu: Wgpu<'a>,
+    wgpu: Wgpu,
 }
 
 /// A type alias for a reference-counted debug statistic.
 pub type DebugProvider = Rc<DebugStatistic>;
 
-impl<'a> DebugRendererState<'a> {
+impl DebugRenderer {
     /// Creates a new debug renderer.
-    pub fn new(wgpu: Wgpu<'a>) -> anyhow::Result<DebugRenderer<'a>> {
+    pub fn new(wgpu: Wgpu) -> anyhow::Result<DebugRenderer> {
         let (render_width, render_height) = wgpu.dimensions();
         let render_format = wgpu.config.get().format;
         Ok(Self {

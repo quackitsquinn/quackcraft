@@ -16,12 +16,12 @@ use crate::graphics::{
 pub struct PostProcessingPass<'a> {
     #[allow(dead_code)] // If we drop this wgpu will panic on render.
     shader: ShaderProgram<'a>,
-    display_texture: Texture<'a>,
+    display_texture: Texture,
     display_bind_group: wgpu::BindGroup,
     pipeline: wgpu::RenderPipeline,
     vertex_buf: VertexBuffer<Uv>,
     index_buf: IndexBuffer<u16>,
-    wgpu: Wgpu<'a>,
+    wgpu: Wgpu,
 }
 
 const UV_VERTICES: &[Uv] = &[
@@ -34,7 +34,7 @@ const UV_VERTICES: &[Uv] = &[
 const UV_INDICES: &[u16] = &[0, 1, 2, 2, 1, 3];
 
 impl<'a> PostProcessingPass<'a> {
-    pub fn new(wgpu: Wgpu<'a>) -> Self {
+    pub fn new(wgpu: Wgpu) -> Self {
         let shader = wgpu.load_shader(
             include_str!("../../shaders/postprocess.wgsl"),
             Some("Post processing Shader"),

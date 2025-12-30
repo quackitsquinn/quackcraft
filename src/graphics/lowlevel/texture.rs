@@ -4,7 +4,7 @@ use crate::graphics::lowlevel::WgpuInstance;
 
 /// A structure representing a texture, its view, and its sampler.
 #[derive(Clone)]
-pub struct Texture<'a> {
+pub struct Texture {
     /// The underlying wgpu texture.
     pub texture: wgpu::Texture,
     /// The texture bind group layout entry.
@@ -16,13 +16,13 @@ pub struct Texture<'a> {
     /// The texture view.
     pub view: wgpu::TextureView,
     image_count: usize,
-    wgpu: Rc<WgpuInstance<'a>>,
+    wgpu: Rc<WgpuInstance>,
 }
 
-impl<'a> Texture<'a> {
+impl Texture {
     /// Creates a new texture from the given texture and sampler.
     pub fn new(
-        wgpu: Rc<WgpuInstance<'a>>,
+        wgpu: Rc<WgpuInstance>,
         texture: wgpu::Texture,
         texture_bind_group_entry: wgpu::BindGroupLayoutEntry,
         sampler: wgpu::Sampler,
@@ -112,7 +112,7 @@ impl<'a> Texture<'a> {
     }
 }
 
-impl Debug for Texture<'_> {
+impl Debug for Texture {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Texture")
             .field("texture", &self.texture)
