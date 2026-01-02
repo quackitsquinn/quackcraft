@@ -4,8 +4,7 @@ use anyhow::Ok;
 use glam::Vec3;
 
 use crate::{
-    block::Block, component::State, graphics::lowlevel::WgpuRenderer,
-    input::keyboard::Keyboard,
+    block::Block, component::State, graphics::lowlevel::WgpuRenderer, input::keyboard::Keyboard,
 };
 
 /// A read-only string type.
@@ -36,26 +35,26 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new() -> Self {
+    pub fn new() -> anyhow::Result<Self> {
         let mut state = State::new();
         state.insert(Keyboard::new());
         let window = window::GlfwWindow::new(800, 600, "Minecraft Clone")
             .expect("Failed to create GLFW window");
 
-        smol::block_on(WgpuRenderer::attach_to(&mut state, &window));
+        smol::block_on(WgpuRenderer::attach_to(&mut state, &window))?;
 
         state.insert(window);
 
         state.finish_initialization();
 
-        Self {
+        Ok(Self {
             component_db: state,
-        }
+        })
     }
 }
 
 pub fn run_game() -> anyhow::Result<()> {
-    let game = Game::new();
+    let game = Game::new()?;
 
     println!("Game initialized: {:?}", game.component_db);
     Ok(())
