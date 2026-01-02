@@ -2,6 +2,8 @@ use std::sync::Arc;
 
 use glfw::{Context, Glfw, GlfwReceiver, PWindow};
 use log::*;
+use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
+use wgpu::{Surface, SurfaceTarget, SurfaceTargetUnsafe};
 
 use crate::{
     ReadOnlyString,
@@ -12,7 +14,7 @@ use crate::{
 pub struct GlfwWindow {
     glfw: Glfw,
     /// The underlying GLFW window.
-    pub window: Arc<PWindow>,
+    pub window: PWindow,
     pub event_receiver: GlfwReceiver<(f64, glfw::WindowEvent)>,
     pub mouse_pos_proxy: Proxy<(f64, f64)>,
 }
@@ -40,7 +42,7 @@ impl GlfwWindow {
         Ok(GlfwWindow {
             glfw,
             mouse_pos_proxy: proxy,
-            window: Arc::new(window),
+            window,
             event_receiver,
         })
     }
@@ -53,8 +55,15 @@ impl GlfwWindow {
         self.glfw.poll_events();
     }
 
+    /// Gets the current size of the window.
+    pub fn size(&self) -> (u32, u32) {
+        let (width, height) = self.window.get_size();
+        (width as u32, height as u32)
+    }
+
     /// Sets the mouse cursor mode.
     pub fn set_mouse_mode(&self, mode: glfw::CursorMode) {
+        // TODO: Now that `window` isn't in an Arc, we can call the actual safe method.
         // So this isn't allowed.. but we have a way around it.
         // Since glfw is a c library, we can just call the function directly.
         // This is fine since a. GlfwWindow: !Send and b. we know the pointer is valid.
@@ -93,6 +102,19 @@ impl GlfwWindow {
             _ => glfw::CursorMode::Normal,
         };
         self.set_mouse_mode(new_mode);
+    }
+
+    /// Creates a WGPU surface for this window.
+    /// The caller must ensure that the GlfwWindow outlives the Surface.
+    pub unsafe fn create_surface(&self, instance: &wgpu::Instance) -> Surface<'static> {
+        unsafe {
+            instance
+                .create_surface_unsafe(
+                    SurfaceTargetUnsafe::from_window(&self.window)
+                        .expect("failed to create surface"),
+                )
+                .expect("failed to create surface")
+        }
     }
 }
 

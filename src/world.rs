@@ -1,10 +1,10 @@
 use std::{cell::RefCell, collections::HashMap};
 
-
 use crate::{
-    BlockPosition, GameRef, GameState,
+    BlockPosition,
     block::Block,
     chunk::Chunk,
+    component::StateHandle,
     coords::bp,
     debug::DebugProvider,
     graphics::{
@@ -23,29 +23,29 @@ pub struct World {
 
 impl World {
     /// Creates an empty World.
-    pub fn empty(resource_state: GameRef) -> Self {
+    pub fn empty(resource_state: &StateHandle) -> Self {
         Self {
             chunks: HashMap::new(),
             render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
-            debug_state: WorldDebugState::new(&resource_state).into(),
+            debug_state: WorldDebugState::new().into(),
         }
     }
 
     /// Creates a new World from the given chunks.
-    pub fn new(chunks: Vec<((i64, i64, i64), Chunk)>, resource_state: GameRef) -> Self {
+    pub fn new(chunks: Vec<((i64, i64, i64), Chunk)>, resource_state: &StateHandle) -> Self {
         Self {
             chunks: chunks
                 .into_iter()
                 .map(|(k, v)| (k.into(), v.into()))
                 .collect(),
             render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
-            debug_state: WorldDebugState::new(&resource_state).into(),
+            debug_state: WorldDebugState::new().into(),
         }
     }
 
     /// Creates a test world with some simple terrain.
-    pub fn test(wgpu: GameRef) -> Self {
-        let mut world = Self::empty(wgpu.clone());
+    pub fn test(wgpu: &StateHandle) -> Self {
+        let mut world = Self::empty(wgpu);
         for x in 0..5 {
             for z in 0..5 {
                 let mut chunk = Chunk::empty(wgpu.clone());
@@ -71,7 +71,7 @@ impl World {
     }
 
     /// Creates a test world with a single block of the given type.
-    pub fn single(resource_state: GameRef, block: Block) -> Self {
+    pub fn single(resource_state: &StateHandle, block: Block) -> Self {
         let chunk = {
             let mut chunk = Chunk::empty(resource_state.clone());
             chunk.data[8][8][8] = block;
@@ -82,7 +82,7 @@ impl World {
         Self {
             chunks,
             render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
-            debug_state: WorldDebugState::new(&resource_state).into(),
+            debug_state: WorldDebugState::new().into(),
         }
     }
 
@@ -106,13 +106,13 @@ impl World {
 }
 
 pub struct WorldRenderState {
-    pub game_state: GameRef,
+    pub game_state: StateHandle,
     meshes: HashMap<BlockPosition, BlockMesh>,
     buffers: Option<Vec<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>>,
 }
 
 impl WorldRenderState {
-    pub fn new(game_state: GameRef) -> Self {
+    pub fn new(game_state: StateHandle) -> Self {
         Self {
             game_state,
             meshes: HashMap::new(),
@@ -124,7 +124,6 @@ impl WorldRenderState {
     pub fn generate_mesh(&mut self, world: &World, with: &crate::block::BlockTextureAtlas) {
         // Ok so, rather than generate area^3, we merge all buffers in y axis only.
         let mut meshes = HashMap::new();
-        let render_state = &self.game_state.render_state();
 
         for (pos, chunk) in world.chunks.iter() {
             let chunk = chunk.get();
@@ -144,7 +143,7 @@ impl WorldRenderState {
             .values()
             .map(|mesh| {
                 total_faces += mesh.face_count();
-                mesh.create_buffers(render_state)
+                mesh.create_buffers(&self.game_state)
             })
             .collect();
 
@@ -167,22 +166,19 @@ impl WorldRenderState {
 struct WorldDebugState {
     /// Current number of faces being rendered.
     face_count: usize,
-    /// Debug provider for the face count.
-    face_count_provider: DebugProvider,
+    // /// Debug provider for the face count.
+    //face_count_provider: DebugProvider,
 }
 
 impl WorldDebugState {
-    pub fn new(game_state: &ImmutableResource<GameState>) -> Self {
-        let mut render_state = game_state.render_state_mut();
-        let face_count_provider = render_state.debug_renderer.add_statistic("Face Count", "0");
+    pub fn new() -> Self {
         Self {
             face_count: 0,
-            face_count_provider,
+            //face_count_provider,
         }
     }
 
     pub fn update_face_count(&mut self, new_count: usize) {
         self.face_count = new_count;
-        self.face_count_provider.update_value(self.face_count);
     }
 }

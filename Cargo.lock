@@ -1733,6 +1733,7 @@ dependencies = [
  "image",
  "log",
  "pod",
+ "raw-window-handle",
  "smol",
  "tobj",
  "wgpu",

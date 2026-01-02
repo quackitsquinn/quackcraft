@@ -2,7 +2,10 @@ use std::rc::Rc;
 
 use bytemuck::Pod;
 
-use crate::graphics::{Wgpu, lowlevel::WgpuInstance};
+use crate::{
+    component::{ResourceHandle, StateHandle},
+    graphics::lowlevel::WgpuRenderer,
+};
 
 /// A buffer for uniform data.
 #[derive(Clone, Debug)]
@@ -11,7 +14,7 @@ where
     T: Pod,
 {
     buffer: wgpu::Buffer,
-    wgpu: Wgpu,
+    handle: ResourceHandle<WgpuRenderer>,
     _marker: std::marker::PhantomData<T>,
 }
 
@@ -23,7 +26,7 @@ impl<T: Pod> UniformBuffer<T> {
     /// see also: [`crate::graphics::WgpuInstance::create_buffer`]
     /// # Safety
     /// The caller must ensure that the provided buffer is valid for the type T.
-    pub unsafe fn from_raw_parts(buffer: wgpu::Buffer, wgpu: Rc<WgpuInstance>) -> Self {
+    pub unsafe fn from_raw_parts(buffer: wgpu::Buffer, handle: StateHandle) -> Self {
         assert!(
             buffer.size() as usize >= std::mem::size_of::<T>(),
             "Buffer size is smaller than type T"
@@ -31,7 +34,7 @@ impl<T: Pod> UniformBuffer<T> {
         Self {
             buffer,
             _marker: std::marker::PhantomData,
-            wgpu,
+            handle: handle.handle_for::<WgpuRenderer>(),
         }
     }
 
@@ -42,7 +45,8 @@ impl<T: Pod> UniformBuffer<T> {
 
     /// Writes data to the uniform buffer.
     pub fn write(&self, data: &T) {
-        self.wgpu
+        self.handle
+            .get()
             .queue
             .write_buffer(&self.buffer, 0, bytemuck::bytes_of(data));
     }

@@ -1,21 +1,30 @@
 use std::{
-    cell::{Ref, RefCell},
-    rc::Rc,
+    cell::{Cell, OnceCell, Ref, RefCell},
+    fmt::Debug,
+    rc::{Rc, Weak},
 };
 
 use anymap::AnyMap;
 
 /// A database for storing components of various types.
-pub struct ComponentDB {
+#[derive(Debug, Clone)]
+pub struct State {
     map: Rc<AnyMap>,
+    public_ref: Rc<OnceCell<State>>,
 }
 
-impl ComponentDB {
+impl State {
     /// Creates a new, empty component database.
     pub fn new() -> Self {
         Self {
             map: Rc::new(AnyMap::new()),
+            public_ref: Rc::new(OnceCell::new()),
         }
+    }
+
+    /// Finalizes the initialization of the component database.
+    pub fn finish_initialization(&self) {
+        let _ = self.public_ref.set(self.clone());
     }
 
     /// Gets a reference to a component of the specified type.
@@ -51,6 +60,16 @@ impl ComponentDB {
 
         map.insert::<Component<T>>(Component::new(component));
     }
+
+    /// Creates a handle for a component of the specified type.
+    pub fn handle_for<T: 'static>(&self) -> ResourceHandle<T> {
+        ResourceHandle::new(self.handle())
+    }
+
+    /// Creates a handle to the component map.
+    pub fn handle(&self) -> StateHandle {
+        StateHandle::new(self)
+    }
 }
 
 /// Internal representation of a component.
@@ -74,5 +93,109 @@ impl<T> Component<T> {
 
     fn get_mut(&self) -> std::cell::RefMut<T> {
         self.data.borrow_mut()
+    }
+}
+
+/// A handle to a component stored in a `ComponentDB`.
+pub struct ResourceHandle<T: 'static> {
+    handle: StateHandle,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T> ResourceHandle<T> {
+    fn new(state_handle: StateHandle) -> Self {
+        Self {
+            handle: state_handle,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Gets a reference to the component.
+    pub fn get(&self) -> Ref<T> {
+        self.handle.get::<T>()
+    }
+
+    /// Gets a mutable reference to the component.
+    pub fn get_mut(&self) -> std::cell::RefMut<T> {
+        self.handle.get_mut::<T>()
+    }
+}
+
+impl<T> Debug for ResourceHandle<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ResourceHandle<{}>", std::any::type_name::<T>())
+    }
+}
+
+impl<T> Clone for ResourceHandle<T> {
+    fn clone(&self) -> Self {
+        Self {
+            handle: self.handle.clone(),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
+/// A handle to a ComponentMap that allows checking its state.
+#[derive(Clone)]
+pub struct StateHandle {
+    // TODO: Figure out a way to optimize this into a single pointer sized field.
+    // This is gonna need some unsafe code and weird pointer tagging so this is a later task.
+    handle: OnceCell<State>,
+    global_handle: Rc<OnceCell<State>>,
+}
+
+impl StateHandle {
+    pub fn new(component_map: &State) -> Self {
+        Self {
+            handle: OnceCell::new(),
+            global_handle: component_map.public_ref.clone(),
+        }
+    }
+
+    fn get_map(&self) -> Option<&State> {
+        if let Some(map) = self.handle.get() {
+            return Some(map);
+        }
+
+        self.global_handle.get().and_then(|map| {
+            let _ = self.handle.set(map.clone());
+            self.handle.get()
+        })
+    }
+
+    /// Gets a reference to a component of the specified type.
+    pub fn get_checked<T: 'static>(&self) -> Option<Ref<T>> {
+        let map = self.get_map()?;
+        Some(map.get())
+    }
+
+    /// Gets a reference to a component of the specified type.
+    pub fn get<T: 'static>(&self) -> Ref<T> {
+        self.get_checked()
+            .expect("Component not found in ComponentDB")
+    }
+
+    /// Gets a mutable reference to a component of the specified type.
+    pub fn get_mut_checked<T: 'static>(&self) -> Option<std::cell::RefMut<'_, T>> {
+        let map = self.get_map()?;
+        Some(map.get_mut())
+    }
+
+    /// Gets a mutable reference to a component of the specified type.
+    pub fn get_mut<T: 'static>(&self) -> std::cell::RefMut<'_, T> {
+        self.get_mut_checked()
+            .expect("Component not found in ComponentDB")
+    }
+
+    /// Creates a handle for a component of the specified type.
+    pub fn handle_for<T: 'static>(&self) -> ResourceHandle<T> {
+        ResourceHandle::new(self.clone())
+    }
+}
+
+impl Debug for StateHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StateHandle").finish()
     }
 }

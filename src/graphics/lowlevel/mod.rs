@@ -15,12 +15,14 @@ use wgpu::{
 
 use crate::{
     ReadOnly,
+    component::{State, StateHandle},
     graphics::lowlevel::{
         buf::{IndexBuffer, IndexLayout, UniformBuffer, VertexBuffer, VertexLayout},
         shader::ShaderProgram,
         texture::Texture,
     },
     resource::Resource,
+    window::GlfwWindow,
 };
 
 pub mod buf;
@@ -29,28 +31,27 @@ pub mod shader;
 pub mod texture;
 
 #[derive(Debug)]
-pub struct WgpuInstance {
+pub struct WgpuRenderer {
     pub instance: Instance,
     pub surface: Surface<'static>,
     pub device: Device,
     pub queue: Queue,
     pub config: Resource<SurfaceConfiguration>,
     pub default_sampler: Option<wgpu::Sampler>,
-    this: Weak<WgpuInstance>,
+    state: StateHandle,
 }
 
-impl WgpuInstance {
-    pub async fn new(window: Arc<glfw::PWindow>) -> anyhow::Result<Rc<Self>> {
-        let size = window.get_size();
+impl WgpuRenderer {
+    /// Attaches a WGPU renderer to the given state and window.
+    pub async fn attach_to(state: &mut State, window: &GlfwWindow) -> anyhow::Result<()> {
+        let size = window.size();
 
         let instance = Instance::new(&InstanceDescriptor {
             backends: wgpu::Backends::PRIMARY,
             ..Default::default()
         });
 
-        let surface = instance
-            .create_surface(window.clone())
-            .map_err(|e| anyhow::anyhow!("Failed to create surface: {:?}", e))?;
+        let surface = unsafe { window.create_surface(&instance) };
 
         let adapter = instance
             .request_adapter(&RequestAdapterOptions {
@@ -92,28 +93,21 @@ impl WgpuInstance {
 
         surface.configure(&device, &config);
 
-        let this = Rc::new_cyclic(|weak| {
-            let mut this = WgpuInstance {
-                instance,
-                surface,
-                device,
-                queue,
-                config: Resource::new(config),
-                default_sampler: None,
-                this: weak.clone(),
-            };
+        let mut this = WgpuRenderer {
+            instance,
+            surface,
+            device,
+            queue,
+            config: Resource::new(config),
+            default_sampler: None,
+            state: state.handle(),
+        };
 
-            this.default_sampler =
-                Some(this.sampler(Some("default sampler"), wgpu::AddressMode::ClampToEdge));
+        this.default_sampler =
+            Some(this.sampler(Some("default sampler"), wgpu::AddressMode::ClampToEdge));
 
-            this
-        });
-
-        Ok(this)
-    }
-
-    fn instance(&self) -> Rc<WgpuInstance> {
-        self.this.upgrade().expect("WgpuInstance dropped!").clone()
+        state.insert(this);
+        Ok(())
     }
 
     /// Resize the surface to the new size.
@@ -182,7 +176,7 @@ impl WgpuInstance {
             });
 
         // Safety: The buffer is valid for type T as it was created from a slice of T.
-        unsafe { UniformBuffer::from_raw_parts(buffer, self.instance()) }
+        unsafe { UniformBuffer::from_raw_parts(buffer, self.state.clone()) }
     }
 
     /// Loads a shader module from WGSL source code.
@@ -300,7 +294,7 @@ impl WgpuInstance {
         };
 
         Texture::new(
-            self.instance(),
+            &self.state,
             text,
             text_layout,
             sampler,
@@ -365,7 +359,7 @@ impl WgpuInstance {
         };
 
         Texture::new(
-            self.instance(),
+            &self.state,
             text,
             text_layout,
             sampler,
@@ -373,10 +367,6 @@ impl WgpuInstance {
             texture_view,
             layers as usize,
         )
-    }
-
-    pub fn depth_texture(&self) -> depth::DepthTexture {
-        depth::DepthTexture::new(self.instance())
     }
 
     /// Creates a bind group layout from the given descriptor.

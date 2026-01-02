@@ -11,13 +11,17 @@ use wgpu_text::{
     glyph_brush::{Layout, Section, Text, ab_glyph::FontRef},
 };
 
-use crate::{ReadOnlyString, graphics::Wgpu};
+use crate::{
+    ReadOnlyString,
+    component::{ResourceHandle, StateHandle},
+    graphics::lowlevel::WgpuRenderer,
+};
 
 pub struct DebugRenderer {
     pub enabled: bool,
     brush: TextBrush<FontRef<'static>>,
     stats: Vec<Weak<DebugStatistic>>,
-    wgpu: Wgpu,
+    wgpu: ResourceHandle<WgpuRenderer>,
 }
 
 impl Debug for DebugRenderer {
@@ -34,7 +38,8 @@ pub type DebugProvider = Rc<DebugStatistic>;
 
 impl DebugRenderer {
     /// Creates a new debug renderer.
-    pub fn new(wgpu: Wgpu) -> anyhow::Result<DebugRenderer> {
+    pub fn new(state: &StateHandle) -> anyhow::Result<DebugRenderer> {
+        let wgpu = state.get::<WgpuRenderer>();
         let (render_width, render_height) = wgpu.dimensions();
         let render_format = wgpu.config.get().format;
         Ok(Self {
@@ -43,7 +48,7 @@ impl DebugRenderer {
                 .build(&wgpu.device, render_width, render_height, render_format),
             enabled: false,
             stats: Vec::new(),
-            wgpu,
+            wgpu: state.handle_for::<WgpuRenderer>(),
         }
         .into())
     }
@@ -66,7 +71,9 @@ impl DebugRenderer {
             return;
         }
 
-        let mut pass = self.wgpu.render_pass(
+        let wgpu = self.wgpu.get();
+
+        let mut pass = wgpu.render_pass(
             Some("Debug Renderer Pass"),
             encoder,
             view,
@@ -104,7 +111,7 @@ impl DebugRenderer {
         }
 
         self.brush
-            .queue(&self.wgpu.device, &self.wgpu.queue, iter::once(section))
+            .queue(&wgpu.device, &wgpu.queue, iter::once(section))
             .expect("failed to queue debug text");
 
         self.brush.draw(&mut pass);

@@ -4,7 +4,11 @@ use wgpu::{TextureFormat, TextureUsages};
 
 use crate::{
     ReadOnly, ReadOnlyString,
-    graphics::{Wgpu, image::Image, lowlevel::texture::Texture},
+    component::{ResourceHandle, StateHandle},
+    graphics::{
+        image::Image,
+        lowlevel::{WgpuRenderer, texture::Texture},
+    },
 };
 
 pub type TextureHandle = u32;
@@ -19,12 +23,12 @@ pub struct TextureCollection {
     gpu_texture: Option<Texture>,
     label: Option<ReadOnlyString>,
     dimensions: (u32, u32),
-    wgpu: Wgpu,
+    handle: ResourceHandle<WgpuRenderer>,
 }
 
 impl TextureCollection {
     pub fn new(
-        wgpu: Wgpu,
+        state: &StateHandle,
         label: Option<impl Into<ReadOnlyString>>,
         dimensions: (u32, u32),
     ) -> Self {
@@ -33,7 +37,7 @@ impl TextureCollection {
             buf: Vec::new(),
             gpu_texture: None,
             label: label.map(|l| l.into()),
-            wgpu,
+            handle: state.handle_for::<WgpuRenderer>(),
             dimensions,
         }
     }
@@ -131,7 +135,7 @@ impl TextureCollection {
             return self.gpu_texture.as_ref().unwrap().clone();
         }
 
-        let texture = self.wgpu.texture(
+        let texture = self.handle.get().texture(
             self.label.as_deref(),
             TextureFormat::Rgba8Unorm,
             TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,

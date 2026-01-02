@@ -1,6 +1,9 @@
 use std::{fmt::Debug, rc::Rc};
 
-use crate::graphics::lowlevel::WgpuInstance;
+use crate::{
+    component::{ResourceHandle, StateHandle},
+    graphics::lowlevel::WgpuRenderer,
+};
 
 /// A structure representing a texture, its view, and its sampler.
 #[derive(Clone)]
@@ -16,13 +19,13 @@ pub struct Texture {
     /// The texture view.
     pub view: wgpu::TextureView,
     image_count: usize,
-    wgpu: Rc<WgpuInstance>,
+    handle: ResourceHandle<WgpuRenderer>,
 }
 
 impl Texture {
     /// Creates a new texture from the given texture and sampler.
     pub fn new(
-        wgpu: Rc<WgpuInstance>,
+        state: &StateHandle,
         texture: wgpu::Texture,
         texture_bind_group_entry: wgpu::BindGroupLayoutEntry,
         sampler: wgpu::Sampler,
@@ -36,7 +39,7 @@ impl Texture {
             sampler,
             sampler_bind_group_entry,
             view,
-            wgpu,
+            handle: state.handle_for::<WgpuRenderer>(),
             image_count,
         }
     }
@@ -48,7 +51,8 @@ impl Texture {
         sampler_index: u32,
         texture_index: u32,
     ) -> wgpu::BindGroupLayout {
-        self.wgpu
+        self.handle
+            .get()
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 label,
                 entries: &[
@@ -79,20 +83,22 @@ impl Texture {
         sampler_binding: u32,
         texture_binding: u32,
     ) -> wgpu::BindGroup {
-        self.wgpu.create_bind_group(&wgpu::BindGroupDescriptor {
-            label,
-            layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: sampler_binding,
-                    resource: wgpu::BindingResource::Sampler(&self.sampler),
-                },
-                wgpu::BindGroupEntry {
-                    binding: texture_binding,
-                    resource: wgpu::BindingResource::TextureView(&self.view),
-                },
-            ],
-        })
+        self.handle
+            .get()
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label,
+                layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: sampler_binding,
+                        resource: wgpu::BindingResource::Sampler(&self.sampler),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: texture_binding,
+                        resource: wgpu::BindingResource::TextureView(&self.view),
+                    },
+                ],
+            })
     }
 
     pub fn layout_and_bind_group(

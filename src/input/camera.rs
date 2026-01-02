@@ -3,8 +3,13 @@ use std::fmt::Debug;
 use glam::{Mat4, Vec2, Vec3, vec2};
 
 use crate::{
+    component::{ResourceHandle, StateHandle},
     debug::{DebugProvider, DebugRenderer},
-    graphics::{Wgpu, callback::TargetHandle, camera::Camera, lowlevel::buf::UniformBuffer},
+    graphics::{
+        callback::TargetHandle,
+        camera::Camera,
+        lowlevel::{WgpuRenderer, buf::UniformBuffer},
+    },
     resource::Resource,
     window::GlfwWindow,
 };
@@ -19,7 +24,7 @@ pub struct CameraController {
     callback_handle: Option<TargetHandle<(f64, f64)>>,
     position_entry: DebugProvider,
     rotation_entry: DebugProvider,
-    wgpu: Wgpu,
+    wgpu_handle: ResourceHandle<WgpuRenderer>,
 }
 
 impl Debug for CameraController {
@@ -33,7 +38,8 @@ impl Debug for CameraController {
 }
 
 impl CameraController {
-    pub fn new<'b>(wgpu: Wgpu, debug_renderer: &mut DebugRenderer) -> CameraController {
+    pub fn new<'b>(state: &StateHandle, debug_renderer: &mut DebugRenderer) -> CameraController {
+        let wgpu = state.get::<WgpuRenderer>();
         let (width, height) = wgpu.dimensions();
         let camera = Camera::new(
             width as f32 / height as f32,
@@ -43,7 +49,7 @@ impl CameraController {
 
         let uniform = wgpu.uniform_buffer(&camera.projection_view_matrix(), Some("Camera Uniform"));
         CameraController {
-            wgpu,
+            wgpu_handle: state.handle_for::<WgpuRenderer>(),
             camera,
             uniform,
             pos: Vec3::ZERO,
@@ -78,7 +84,7 @@ impl CameraController {
 
     /// Creates a bind group layout for the camera uniform buffer.
     pub fn bind_group_layout(&self, binding: u32) -> wgpu::BindGroupLayout {
-        self.wgpu.bind_group_layout(
+        self.wgpu_handle.get().bind_group_layout(
             Some("camera bind group layout"),
             &[wgpu::BindGroupLayoutEntry {
                 binding,
@@ -115,7 +121,7 @@ impl CameraController {
         layout: &wgpu::BindGroupLayout,
         binding: u32,
     ) -> wgpu::BindGroup {
-        self.wgpu.bind_group(
+        self.wgpu_handle.get().bind_group(
             Some("camera bind group"),
             layout,
             &[wgpu::BindGroupEntry {
@@ -136,54 +142,55 @@ impl CameraController {
         )
     }
 
-    /// Creates the main camera controller and sets up mouse callbacks.
-    pub fn create_main_camera(
-        wgpu: &Wgpu,
-        window: &GlfwWindow,
-        debug_renderer: &mut DebugRenderer,
-        binding: u32,
-    ) -> (
-        Resource<CameraController>,
-        wgpu::BindGroupLayout,
-        wgpu::BindGroup,
-    ) {
-        let camera: Resource<CameraController> =
-            CameraController::new(wgpu.clone(), debug_renderer).into();
-        let (camera_layout, camera_bind_group) = camera.get().bind_group(binding);
+    // / Creates the main camera controller and sets up mouse callbacks.
+    // TODO: This needs to be completely reworked to fit the new architecture.
+    // pub fn create_main_camera(
+    //     wgpu: &Wgpu,
+    //     window: &GlfwWindow,
+    //     debug_renderer: &mut DebugRenderer,
+    //     binding: u32,
+    // ) -> (
+    //     Resource<CameraController>,
+    //     wgpu::BindGroupLayout,
+    //     wgpu::BindGroup,
+    // ) {
+    //     let camera: Resource<CameraController> =
+    //         CameraController::new(wgpu.clone(), debug_renderer).into();
+    //     let (camera_layout, camera_bind_group) = camera.get().bind_group(binding);
 
-        let closure_camera = camera.clone();
-        CameraController::register_callback(closure_camera.clone(), window);
-        window.set_mouse_mode(glfw::CursorMode::Disabled);
+    //     let closure_camera = camera.clone();
+    //     CameraController::register_callback(closure_camera.clone(), window);
+    //     window.set_mouse_mode(glfw::CursorMode::Disabled);
 
-        (camera, camera_layout, camera_bind_group)
-    }
+    //     (camera, camera_layout, camera_bind_group)
+    // }
 
-    /// Registers mouse movement callbacks to control the camera rotation.
-    pub fn register_callback(this: Resource<CameraController>, window: &GlfwWindow) {
-        let closure_camera = this.clone();
-        let mut last = Vec2::ZERO;
-        let mut first_mouse = true;
-        let handle = window.register_mouse_pos_callback(Some("camera"), move |(x, y)| {
-            let container = closure_camera.clone();
-            let mut camera = container.get_mut();
-            let pos = vec2(x as f32, y as f32);
-            if first_mouse {
-                last = pos;
-                first_mouse = false;
-                return;
-            }
+    // / Registers mouse movement callbacks to control the camera rotation.
+    // pub fn register_callback(this: Resource<CameraController>, window: &GlfwWindow) {
+    //     let closure_camera = this.clone();
+    //     let mut last = Vec2::ZERO;
+    //     let mut first_mouse = true;
+    //     let handle = window.register_mouse_pos_callback(Some("camera"), move |(x, y)| {
+    //         let container = closure_camera.clone();
+    //         let mut camera = container.get_mut();
+    //         let pos = vec2(x as f32, y as f32);
+    //         if first_mouse {
+    //             last = pos;
+    //             first_mouse = false;
+    //             return;
+    //         }
 
-            let mut offset = pos - last;
-            last = pos;
+    //         let mut offset = pos - last;
+    //         last = pos;
 
-            // Invert y-axis for typical FPS camera control
-            offset *= Vec2::NEG_Y + Vec2::X;
+    //         // Invert y-axis for typical FPS camera control
+    //         offset *= Vec2::NEG_Y + Vec2::X;
 
-            camera.process_rot(offset);
-        });
+    //         camera.process_rot(offset);
+    //     });
 
-        this.get_mut().callback_handle = Some(handle);
-    }
+    //     this.get_mut().callback_handle = Some(handle);
+    // }
 
     pub fn front(&self) -> Vec3 {
         self.camera.front()

@@ -2,10 +2,13 @@ use bytemuck::{Pod, Zeroable};
 
 use crate::{
     BlockPosition,
+    component::StateHandle,
     graphics::{
         CardinalDirection, FACE_INDICES, FACE_TABLE,
-        lowlevel::buf::{IndexBuffer, VertexBuffer, VertexLayout},
-        render::RenderState,
+        lowlevel::{
+            WgpuRenderer,
+            buf::{IndexBuffer, VertexBuffer, VertexLayout},
+        },
         textures::TextureHandle,
     },
 };
@@ -88,9 +91,9 @@ impl BlockMesh {
     /// Creates the vertex and index buffers for the mesh.
     pub fn create_buffers(
         &self,
-        wgpu: &RenderState,
+        state: &StateHandle,
     ) -> (VertexBuffer<BlockVertex>, IndexBuffer<u16>) {
-        let wgpu = &wgpu.wgpu;
+        let wgpu = state.get::<WgpuRenderer>();
         let vertex_buffer = wgpu.vertex_buffer::<BlockVertex>(
             bytemuck::cast_slice::<_, BlockVertex>(self.vertices()),
             Some("BlockMesh Vertex Buffer"),

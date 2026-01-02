@@ -3,8 +3,9 @@ use std::cell::RefCell;
 use log::warn;
 
 use crate::{
-    BlockPosition, ChunkPosition, GameRef,
+    BlockPosition, ChunkPosition,
     block::{Block, BlockTextureAtlas},
+    component::StateHandle,
     coords::bp,
     graphics::{
         CardinalDirection,
@@ -24,11 +25,11 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn empty(game_ref: GameRef) -> Self {
+    pub fn empty(state: StateHandle) -> Self {
         Self {
             data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
             neighbors: [None, None, None, None, None, None],
-            render_state: RefCell::new(ChunkRenderState::new(game_ref.clone())),
+            render_state: RefCell::new(ChunkRenderState::new(state)),
         }
     }
 
@@ -99,11 +100,11 @@ impl std::ops::IndexMut<(usize, usize, usize)> for Chunk {
 pub struct ChunkRenderState {
     block_mesh: Option<BlockMesh>,
     buffers: Option<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>,
-    game_state: GameRef,
+    game_state: StateHandle,
 }
 
 impl ChunkRenderState {
-    pub fn new(game_state: GameRef) -> Self {
+    pub fn new(game_state: StateHandle) -> Self {
         Self {
             block_mesh: None,
             buffers: None,
@@ -150,13 +151,16 @@ impl ChunkRenderState {
     }
 
     /// Generates the vertex and index buffers for the current mesh, if not already generated.
-    pub fn generate_buffers(&mut self) -> (&VertexBuffer<BlockVertex>, &IndexBuffer<u16>) {
+    pub fn generate_buffers(
+        &mut self,
+        state: &StateHandle,
+    ) -> (&VertexBuffer<BlockVertex>, &IndexBuffer<u16>) {
         if self.buffers.is_none() {
             let mesh = self
                 .block_mesh
                 .as_ref()
                 .expect("Mesh must be generated before buffers");
-            self.buffers = Some(mesh.create_buffers(&self.game_state.render_state()));
+            self.buffers = Some(mesh.create_buffers(state));
         }
         let (vb, ib) = self.buffers.as_ref().unwrap();
         (vb, ib)
