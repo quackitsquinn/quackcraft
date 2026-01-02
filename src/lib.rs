@@ -31,6 +31,7 @@ pub type GameRef = ImmutableResource<GameState>;
 mod assets;
 mod block;
 mod chunk;
+mod component;
 pub mod coords;
 mod debug;
 pub mod graphics;

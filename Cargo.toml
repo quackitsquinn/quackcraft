@@ -16,6 +16,7 @@ wgpu = "28.0.0"
 glam = { version = "0.30.9", features = ["bytemuck"] }
 tobj = "4.0.3"
 wgpu_text = "28.0.0"
+anymap = "0.12.1"
 
 [profile.release]
 debug = true
