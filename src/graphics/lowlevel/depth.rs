@@ -1,4 +1,3 @@
-
 use wgpu::{CompareFunction, StoreOp, TextureFormat};
 
 use crate::{
@@ -24,8 +23,6 @@ impl DepthTexture {
             height: config.height,
             depth_or_array_layers: 1,
         };
-
-        let wgpu = state.get::<WgpuRenderer>();
 
         let desc = wgpu::TextureDescriptor {
             label: Some("Depth Texture"),

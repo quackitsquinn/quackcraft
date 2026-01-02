@@ -51,6 +51,9 @@ impl Game {
             component_db: state,
         })
     }
+
+    pub fn update(&mut self) {
+    }
 }
 
 pub fn run_game() -> anyhow::Result<()> {

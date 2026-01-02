@@ -1,8 +1,4 @@
-use std::{
-    cell::RefCell,
-    ops::Deref,
-    rc::Rc,
-};
+use std::{cell::RefCell, ops::Deref, rc::Rc};
 
 /// A shared resource wrapper that provides interior mutability.
 #[derive(Debug, PartialEq, Eq, Default)]

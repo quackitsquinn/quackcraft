@@ -24,6 +24,7 @@ where
     targets: RefVec<CallbackTarget<Args>>,
     suspended: RefCell<bool>,
 }
+
 // TODO: Reduce Copy into Clone?
 impl<Args> Proxy<Args>
 where

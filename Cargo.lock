@@ -148,12 +148,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anymap"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33954243bd79057c2de7338850b85983a44588021f8a5fee574a8888c6de4344"
-
-[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1725,7 +1719,6 @@ name = "quackcraft"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "anymap",
  "bytemuck",
  "env_logger",
  "glam",
@@ -1734,6 +1727,7 @@ dependencies = [
  "log",
  "pod",
  "raw-window-handle",
+ "rustc-hash 2.1.1",
  "smol",
  "tobj",
  "wgpu",
