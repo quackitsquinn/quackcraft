@@ -1,15 +1,17 @@
 use std::{
+    any::TypeId,
     cell::{Cell, OnceCell, Ref, RefCell},
     fmt::Debug,
     rc::{Rc, Weak},
 };
 
-use anymap::AnyMap;
+use anymap::{AnyMap, any::UncheckedAnyExt, raw::RawMap};
+use wgpu::naga::Type;
 
 /// A database for storing components of various types.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct State {
-    map: Rc<AnyMap>,
+    map: Rc<RawMap>,
     public_ref: Rc<OnceCell<State>>,
 }
 
@@ -17,7 +19,7 @@ impl State {
     /// Creates a new, empty component database.
     pub fn new() -> Self {
         Self {
-            map: Rc::new(AnyMap::new()),
+            map: Rc::new(RawMap::new()),
             public_ref: Rc::new(OnceCell::new()),
         }
     }
@@ -29,8 +31,8 @@ impl State {
 
     /// Gets a reference to a component of the specified type.
     pub fn get_checked<T: 'static>(&self) -> Option<Ref<'_, T>> {
-        let component = self.map.get::<Component<T>>()?;
-        Some(component.get())
+        let component = self.map.get(&TypeId::of::<Resource<T>>())?;
+        Some(unsafe { component.downcast_ref_unchecked::<Resource<T>>().get() })
     }
 
     /// Gets a reference to a component of the specified type.
@@ -41,8 +43,8 @@ impl State {
 
     /// Gets a mutable reference to a component of the specified type.
     pub fn get_mut_checked<T: 'static>(&self) -> Option<std::cell::RefMut<'_, T>> {
-        let component = self.map.get::<Component<T>>()?;
-        Some(component.get_mut())
+        let component = self.map.get(&TypeId::of::<Resource<T>>())?;
+        Some(unsafe { component.downcast_ref_unchecked::<Resource<T>>().get_mut() })
     }
 
     /// Gets a mutable reference to a component of the specified type.
@@ -58,7 +60,12 @@ impl State {
         let map = Rc::get_mut(&mut self.map)
             .expect("Cannot insert into ComponentDB while there are other references");
 
-        map.insert::<Component<T>>(Component::new(component));
+        unsafe {
+            map.insert(
+                TypeId::of::<Resource<T>>(),
+                Box::new(Resource::new(component)),
+            )
+        };
     }
 
     /// Creates a handle for a component of the specified type.
@@ -72,26 +79,44 @@ impl State {
     }
 }
 
-/// Internal representation of a component.
-struct Component<T> {
-    // This struct mainly exists right now just as future-proofing in case we want to add
-    // more functionality to components later.
+impl Debug for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut type_names: Vec<&'static str> = vec![];
+        for component in self.map.iter() {
+            // SAFETY: We only insert Component<T> types into the map, and Component<T> always has a &'static str type_name field.
+            let type_name = unsafe { component.downcast_ref_unchecked::<&'static str>() };
+            type_names.push(type_name);
+        }
+        f.debug_struct("State")
+            .field("resources", &type_names)
+            .finish()
+    }
+}
+
+/// Internal representation of a resource.
+///
+/// I promise this codebase won't have multiple Resource structs with different meanings, the old one is being removed soon.
+#[repr(C)]
+struct Resource<T> {
+    // WARNING: field order matters here!
+    type_name: &'static str,
     data: RefCell<T>,
 }
 
-impl<T> Component<T> {
+impl<T> Resource<T> {
     /// Creates a new component.
     fn new(data: T) -> Self {
         Self {
             data: RefCell::new(data),
+            type_name: std::any::type_name::<T>(),
         }
     }
 
-    fn get(&self) -> std::cell::Ref<T> {
+    fn get(&self) -> std::cell::Ref<'_, T> {
         self.data.borrow()
     }
 
-    fn get_mut(&self) -> std::cell::RefMut<T> {
+    fn get_mut(&self) -> std::cell::RefMut<'_, T> {
         self.data.borrow_mut()
     }
 }

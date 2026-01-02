@@ -48,17 +48,22 @@ impl Game {
         let window = window::GlfwWindow::new(800, 600, "Minecraft Clone")
             .expect("Failed to create GLFW window");
 
-        WgpuRenderer::attach_to(&mut state, &window);
+        smol::block_on(WgpuRenderer::attach_to(&mut state, &window));
 
         state.insert(window);
 
         state.finish_initialization();
 
-        todo!()
+        Self {
+            component_db: state,
+        }
     }
 }
 
 pub fn run_game() -> anyhow::Result<()> {
+    let mut game = Game::new();
+
+    println!("Game initialized: {:?}", game.component_db);
     Ok(())
 }
 
