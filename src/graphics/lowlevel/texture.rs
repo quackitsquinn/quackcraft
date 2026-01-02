@@ -1,4 +1,4 @@
-use std::{fmt::Debug, rc::Rc};
+use std::fmt::Debug;
 
 use crate::{
     component::{ResourceHandle, StateHandle},

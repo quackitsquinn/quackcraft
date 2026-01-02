@@ -1,9 +1,7 @@
-use std::sync::Arc;
 
 use glfw::{Context, Glfw, GlfwReceiver, PWindow};
 use log::*;
-use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
-use wgpu::{Surface, SurfaceTarget, SurfaceTargetUnsafe};
+use wgpu::{Surface, SurfaceTargetUnsafe};
 
 use crate::{
     ReadOnlyString,

@@ -1,12 +1,11 @@
 use std::{
     any::TypeId,
-    cell::{Cell, OnceCell, Ref, RefCell},
+    cell::{OnceCell, Ref, RefCell},
     fmt::Debug,
-    rc::{Rc, Weak},
+    rc::Rc,
 };
 
-use anymap::{AnyMap, any::UncheckedAnyExt, raw::RawMap};
-use wgpu::naga::Type;
+use anymap::{any::UncheckedAnyExt, raw::RawMap};
 
 /// A database for storing components of various types.
 #[derive(Clone)]
@@ -36,7 +35,7 @@ impl State {
     }
 
     /// Gets a reference to a component of the specified type.
-    pub fn get<T: 'static>(&self) -> Ref<T> {
+    pub fn get<T: 'static>(&self) -> Ref<'_, T> {
         self.get_checked()
             .expect("Component not found in ComponentDB")
     }
@@ -136,12 +135,12 @@ impl<T> ResourceHandle<T> {
     }
 
     /// Gets a reference to the component.
-    pub fn get(&self) -> Ref<T> {
+    pub fn get(&self) -> Ref<'_, T> {
         self.handle.get::<T>()
     }
 
     /// Gets a mutable reference to the component.
-    pub fn get_mut(&self) -> std::cell::RefMut<T> {
+    pub fn get_mut(&self) -> std::cell::RefMut<'_, T> {
         self.handle.get_mut::<T>()
     }
 }
@@ -190,13 +189,13 @@ impl StateHandle {
     }
 
     /// Gets a reference to a component of the specified type.
-    pub fn get_checked<T: 'static>(&self) -> Option<Ref<T>> {
+    pub fn get_checked<T: 'static>(&self) -> Option<Ref<'_, T>> {
         let map = self.get_map()?;
         Some(map.get())
     }
 
     /// Gets a reference to a component of the specified type.
-    pub fn get<T: 'static>(&self) -> Ref<T> {
+    pub fn get<T: 'static>(&self) -> Ref<'_, T> {
         self.get_checked()
             .expect("Component not found in ComponentDB")
     }

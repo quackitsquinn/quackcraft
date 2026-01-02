@@ -6,13 +6,12 @@ use crate::{
     chunk::Chunk,
     component::StateHandle,
     coords::bp,
-    debug::DebugProvider,
     graphics::{
         CardinalDirection,
         lowlevel::buf::{IndexBuffer, VertexBuffer},
         mesh::{BlockMesh, BlockVertex},
     },
-    resource::{ImmutableResource, Resource},
+    resource::Resource,
 };
 
 pub struct World {

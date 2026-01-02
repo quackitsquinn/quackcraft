@@ -1,16 +1,10 @@
-use std::{
-    cell::{Cell, Ref, RefCell, RefMut},
-    rc::Rc,
-    sync::Arc,
-};
+use std::sync::Arc;
 
 use anyhow::Ok;
 use glam::Vec3;
-use glfw::{Action, Key, WindowEvent};
-use log::info;
 
 use crate::{
-    assets::AssetStore, block::Block, component::State, graphics::lowlevel::WgpuRenderer,
+    block::Block, component::State, graphics::lowlevel::WgpuRenderer,
     input::keyboard::Keyboard,
 };
 
@@ -61,7 +55,7 @@ impl Game {
 }
 
 pub fn run_game() -> anyhow::Result<()> {
-    let mut game = Game::new();
+    let game = Game::new();
 
     println!("Game initialized: {:?}", game.component_db);
     Ok(())

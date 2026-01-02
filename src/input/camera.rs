@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use glam::{Mat4, Vec2, Vec3, vec2};
+use glam::{Mat4, Vec2, Vec3};
 
 use crate::{
     component::{ResourceHandle, StateHandle},
@@ -10,8 +10,6 @@ use crate::{
         camera::Camera,
         lowlevel::{WgpuRenderer, buf::UniformBuffer},
     },
-    resource::Resource,
-    window::GlfwWindow,
 };
 
 #[derive(Clone)]
