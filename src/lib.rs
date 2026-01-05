@@ -52,8 +52,7 @@ impl Game {
         })
     }
 
-    pub fn update(&mut self) {
-    }
+    pub fn update(&mut self) {}
 }
 
 pub fn run_game() -> anyhow::Result<()> {

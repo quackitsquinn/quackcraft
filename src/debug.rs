@@ -49,8 +49,7 @@ impl DebugRenderer {
             enabled: false,
             stats: Vec::new(),
             wgpu: state.handle_for::<WgpuRenderer>(),
-        }
-        .into())
+        })
     }
 
     /// Adds a new debug statistic to be displayed.

@@ -1,10 +1,9 @@
-
 pub mod callback;
 pub mod camera;
 pub mod image;
 pub mod lowlevel;
 pub mod mesh;
-pub mod pipelines;
+pub mod pipeline;
 pub mod textures;
 
 /// Cardinal directions in 3D space.
