@@ -72,9 +72,15 @@ impl State {
 
 impl Debug for State {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut type_names: Vec<&'static str> = vec![];
+        struct TyDbg(&'static str);
+        impl Debug for TyDbg {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
+        let mut type_names: Vec<TyDbg> = vec![];
         for component in self.map.iter() {
-            type_names.push(component.1.type_name);
+            type_names.push(TyDbg(component.1.type_name));
         }
         f.debug_struct("State")
             .field("resources", &type_names)

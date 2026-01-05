@@ -124,7 +124,14 @@ impl<K: PipelineKey> RenderController<K> {
 impl<K: PipelineKey> Debug for RenderController<K> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RenderController")
-            .field("pipelines", &self.pipelines.keys().collect::<Vec<&K>>())
+            .field(
+                "pipelines",
+                &self
+                    .pipelines
+                    .iter()
+                    .map(|(k, p)| (k, p.label().unwrap_or("?")))
+                    .collect::<Vec<(&K, &str)>>(),
+            )
             .finish()
     }
 }
