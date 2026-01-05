@@ -1,34 +1,6 @@
-use std::sync::Arc;
-
-use anyhow::Ok;
-use glam::Vec3;
-
-use crate::{
-    block::Block, component::State, graphics::lowlevel::WgpuRenderer, input::keyboard::Keyboard,
+use engine::{
+    component::State, graphics::lowlevel::WgpuRenderer, input::keyboard::Keyboard, window,
 };
-
-/// A read-only string type.
-pub type ReadOnlyString = Arc<str>;
-/// A read-only slice type.
-pub type ReadOnly<T> = Arc<[T]>;
-/// A position in the world, in chunk coordinates.
-pub type ChunkPosition = coords::BlockPosition;
-/// A position in the world, in chunk coordinates.
-pub type BlockPosition = coords::BlockPosition;
-/// A position in the world, in floating-point coordinates.
-pub type FloatPosition = Vec3;
-
-mod assets;
-mod block;
-mod chunk;
-mod component;
-pub mod coords;
-mod debug;
-pub mod graphics;
-mod input;
-pub mod resource;
-mod window;
-mod world;
 
 pub struct Game {
     component_db: State,

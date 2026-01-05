@@ -34,19 +34,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
-name = "ahash"
-version = "0.8.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a15f179cd60c4584b8a8c596927aadc462e27f2ca70c04e0071964a73ba7a75"
-dependencies = [
- "cfg-if",
- "getrandom",
- "once_cell",
- "version_check",
- "zerocopy",
-]
-
-[[package]]
 name = "aho-corasick"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -651,6 +638,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
+name = "engine"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "glam",
+ "glfw",
+ "image",
+ "log",
+ "raw-window-handle",
+ "rustc-hash 2.1.1",
+ "smol",
+ "wgpu",
+ "wgpu_text",
+]
+
+[[package]]
 name = "env_filter"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1221,9 +1225,9 @@ checksum = "7a79a3332a6609480d7d0c9eab957bca6b455b91bb84e66d19f5ff66294b85b8"
 
 [[package]]
 name = "libc"
-version = "0.2.178"
+version = "0.2.179"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37c93d8daa9d8a012fd8ab92f088405fb202ea0b6ab73ee2482ae66af4f42091"
+checksum = "c5a2d376baa530d1238d133232d15e239abad80d05838b4b59354e5268af431f"
 
 [[package]]
 name = "libfuzzer-sys"
@@ -1531,12 +1535,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "packed"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41218181af10bee963afd8645b68e050b2feb64635c3639a263c42dba8295334"
-
-[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1611,17 +1609,6 @@ dependencies = [
  "fdeflate",
  "flate2",
  "miniz_oxide",
-]
-
-[[package]]
-name = "pod"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08b1c1c9af3b1adb5c22ae60040a78db0ce356760007efe187c37da4ab6318b7"
-dependencies = [
- "packed",
- "read_exact",
- "uninitialized",
 ]
 
 [[package]]
@@ -1719,19 +1706,11 @@ name = "quackcraft"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bytemuck",
+ "engine",
  "env_logger",
- "glam",
- "glfw",
- "image",
  "log",
- "pod",
- "raw-window-handle",
- "rustc-hash 2.1.1",
  "smol",
- "tobj",
  "wgpu",
- "wgpu_text",
 ]
 
 [[package]]
@@ -1865,12 +1844,6 @@ dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
 ]
-
-[[package]]
-name = "read_exact"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22bc22a81e0dda32ddd56276b166b548b0ab76281af15f0ba6c22b4bd43c8cd4"
 
 [[package]]
 name = "redox_syscall"
@@ -2087,9 +2060,9 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "syn"
-version = "2.0.111"
+version = "2.0.113"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "390cc9a294ab71bdb1aa2e99d13be9c753cd2d7bd6560c77118597410c4d2e87"
+checksum = "678faa00651c9eb72dd2020cbdf275d92eccb2400d568e419efdd64838145cb4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2140,15 +2113,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tobj"
-version = "4.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04aca6092e5978e708ee784e8ab9b5cf3cdb598b28f99a2f257446e7081a7025"
-dependencies = [
- "ahash",
-]
-
-[[package]]
 name = "ttf-parser"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2174,12 +2138,6 @@ name = "unicode-width"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
-
-[[package]]
-name = "uninitialized"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74c1aa4511c38276c548406f0b1f5f8b793f000cfb51e18f278a102abd057e81"
 
 [[package]]
 name = "utf8parse"

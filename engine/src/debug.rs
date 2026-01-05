@@ -43,7 +43,7 @@ impl DebugRenderer {
         let (render_width, render_height) = wgpu.dimensions();
         let render_format = wgpu.config.get().format;
         Ok(Self {
-            brush: BrushBuilder::using_font_bytes(include_bytes!("../FiraCode-Regular.ttf"))
+            brush: BrushBuilder::using_font_bytes(include_bytes!("../../FiraCode-Regular.ttf"))
                 .expect("failed to create debug brush")
                 .build(&wgpu.device, render_width, render_height, render_format),
             enabled: false,

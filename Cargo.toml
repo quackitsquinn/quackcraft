@@ -3,21 +3,32 @@ name = "quackcraft"
 version = "0.1.0"
 edition = "2024"
 
+[profile.release]
+debug = true
+
 [dependencies]
+env_logger = "0.11.8"
+anyhow = { workspace = true }
+log = { workspace = true }
+engine = { path = "engine" }
+wgpu = { workspace = true }
+smol = { workspace = true }
+
+
+[workspace]
+members = [
+    "engine",
+]
+
+[workspace.dependencies]
 anyhow = { version = "1.0.100", features = ["backtrace"] }
 bytemuck = { version = "1.24.0", features = ["derive"] }
-env_logger = "0.11.8"
 glfw = { version = "0.61.0", features = ["raw-window-handle-v0-6"] }
 image = "0.25.9"
 log = "0.4.29"
-pod = "0.5.0"
 smol = "2.0.2"
 wgpu = "28.0.0"
 glam = { version = "0.30.9", features = ["bytemuck"] }
-tobj = "4.0.3"
 wgpu_text = "28.0.0"
 raw-window-handle = "0.6.2"
 rustc-hash = "2.1.1"
-
-[profile.release]
-debug = true
