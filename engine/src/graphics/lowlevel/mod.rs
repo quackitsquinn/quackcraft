@@ -12,7 +12,7 @@ use wgpu::{
 
 use crate::{
     ReadOnly,
-    component::{State, StateHandle},
+    component::{ComponentStore, ComponentStoreHandle},
     graphics::lowlevel::{
         buf::{IndexBuffer, IndexLayout, UniformBuffer, VertexBuffer, VertexLayout},
         shader::ShaderProgram,
@@ -35,12 +35,12 @@ pub struct WgpuRenderer {
     pub queue: Queue,
     pub config: Resource<SurfaceConfiguration>,
     pub default_sampler: Option<wgpu::Sampler>,
-    state: StateHandle,
+    state: ComponentStoreHandle,
 }
 
 impl WgpuRenderer {
     /// Attaches a WGPU renderer to the given state and window.
-    pub async fn attach_to(state: &mut State, window: &GlfwWindow) -> anyhow::Result<()> {
+    pub async fn attach_to(state: &mut ComponentStore, window: &GlfwWindow) -> anyhow::Result<()> {
         let size = window.size();
 
         let instance = Instance::new(&InstanceDescriptor {

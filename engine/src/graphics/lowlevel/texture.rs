@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::{
-    component::{ResourceHandle, StateHandle},
+    component::{ComponentHandle, ComponentStoreHandle},
     graphics::lowlevel::WgpuRenderer,
 };
 
@@ -19,13 +19,13 @@ pub struct Texture {
     /// The texture view.
     pub view: wgpu::TextureView,
     image_count: usize,
-    handle: ResourceHandle<WgpuRenderer>,
+    handle: ComponentHandle<WgpuRenderer>,
 }
 
 impl Texture {
     /// Creates a new texture from the given texture and sampler.
     pub fn new(
-        state: &StateHandle,
+        state: &ComponentStoreHandle,
         texture: wgpu::Texture,
         texture_bind_group_entry: wgpu::BindGroupLayoutEntry,
         sampler: wgpu::Sampler,

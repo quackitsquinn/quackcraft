@@ -13,7 +13,7 @@ use wgpu_text::{
 
 use crate::{
     ReadOnlyString,
-    component::{ResourceHandle, StateHandle},
+    component::{ComponentHandle, ComponentStoreHandle},
     graphics::lowlevel::WgpuRenderer,
 };
 
@@ -21,7 +21,7 @@ pub struct DebugRenderer {
     pub enabled: bool,
     brush: TextBrush<FontRef<'static>>,
     stats: Vec<Weak<DebugStatistic>>,
-    wgpu: ResourceHandle<WgpuRenderer>,
+    wgpu: ComponentHandle<WgpuRenderer>,
 }
 
 impl Debug for DebugRenderer {
@@ -38,7 +38,7 @@ pub type DebugProvider = Rc<DebugStatistic>;
 
 impl DebugRenderer {
     /// Creates a new debug renderer.
-    pub fn new(state: &StateHandle) -> anyhow::Result<DebugRenderer> {
+    pub fn new(state: &ComponentStoreHandle) -> anyhow::Result<DebugRenderer> {
         let wgpu = state.get::<WgpuRenderer>();
         let (render_width, render_height) = wgpu.dimensions();
         let render_format = wgpu.config.get().format;

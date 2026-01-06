@@ -15,12 +15,12 @@ use rustc_hash::FxBuildHasher;
 type ResourceMap = HashMap<TypeId, ResourceNode, FxBuildHasher>;
 
 /// A database for storing components of various types.
-pub struct State {
+pub struct ComponentStore {
     map: Rc<ResourceMap>,
-    public_ref: Rc<OnceCell<State>>,
+    public_ref: Rc<OnceCell<ComponentStore>>,
 }
 
-impl State {
+impl ComponentStore {
     /// Creates a new, empty component database.
     pub fn new() -> Self {
         Self {
@@ -60,17 +60,17 @@ impl State {
     }
 
     /// Creates a handle for a component of the specified type.
-    pub fn handle_for<T: 'static>(&self) -> ResourceHandle<T> {
-        ResourceHandle::new(self.handle())
+    pub fn handle_for<T: 'static>(&self) -> ComponentHandle<T> {
+        ComponentHandle::new(self.handle())
     }
 
     /// Creates a handle to the component map.
-    pub fn handle(&self) -> StateHandle {
-        StateHandle::new(self)
+    pub fn handle(&self) -> ComponentStoreHandle {
+        ComponentStoreHandle::new(self)
     }
 }
 
-impl Debug for State {
+impl Debug for ComponentStore {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         struct TyDbg(&'static str);
         impl Debug for TyDbg {
@@ -89,13 +89,13 @@ impl Debug for State {
 }
 
 /// A handle to a component stored in a `ComponentDB`.
-pub struct ResourceHandle<T: 'static> {
-    handle: StateHandle,
+pub struct ComponentHandle<T: 'static> {
+    handle: ComponentStoreHandle,
     _phantom: std::marker::PhantomData<T>,
 }
 
-impl<T> ResourceHandle<T> {
-    fn new(state_handle: StateHandle) -> Self {
+impl<T> ComponentHandle<T> {
+    fn new(state_handle: ComponentStoreHandle) -> Self {
         Self {
             handle: state_handle,
             _phantom: std::marker::PhantomData,
@@ -113,13 +113,13 @@ impl<T> ResourceHandle<T> {
     }
 }
 
-impl<T> Debug for ResourceHandle<T> {
+impl<T> Debug for ComponentHandle<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "ResourceHandle<{}>", std::any::type_name::<T>())
     }
 }
 
-impl<T> Clone for ResourceHandle<T> {
+impl<T> Clone for ComponentHandle<T> {
     fn clone(&self) -> Self {
         Self {
             handle: self.handle.clone(),
@@ -130,15 +130,15 @@ impl<T> Clone for ResourceHandle<T> {
 
 /// A handle to a ComponentMap that allows checking its state.
 #[derive(Clone)]
-pub struct StateHandle {
+pub struct ComponentStoreHandle {
     // TODO: Figure out a way to optimize this into a single pointer sized field.
     // This is gonna need some unsafe code and weird pointer tagging so this is a later task.
     handle: OnceCell<Rc<ResourceMap>>,
-    global_handle: Rc<OnceCell<State>>,
+    global_handle: Rc<OnceCell<ComponentStore>>,
 }
 
-impl StateHandle {
-    pub fn new(component_map: &State) -> Self {
+impl ComponentStoreHandle {
+    pub fn new(component_map: &ComponentStore) -> Self {
         Self {
             handle: OnceCell::new(),
             global_handle: component_map.public_ref.clone(),
@@ -156,19 +156,19 @@ impl StateHandle {
     }
 
     /// Creates a handle for a component of the specified type.
-    pub fn handle_for<T: 'static>(&self) -> ResourceHandle<T> {
-        ResourceHandle::new(self.clone())
+    pub fn handle_for<T: 'static>(&self) -> ComponentHandle<T> {
+        ComponentHandle::new(self.clone())
     }
 }
 
-impl Debug for StateHandle {
+impl Debug for ComponentStoreHandle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("StateHandle").finish()
     }
 }
 
 mod get_impls {
-    use crate::component::{State, StateHandle};
+    use crate::component::{ComponentStore, ComponentStoreHandle};
 
     macro_rules! impl_get {
         () => {
@@ -198,11 +198,11 @@ mod get_impls {
         };
     }
 
-    impl StateHandle {
+    impl ComponentStoreHandle {
         impl_get!();
     }
 
-    impl State {
+    impl ComponentStore {
         impl_get!();
     }
 }

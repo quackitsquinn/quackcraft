@@ -4,7 +4,7 @@ use wgpu::{TextureFormat, TextureUsages};
 
 use crate::{
     ReadOnly, ReadOnlyString,
-    component::{ResourceHandle, StateHandle},
+    component::{ComponentHandle, ComponentStoreHandle},
     graphics::{
         image::Image,
         lowlevel::{WgpuRenderer, texture::Texture},
@@ -23,12 +23,12 @@ pub struct TextureCollection {
     gpu_texture: Option<Texture>,
     label: Option<ReadOnlyString>,
     dimensions: (u32, u32),
-    handle: ResourceHandle<WgpuRenderer>,
+    handle: ComponentHandle<WgpuRenderer>,
 }
 
 impl TextureCollection {
     pub fn new(
-        state: &StateHandle,
+        state: &ComponentStoreHandle,
         label: Option<impl Into<ReadOnlyString>>,
         dimensions: (u32, u32),
     ) -> Self {

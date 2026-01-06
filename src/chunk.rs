@@ -10,7 +10,7 @@ use crate::{
 };
 
 use engine::{
-    component::StateHandle,
+    component::ComponentStoreHandle,
     graphics::{
         CardinalDirection,
         lowlevel::buf::{IndexBuffer, VertexBuffer},
@@ -28,7 +28,7 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn empty(state: StateHandle) -> Self {
+    pub fn empty(state: ComponentStoreHandle) -> Self {
         Self {
             data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
             neighbors: [None, None, None, None, None, None],
@@ -103,11 +103,11 @@ impl std::ops::IndexMut<(usize, usize, usize)> for Chunk {
 pub struct ChunkRenderState {
     block_mesh: Option<BlockMesh>,
     buffers: Option<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>,
-    game_state: StateHandle,
+    game_state: ComponentStoreHandle,
 }
 
 impl ChunkRenderState {
-    pub fn new(game_state: StateHandle) -> Self {
+    pub fn new(game_state: ComponentStoreHandle) -> Self {
         Self {
             block_mesh: None,
             buffers: None,
@@ -156,7 +156,7 @@ impl ChunkRenderState {
     /// Generates the vertex and index buffers for the current mesh, if not already generated.
     pub fn generate_buffers(
         &mut self,
-        state: &StateHandle,
+        state: &ComponentStoreHandle,
     ) -> (&VertexBuffer<BlockVertex>, &IndexBuffer<u16>) {
         if self.buffers.is_none() {
             let mesh = self

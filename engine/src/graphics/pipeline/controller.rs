@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use anyhow::Context;
 
 use crate::{
-    component::{ResourceHandle, State},
+    component::{ComponentHandle, ComponentStore},
     graphics::{
         lowlevel::WgpuRenderer,
         pipeline::{RenderPipeline, UpdateRequest},
@@ -21,12 +21,12 @@ pub struct RenderController<K: PipelineKey> {
     pipelines: std::collections::HashMap<K, Box<dyn RenderPipeline<K>>>,
     render_list: Vec<K>,
     render_suface: Option<(K, wgpu::TextureView)>,
-    wgpu: ResourceHandle<WgpuRenderer>,
+    wgpu: ComponentHandle<WgpuRenderer>,
 }
 
 impl<K: PipelineKey> RenderController<K> {
     /// Creates a new RenderController.
-    pub fn new(state: &State) -> Self {
+    pub fn new(state: &ComponentStore) -> Self {
         Self {
             pipelines: std::collections::HashMap::new(),
             render_list: Vec::new(),

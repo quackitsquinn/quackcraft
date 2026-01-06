@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use glam::{Mat4, Vec2, Vec3};
 
 use crate::{
-    component::{ResourceHandle, StateHandle},
+    component::{ComponentHandle, ComponentStoreHandle},
     debug::{DebugProvider, DebugRenderer},
     graphics::{
         callback::TargetHandle,
@@ -22,7 +22,7 @@ pub struct CameraController {
     callback_handle: Option<TargetHandle<(f64, f64)>>,
     position_entry: DebugProvider,
     rotation_entry: DebugProvider,
-    wgpu_handle: ResourceHandle<WgpuRenderer>,
+    wgpu_handle: ComponentHandle<WgpuRenderer>,
 }
 
 impl Debug for CameraController {
@@ -36,7 +36,7 @@ impl Debug for CameraController {
 }
 
 impl CameraController {
-    pub fn new<'b>(state: &StateHandle, debug_renderer: &mut DebugRenderer) -> CameraController {
+    pub fn new<'b>(state: &ComponentStoreHandle, debug_renderer: &mut DebugRenderer) -> CameraController {
         let wgpu = state.get::<WgpuRenderer>();
         let (width, height) = wgpu.dimensions();
         let camera = Camera::new(

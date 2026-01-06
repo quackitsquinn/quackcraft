@@ -3,7 +3,7 @@ use bytemuck::{Pod, Zeroable};
 use crate::{BlockPosition, FACE_INDICES, FACE_TABLE};
 
 use engine::{
-    component::StateHandle,
+    component::ComponentStoreHandle,
     graphics::{
         CardinalDirection,
         lowlevel::{
@@ -92,7 +92,7 @@ impl BlockMesh {
     /// Creates the vertex and index buffers for the mesh.
     pub fn create_buffers(
         &self,
-        state: &StateHandle,
+        state: &ComponentStoreHandle,
     ) -> (VertexBuffer<BlockVertex>, IndexBuffer<u16>) {
         let wgpu = state.get::<WgpuRenderer>();
         let vertex_buffer = wgpu.vertex_buffer::<BlockVertex>(

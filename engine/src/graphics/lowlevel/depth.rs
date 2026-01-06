@@ -1,7 +1,7 @@
 use wgpu::{CompareFunction, StoreOp, TextureFormat};
 
 use crate::{
-    component::{ResourceHandle, State},
+    component::{ComponentHandle, ComponentStore},
     graphics::lowlevel::WgpuRenderer,
 };
 
@@ -10,12 +10,12 @@ pub struct DepthTexture {
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,
     pub sampler: wgpu::Sampler,
-    wgpu_handle: ResourceHandle<WgpuRenderer>,
+    wgpu_handle: ComponentHandle<WgpuRenderer>,
 }
 
 impl DepthTexture {
     pub const TEXTURE_FORMAT: TextureFormat = TextureFormat::Depth32Float;
-    pub fn new(state: &mut State) -> Self {
+    pub fn new(state: &mut ComponentStore) -> Self {
         let wgpu = state.get::<WgpuRenderer>();
         let config = wgpu.config.get();
         let size = wgpu::Extent3d {

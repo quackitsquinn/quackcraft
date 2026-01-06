@@ -9,7 +9,7 @@ use crate::{
 };
 
 use engine::{
-    component::StateHandle,
+    component::ComponentStoreHandle,
     graphics::{
         CardinalDirection,
         lowlevel::buf::{IndexBuffer, VertexBuffer},
@@ -25,7 +25,7 @@ pub struct World {
 
 impl World {
     /// Creates an empty World.
-    pub fn empty(resource_state: &StateHandle) -> Self {
+    pub fn empty(resource_state: &ComponentStoreHandle) -> Self {
         Self {
             chunks: HashMap::new(),
             render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
@@ -34,7 +34,10 @@ impl World {
     }
 
     /// Creates a new World from the given chunks.
-    pub fn new(chunks: Vec<((i64, i64, i64), Chunk)>, resource_state: &StateHandle) -> Self {
+    pub fn new(
+        chunks: Vec<((i64, i64, i64), Chunk)>,
+        resource_state: &ComponentStoreHandle,
+    ) -> Self {
         Self {
             chunks: chunks
                 .into_iter()
@@ -46,7 +49,7 @@ impl World {
     }
 
     /// Creates a test world with some simple terrain.
-    pub fn test(wgpu: &StateHandle) -> Self {
+    pub fn test(wgpu: &ComponentStoreHandle) -> Self {
         let mut world = Self::empty(wgpu);
         for x in 0..5 {
             for z in 0..5 {
@@ -73,7 +76,7 @@ impl World {
     }
 
     /// Creates a test world with a single block of the given type.
-    pub fn single(resource_state: &StateHandle, block: Block) -> Self {
+    pub fn single(resource_state: &ComponentStoreHandle, block: Block) -> Self {
         let chunk = {
             let mut chunk = Chunk::empty(resource_state.clone());
             chunk.data[8][8][8] = block;
@@ -108,13 +111,13 @@ impl World {
 }
 
 pub struct WorldRenderState {
-    pub game_state: StateHandle,
+    pub game_state: ComponentStoreHandle,
     meshes: HashMap<BlockPosition, BlockMesh>,
     buffers: Option<Vec<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>>,
 }
 
 impl WorldRenderState {
-    pub fn new(game_state: StateHandle) -> Self {
+    pub fn new(game_state: ComponentStoreHandle) -> Self {
         Self {
             game_state,
             meshes: HashMap::new(),

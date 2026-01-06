@@ -2,7 +2,7 @@
 use bytemuck::Pod;
 
 use crate::{
-    component::{ResourceHandle, StateHandle},
+    component::{ComponentHandle, ComponentStoreHandle},
     graphics::lowlevel::WgpuRenderer,
 };
 
@@ -13,7 +13,7 @@ where
     T: Pod,
 {
     buffer: wgpu::Buffer,
-    handle: ResourceHandle<WgpuRenderer>,
+    handle: ComponentHandle<WgpuRenderer>,
     _marker: std::marker::PhantomData<T>,
 }
 
@@ -25,7 +25,7 @@ impl<T: Pod> UniformBuffer<T> {
     /// see also: [`crate::graphics::WgpuInstance::create_buffer`]
     /// # Safety
     /// The caller must ensure that the provided buffer is valid for the type T.
-    pub unsafe fn from_raw_parts(buffer: wgpu::Buffer, handle: StateHandle) -> Self {
+    pub unsafe fn from_raw_parts(buffer: wgpu::Buffer, handle: ComponentStoreHandle) -> Self {
         assert!(
             buffer.size() as usize >= std::mem::size_of::<T>(),
             "Buffer size is smaller than type T"

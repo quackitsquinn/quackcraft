@@ -1,5 +1,5 @@
 use engine::{
-    component::State, graphics::lowlevel::WgpuRenderer, input::keyboard::Keyboard, window,
+    component::ComponentStore, graphics::lowlevel::WgpuRenderer, input::keyboard::Keyboard, window,
 };
 
 pub mod block;
@@ -61,12 +61,12 @@ pub const FACE_TABLE: [[([f32; 3], [f32; 2]); 4]; 6] = [
 pub const FACE_INDICES: [u16; 6] = [0, 1, 2, 2, 3, 0];
 
 pub struct Game {
-    component_db: State,
+    component_db: ComponentStore,
 }
 
 impl Game {
     pub fn new() -> anyhow::Result<Self> {
-        let mut state = State::new();
+        let mut state = ComponentStore::new();
         state.insert(Keyboard::new());
         let window = window::GlfwWindow::new(800, 600, "Minecraft Clone")
             .expect("Failed to create GLFW window");
@@ -82,7 +82,7 @@ impl Game {
         })
     }
 
-    pub fn update(&mut self) {}
+    pub const fn update(&mut self) {}
 }
 
 pub fn run_game() -> anyhow::Result<()> {
