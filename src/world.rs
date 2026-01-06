@@ -4,12 +4,15 @@ use crate::{
     BlockPosition,
     block::Block,
     chunk::Chunk,
-    component::StateHandle,
     coords::bp,
+    mesh::{BlockMesh, BlockVertex},
+};
+
+use engine::{
+    component::StateHandle,
     graphics::{
         CardinalDirection,
         lowlevel::buf::{IndexBuffer, VertexBuffer},
-        mesh::{BlockMesh, BlockVertex},
     },
     resource::Resource,
 };
@@ -51,14 +54,14 @@ impl World {
                 for i in 0..16 {
                     for j in 0..16 {
                         if (i + j) % 2 == 0 {
-                            chunk.data[i][15][j] = crate::Block::OakWood;
+                            chunk.data[i][15][j] = Block::OakWood;
                         } else {
-                            chunk.data[i][14][j] = crate::Block::OakLeaves;
+                            chunk.data[i][14][j] = Block::OakLeaves;
                         }
-                        chunk.data[i][3][j] = crate::Block::Grass;
-                        chunk.data[i][2][j] = crate::Block::Dirt;
-                        chunk.data[i][1][j] = crate::Block::Dirt;
-                        chunk.data[i][0][j] = crate::Block::Stone;
+                        chunk.data[i][3][j] = Block::Grass;
+                        chunk.data[i][2][j] = Block::Dirt;
+                        chunk.data[i][1][j] = Block::Dirt;
+                        chunk.data[i][0][j] = Block::Stone;
                     }
                 }
                 world.push_chunk(bp(x, 0, z), chunk.clone());

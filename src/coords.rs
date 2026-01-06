@@ -35,7 +35,7 @@ impl BlockPosition {
     }
 
     /// Offsets the block position by one unit in the direction of the cardinal direction.
-    pub fn offset(&self, dir: crate::graphics::CardinalDirection) -> Self {
+    pub fn offset(&self, dir: engine::graphics::CardinalDirection) -> Self {
         let (dx, dy, dz) = dir.normal_i64();
         Self(self.0 + dx, self.1 + dy, self.2 + dz)
     }

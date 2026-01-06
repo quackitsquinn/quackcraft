@@ -2,6 +2,64 @@ use engine::{
     component::State, graphics::lowlevel::WgpuRenderer, input::keyboard::Keyboard, window,
 };
 
+pub mod block;
+pub mod chunk;
+pub mod coords;
+pub mod mesh;
+pub mod world;
+
+/// A position in the world, in chunk coordinates.
+pub type BlockPosition = coords::BlockPosition;
+/// A position in the world, in chunk coordinates.
+pub type ChunkPosition = coords::BlockPosition;
+
+pub const FACE_TABLE: [[([f32; 3], [f32; 2]); 4]; 6] = [
+    // +X
+    [
+        ([1.0, 0.0, 1.0], [0.0, 0.0]),
+        ([1.0, 1.0, 1.0], [0.0, 1.0]),
+        ([1.0, 1.0, 0.0], [1.0, 1.0]),
+        ([1.0, 0.0, 0.0], [1.0, 0.0]),
+    ],
+    // -X
+    [
+        ([0.0, 0.0, 1.0], [0.0, 0.0]),
+        ([0.0, 1.0, 1.0], [0.0, 1.0]),
+        ([0.0, 1.0, 0.0], [1.0, 1.0]),
+        ([0.0, 0.0, 0.0], [1.0, 0.0]),
+    ],
+    // +Y
+    [
+        ([1.0, 1.0, 0.0], [1.0, 0.0]),
+        ([0.0, 1.0, 0.0], [0.0, 0.0]),
+        ([0.0, 1.0, 1.0], [0.0, 1.0]),
+        ([1.0, 1.0, 1.0], [1.0, 1.0]),
+    ],
+    // -Y
+    [
+        ([0.0, 0.0, 1.0], [0.0, 1.0]),
+        ([1.0, 0.0, 1.0], [1.0, 1.0]),
+        ([1.0, 0.0, 0.0], [1.0, 0.0]),
+        ([0.0, 0.0, 0.0], [0.0, 0.0]),
+    ],
+    // +Z
+    [
+        ([0.0, 1.0, 1.0], [0.0, 1.0]),
+        ([0.0, 0.0, 1.0], [0.0, 0.0]),
+        ([1.0, 0.0, 1.0], [1.0, 0.0]),
+        ([1.0, 1.0, 1.0], [1.0, 1.0]),
+    ],
+    // -Z
+    [
+        ([1.0, 0.0, 0.0], [1.0, 0.0]),
+        ([1.0, 1.0, 0.0], [1.0, 1.0]),
+        ([0.0, 1.0, 0.0], [0.0, 1.0]),
+        ([0.0, 0.0, 0.0], [0.0, 0.0]),
+    ],
+];
+
+pub const FACE_INDICES: [u16; 6] = [0, 1, 2, 2, 3, 0];
+
 pub struct Game {
     component_db: State,
 }

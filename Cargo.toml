@@ -13,6 +13,7 @@ log = { workspace = true }
 engine = { path = "engine" }
 wgpu = { workspace = true }
 smol = { workspace = true }
+bytemuck = { workspace = true }
 
 
 [workspace]

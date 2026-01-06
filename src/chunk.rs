@@ -5,12 +5,15 @@ use log::warn;
 use crate::{
     BlockPosition, ChunkPosition,
     block::{Block, BlockTextureAtlas},
-    component::StateHandle,
     coords::bp,
+    mesh::{BlockMesh, BlockVertex},
+};
+
+use engine::{
+    component::StateHandle,
     graphics::{
         CardinalDirection,
         lowlevel::buf::{IndexBuffer, VertexBuffer},
-        mesh::{BlockMesh, BlockVertex},
     },
     resource::Resource,
 };

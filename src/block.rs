@@ -1,5 +1,4 @@
-
-use crate::graphics::textures::TextureHandle;
+use engine::graphics::textures::TextureHandle;
 
 // TODO: fancy optimizations for blocks
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -59,7 +58,7 @@ impl BlockTextureAtlas {
     pub fn face_texture_index(
         &self,
         block: Block,
-        direction: crate::graphics::CardinalDirection,
+        direction: engine::graphics::CardinalDirection,
     ) -> TextureHandle {
         match block {
             // Generate column like textures for grass and leaves
@@ -67,8 +66,8 @@ impl BlockTextureAtlas {
                 let column_base = self.get_base_handle(block);
                 // Grass has different textures for top, bottom, and sides
                 match direction {
-                    crate::graphics::CardinalDirection::Up => column_base, // Top texture
-                    crate::graphics::CardinalDirection::Down => {
+                    engine::graphics::CardinalDirection::Up => column_base, // Top texture
+                    engine::graphics::CardinalDirection::Down => {
                         // If the block overrides the bottom texture, use that.
                         // Otherwise, use the default bottom texture.
                         if let Some(bottom) = block.bottom_texture() {

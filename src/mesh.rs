@@ -1,10 +1,11 @@
 use bytemuck::{Pod, Zeroable};
 
-use crate::{
-    BlockPosition,
+use crate::{BlockPosition, FACE_INDICES, FACE_TABLE};
+
+use engine::{
     component::StateHandle,
     graphics::{
-        CardinalDirection, FACE_INDICES, FACE_TABLE,
+        CardinalDirection,
         lowlevel::{
             WgpuRenderer,
             buf::{IndexBuffer, VertexBuffer, VertexLayout},

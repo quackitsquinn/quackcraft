@@ -1706,6 +1706,7 @@ name = "quackcraft"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bytemuck",
  "engine",
  "env_logger",
  "log",
