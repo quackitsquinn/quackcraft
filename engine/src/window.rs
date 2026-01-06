@@ -1,4 +1,3 @@
-
 use glfw::{Context, Glfw, GlfwReceiver, PWindow};
 use log::*;
 use wgpu::{Surface, SurfaceTargetUnsafe};

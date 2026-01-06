@@ -1,15 +1,8 @@
 use std::collections::HashMap;
 
-use crate::{
-    BlockPosition,
-    coords::bp,
-};
+use crate::{BlockPosition, coords::bp};
 
-use engine::{
-    component::ComponentStoreHandle,
-    graphics::CardinalDirection,
-    resource::Resource,
-};
+use engine::{component::ComponentStoreHandle, graphics::CardinalDirection, resource::Resource};
 
 pub mod block;
 pub mod chunk;
@@ -97,5 +90,37 @@ impl World {
                 }
             });
         }
+    }
+}
+
+/// The currently active world.
+pub struct ActiveWorld {
+    world: Option<World>,
+}
+
+impl ActiveWorld {
+    /// Creates a new, empty ActiveWorld.
+    pub fn new() -> Self {
+        Self { world: None }
+    }
+
+    /// Creates a new ActiveWorld with the given world.
+    pub fn with_world(world: World) -> Self {
+        Self { world: Some(world) }
+    }
+
+    /// Sets the active world.
+    pub fn set_world(&mut self, world: World) {
+        self.world = Some(world);
+    }
+
+    /// Gets a reference to the active world.
+    pub fn get_world(&self) -> Option<&World> {
+        self.world.as_ref()
+    }
+
+    /// Gets a mutable reference to the active world.   
+    pub fn get_world_mut(&mut self) -> Option<&mut World> {
+        self.world.as_mut()
     }
 }

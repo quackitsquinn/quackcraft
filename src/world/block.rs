@@ -1,4 +1,3 @@
-
 // TODO: fancy optimizations for blocks
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]

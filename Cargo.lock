@@ -1709,6 +1709,7 @@ dependencies = [
  "bytemuck",
  "engine",
  "env_logger",
+ "glfw",
  "log",
  "smol",
  "wgpu",

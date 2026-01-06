@@ -36,7 +36,10 @@ impl Debug for CameraController {
 }
 
 impl CameraController {
-    pub fn new<'b>(state: &ComponentStoreHandle, debug_renderer: &mut DebugRenderer) -> CameraController {
+    pub fn new<'b>(
+        state: &ComponentStoreHandle,
+        debug_renderer: &mut DebugRenderer,
+    ) -> CameraController {
         let wgpu = state.get::<WgpuRenderer>();
         let (width, height) = wgpu.dimensions();
         let camera = Camera::new(

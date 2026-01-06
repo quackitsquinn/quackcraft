@@ -1,9 +1,16 @@
 use engine::{
-    component::ComponentStore, graphics::lowlevel::WgpuRenderer, input::keyboard::Keyboard, window,
+    component::ComponentStore,
+    graphics::{lowlevel::WgpuRenderer, pipeline::controller::RenderController},
+    input::keyboard::Keyboard,
+    window,
 };
+use glfw::{Action, WindowEvent};
+
+use crate::{render::RenderPipelines, world::ActiveWorld};
 
 pub mod coords;
 pub mod mesh;
+pub mod render;
 pub mod world;
 
 /// A position in the world, in chunk coordinates.
@@ -73,6 +80,13 @@ impl Game {
 
         state.insert(window);
 
+        let world = world::World::test(&state.handle());
+        let active_world = ActiveWorld::with_world(world);
+        state.insert(active_world);
+
+        let renderer: RenderController<RenderPipelines> = RenderController::new(&state);
+        state.insert(renderer);
+
         state.finish_initialization();
 
         Ok(Self {
@@ -80,13 +94,88 @@ impl Game {
         })
     }
 
-    pub const fn update(&mut self) {}
+    /// Updates the game state.
+    ///
+    /// `delta_time` is the time elapsed since the last update, in seconds.
+    ///
+    /// Returns `Ok(())` if the update was successful, or `Err(None)` if the game should exit,
+    /// or `Err(Some(error))` if an error occurred.
+    pub fn update(&mut self, delta_time: f64) -> Option<()> {
+        let _ = delta_time;
+
+        let mut window = self.component_db.get_mut::<window::GlfwWindow>();
+        if window.should_close() {
+            return None;
+        }
+
+        let mut keyboard = self.component_db.get_mut::<Keyboard>();
+        let wgpu = self.component_db.get::<WgpuRenderer>();
+
+        window.poll_events();
+
+        while let Some((_, event)) = window.event_receiver.receive() {
+            match event {
+                WindowEvent::Close => {
+                    return None;
+                }
+                WindowEvent::Size(x, y) => {
+                    wgpu.resize((x, y));
+                }
+                WindowEvent::Key(key, _, Action::Press, _) => {
+                    keyboard.press_key(key);
+                }
+
+                WindowEvent::Key(key, _, Action::Release, _) => {
+                    keyboard.release_key(key);
+                }
+                _ => {}
+            }
+        }
+
+        drop_all!(window, keyboard);
+
+        let mut renderer = self
+            .component_db
+            .get_mut::<RenderController<RenderPipelines>>();
+
+        renderer.update_pipelines();
+        Some(())
+    }
+
+    /// Renders a frame. Returns the time taken to render the frame, in milliseconds.
+    pub fn render(&mut self) -> anyhow::Result<()> {
+        let renderer = self
+            .component_db
+            .get_mut::<RenderController<RenderPipelines>>();
+        let wgpu = self.component_db.get::<WgpuRenderer>();
+        let mut encoder = wgpu.create_encoder(Some("Main Render Encoder"));
+        renderer.render_pipelines(&mut encoder)?;
+        wgpu.submit_single(encoder.finish());
+        Ok(())
+    }
 }
 
 pub fn run_game() -> anyhow::Result<()> {
     let game = Game::new()?;
 
     println!("Game initialized: {:?}", game.component_db);
+    let mut game = game;
+
+    let mut last_delta = std::time::Instant::now();
+
+    loop {
+        let now = std::time::Instant::now();
+        let delta = now.duration_since(last_delta);
+        last_delta = now;
+
+        let update_result = game.update(delta.as_secs_f64());
+        match update_result {
+            Some(()) => {}
+            None => break,
+        }
+
+        game.render()?;
+    }
     Ok(())
 }
 
@@ -96,5 +185,13 @@ pub fn run_game() -> anyhow::Result<()> {
 macro_rules! include_minecraft_texture {
     ($res: literal) => {
         include_bytes!(concat!("../res/assets/minecraft/textures/", $res, ".png"))
+    };
+}
+
+/// Drops all given values.
+#[macro_export]
+macro_rules! drop_all {
+    ($($val: expr),*) => {
+        $(drop($val);)*
     };
 }
