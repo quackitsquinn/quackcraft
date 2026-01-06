@@ -1,6 +1,9 @@
 use engine::{
     component::ComponentStore,
-    graphics::{lowlevel::WgpuRenderer, pipeline::controller::RenderController},
+    graphics::{
+        lowlevel::WgpuRenderer,
+        pipeline::{controller::RenderController, pipelines::clear::ClearPipeline},
+    },
     input::keyboard::Keyboard,
     window,
 };
@@ -84,7 +87,14 @@ impl Game {
         let active_world = ActiveWorld::with_world(world);
         state.insert(active_world);
 
-        let renderer: RenderController<RenderPipelines> = RenderController::new(&state);
+        let mut renderer: RenderController<RenderPipelines> = RenderController::new(&state);
+
+        renderer.add_pipeline(
+            RenderPipelines::Clear,
+            ClearPipeline::new(1.0, 0.0, 0.5, 1.0),
+        );
+
+        renderer.set_render_order(vec![RenderPipelines::Clear]);
         state.insert(renderer);
 
         state.finish_initialization();
@@ -149,8 +159,9 @@ impl Game {
             .get_mut::<RenderController<RenderPipelines>>();
         let wgpu = self.component_db.get::<WgpuRenderer>();
         let mut encoder = wgpu.create_encoder(Some("Main Render Encoder"));
-        renderer.render_pipelines(&mut encoder)?;
+        let (view, texture) = renderer.render_pipelines(&mut encoder)?;
         wgpu.submit_single(encoder.finish());
+        view.present();
         Ok(())
     }
 }

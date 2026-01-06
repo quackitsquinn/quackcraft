@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use anyhow::Context;
+use wgpu::TextureView;
 
 use crate::{
     component::{ComponentHandle, ComponentStore},
@@ -21,7 +22,8 @@ pub struct RenderController<K: PipelineKey> {
     pipelines: std::collections::HashMap<K, Box<dyn RenderPipeline<K>>>,
     render_list: Vec<K>,
     render_suface: Option<(K, wgpu::TextureView)>,
-    wgpu: ComponentHandle<WgpuRenderer>,
+    /// The WGPU renderer. Convenience access for pipelines.
+    pub wgpu: ComponentHandle<WgpuRenderer>,
 }
 
 impl<K: PipelineKey> RenderController<K> {
@@ -80,15 +82,18 @@ impl<K: PipelineKey> RenderController<K> {
     }
 
     /// Renders all pipelines in the order specified by `set_render_order`.
-    pub fn render_pipelines(&self, encoder: &mut wgpu::CommandEncoder) -> anyhow::Result<()> {
+    pub fn render_pipelines(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+    ) -> anyhow::Result<(wgpu::SurfaceTexture, TextureView)> {
         let wgpu = self.wgpu.get();
-        let (_, swapchain_texture) = wgpu
+        let (surf, swapchain_texture) = wgpu
             .current_view()
             .with_context(|| "Failed to get swapchain texture")?;
 
         if let Some((ref key, ref target)) = self.render_suface {
             self.render_with_target(encoder, &swapchain_texture, key, target)?;
-            return Ok(());
+            return Ok((surf, swapchain_texture));
         }
 
         for pipeline_key in &self.render_list {
@@ -98,7 +103,7 @@ impl<K: PipelineKey> RenderController<K> {
             pipeline.render(self, encoder, &swapchain_texture);
         }
 
-        Ok(())
+        Ok((surf, swapchain_texture))
     }
 
     fn render_with_target(
