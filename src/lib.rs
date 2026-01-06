@@ -2,8 +2,6 @@ use engine::{
     component::ComponentStore, graphics::lowlevel::WgpuRenderer, input::keyboard::Keyboard, window,
 };
 
-pub mod block;
-pub mod chunk;
 pub mod coords;
 pub mod mesh;
 pub mod world;

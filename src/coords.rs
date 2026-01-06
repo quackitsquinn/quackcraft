@@ -1,6 +1,6 @@
 use std::ops::Neg;
 
-use crate::chunk::CHUNK_SIZE;
+use crate::world::chunk::CHUNK_SIZE;
 
 /// A position in block coordinates.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, bytemuck::Pod, bytemuck::Zeroable)]

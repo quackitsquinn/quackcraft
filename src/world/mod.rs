@@ -2,8 +2,6 @@ use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
     BlockPosition,
-    block::Block,
-    chunk::Chunk,
     coords::bp,
     mesh::{BlockMesh, BlockVertex},
 };
@@ -17,10 +15,14 @@ use engine::{
     resource::Resource,
 };
 
+pub mod block;
+pub mod chunk;
+
+pub use block::Block;
+pub use chunk::Chunk;
+
 pub struct World {
     pub chunks: HashMap<BlockPosition, Resource<Chunk>>,
-    pub render_state: RefCell<WorldRenderState>,
-    debug_state: Resource<WorldDebugState>,
 }
 
 impl World {
@@ -28,8 +30,6 @@ impl World {
     pub fn empty(resource_state: &ComponentStoreHandle) -> Self {
         Self {
             chunks: HashMap::new(),
-            render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
-            debug_state: WorldDebugState::new().into(),
         }
     }
 
@@ -43,8 +43,6 @@ impl World {
                 .into_iter()
                 .map(|(k, v)| (k.into(), v.into()))
                 .collect(),
-            render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
-            debug_state: WorldDebugState::new().into(),
         }
     }
 
@@ -84,11 +82,7 @@ impl World {
         };
         let mut chunks = HashMap::new();
         chunks.insert(bp(0, 0, 0), chunk.into());
-        Self {
-            chunks,
-            render_state: RefCell::new(WorldRenderState::new(resource_state.clone())),
-            debug_state: WorldDebugState::new().into(),
-        }
+        Self { chunks }
     }
 
     /// Inserts a chunk at the given position.
@@ -107,83 +101,5 @@ impl World {
                 }
             });
         }
-    }
-}
-
-pub struct WorldRenderState {
-    pub game_state: ComponentStoreHandle,
-    meshes: HashMap<BlockPosition, BlockMesh>,
-    buffers: Option<Vec<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>>,
-}
-
-impl WorldRenderState {
-    pub fn new(game_state: ComponentStoreHandle) -> Self {
-        Self {
-            game_state,
-            meshes: HashMap::new(),
-            buffers: None,
-        }
-    }
-
-    /// Generates the mesh for all chunks in the world.
-    pub fn generate_mesh(&mut self, world: &World, with: &crate::block::BlockTextureAtlas) {
-        // Ok so, rather than generate area^3, we merge all buffers in y axis only.
-        let mut meshes = HashMap::new();
-
-        for (pos, chunk) in world.chunks.iter() {
-            let chunk = chunk.get();
-            let mut render_state = chunk.render_state.borrow_mut();
-            let mesh = render_state.generate_mesh(&chunk, *pos, with);
-            meshes
-                .entry(*pos)
-                .and_modify(|f: &mut BlockMesh| *f = mesh.clone())
-                .or_insert_with(|| mesh.clone());
-        }
-
-        self.meshes = meshes;
-
-        let mut total_faces = 0;
-        let buffers = self
-            .meshes
-            .values()
-            .map(|mesh| {
-                total_faces += mesh.face_count();
-                mesh.create_buffers(&self.game_state)
-            })
-            .collect();
-
-        world.debug_state.get_mut().update_face_count(total_faces);
-
-        self.buffers = Some(buffers);
-    }
-
-    pub fn render(&self, render_pass: &mut wgpu::RenderPass) {
-        if let Some(buffers) = &self.buffers {
-            for (vbuf, ibuf) in buffers.iter() {
-                render_pass.set_vertex_buffer(0, vbuf.buffer().slice(..));
-                render_pass.set_index_buffer(ibuf.buffer().slice(..), wgpu::IndexFormat::Uint16);
-                render_pass.draw_indexed(0..ibuf.count() as u32, 0, 0..1);
-            }
-        }
-    }
-}
-
-struct WorldDebugState {
-    /// Current number of faces being rendered.
-    face_count: usize,
-    // /// Debug provider for the face count.
-    //face_count_provider: DebugProvider,
-}
-
-impl WorldDebugState {
-    pub fn new() -> Self {
-        Self {
-            face_count: 0,
-            //face_count_provider,
-        }
-    }
-
-    pub fn update_face_count(&mut self, new_count: usize) {
-        self.face_count = new_count;
     }
 }

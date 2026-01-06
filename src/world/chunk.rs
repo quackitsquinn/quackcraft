@@ -4,9 +4,9 @@ use log::warn;
 
 use crate::{
     BlockPosition, ChunkPosition,
-    block::{Block, BlockTextureAtlas},
     coords::bp,
     mesh::{BlockMesh, BlockVertex},
+    world::Block,
 };
 
 use engine::{
@@ -24,7 +24,6 @@ pub const CHUNK_SIZE: usize = 16;
 pub struct Chunk {
     pub data: [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
     neighbors: [Option<Resource<Chunk>>; 6],
-    pub render_state: RefCell<ChunkRenderState>,
 }
 
 impl Chunk {
@@ -32,7 +31,6 @@ impl Chunk {
         Self {
             data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
             neighbors: [None, None, None, None, None, None],
-            render_state: RefCell::new(ChunkRenderState::new(state)),
         }
     }
 
@@ -95,77 +93,5 @@ impl std::ops::Index<(usize, usize, usize)> for Chunk {
 impl std::ops::IndexMut<(usize, usize, usize)> for Chunk {
     fn index_mut(&mut self, index: (usize, usize, usize)) -> &mut Self::Output {
         &mut self.data[index.0][index.1][index.2]
-    }
-}
-
-/// Render state for a chunk.
-#[derive(Debug, Clone)]
-pub struct ChunkRenderState {
-    block_mesh: Option<BlockMesh>,
-    buffers: Option<(VertexBuffer<BlockVertex>, IndexBuffer<u16>)>,
-    game_state: ComponentStoreHandle,
-}
-
-impl ChunkRenderState {
-    pub fn new(game_state: ComponentStoreHandle) -> Self {
-        Self {
-            block_mesh: None,
-            buffers: None,
-            game_state,
-        }
-    }
-
-    /// Generates the mesh for the `chunk` `at`
-    pub fn generate_mesh(
-        &mut self,
-        chunk: &Chunk,
-        at: ChunkPosition,
-        with: &BlockTextureAtlas,
-    ) -> &BlockMesh {
-        let mut mesh = BlockMesh::empty();
-
-        for x in 0..16 {
-            for y in 0..16 {
-                for z in 0..16 {
-                    let block = chunk.data[x][y][z];
-                    let true_pos = bp(
-                        x as i64 + (at.0 * CHUNK_SIZE as i64),
-                        y as i64 + (at.1 * CHUNK_SIZE as i64),
-                        z as i64 + (at.2 * CHUNK_SIZE as i64),
-                    );
-                    let rel_pos = bp(x as i64, y as i64, z as i64);
-                    if block != Block::Air {
-                        // TODO.. in the probably distant future: greedy meshing
-                        CardinalDirection::iter().for_each(|dir| {
-                            // For now, were just going to assume that out-of-bounds blocks are air.
-                            // This is a bigger problem in this engine since chunks are only 16x16x16, rather than 16x256x16.
-                            if !chunk.inspect_block(rel_pos, dir).is_solid() {
-                                mesh.emit_face(&with.face_texture_index(block, dir), true_pos, dir);
-                            }
-                        });
-                    }
-                }
-            }
-        }
-
-        self.block_mesh = Some(mesh);
-        self.buffers = None; // Invalidate buffers
-        self.block_mesh.as_ref().unwrap()
-    }
-
-    /// Generates the vertex and index buffers for the current mesh, if not already generated.
-    pub fn generate_buffers(
-        &mut self,
-        state: &ComponentStoreHandle,
-    ) -> (&VertexBuffer<BlockVertex>, &IndexBuffer<u16>) {
-        if self.buffers.is_none() {
-            let mesh = self
-                .block_mesh
-                .as_ref()
-                .expect("Mesh must be generated before buffers");
-            self.buffers = Some(mesh.create_buffers(state));
-        }
-        let (vb, ib) = self.buffers.as_ref().unwrap();
-        (vb, ib)
     }
 }
