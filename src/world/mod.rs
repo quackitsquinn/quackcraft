@@ -1,17 +1,13 @@
-use std::{cell::RefCell, collections::HashMap};
+use std::collections::HashMap;
 
 use crate::{
     BlockPosition,
     coords::bp,
-    mesh::{BlockMesh, BlockVertex},
 };
 
 use engine::{
     component::ComponentStoreHandle,
-    graphics::{
-        CardinalDirection,
-        lowlevel::buf::{IndexBuffer, VertexBuffer},
-    },
+    graphics::CardinalDirection,
     resource::Resource,
 };
 
@@ -27,7 +23,7 @@ pub struct World {
 
 impl World {
     /// Creates an empty World.
-    pub fn empty(resource_state: &ComponentStoreHandle) -> Self {
+    pub fn empty(_resource_state: &ComponentStoreHandle) -> Self {
         Self {
             chunks: HashMap::new(),
         }
@@ -36,7 +32,7 @@ impl World {
     /// Creates a new World from the given chunks.
     pub fn new(
         chunks: Vec<((i64, i64, i64), Chunk)>,
-        resource_state: &ComponentStoreHandle,
+        _resource_state: &ComponentStoreHandle,
     ) -> Self {
         Self {
             chunks: chunks

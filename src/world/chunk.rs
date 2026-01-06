@@ -1,22 +1,8 @@
-use std::cell::RefCell;
-
 use log::warn;
 
-use crate::{
-    BlockPosition, ChunkPosition,
-    coords::bp,
-    mesh::{BlockMesh, BlockVertex},
-    world::Block,
-};
+use crate::{BlockPosition, world::Block};
 
-use engine::{
-    component::ComponentStoreHandle,
-    graphics::{
-        CardinalDirection,
-        lowlevel::buf::{IndexBuffer, VertexBuffer},
-    },
-    resource::Resource,
-};
+use engine::{component::ComponentStoreHandle, graphics::CardinalDirection, resource::Resource};
 
 pub const CHUNK_SIZE: usize = 16;
 
@@ -27,7 +13,7 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn empty(state: ComponentStoreHandle) -> Self {
+    pub fn empty(_state: ComponentStoreHandle) -> Self {
         Self {
             data: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
             neighbors: [None, None, None, None, None, None],

@@ -1,4 +1,3 @@
-use engine::graphics::textures::TextureHandle;
 
 // TODO: fancy optimizations for blocks
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

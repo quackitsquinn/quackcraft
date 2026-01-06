@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use anyhow::Ok;
 use glam::Vec3;
 
 /// A read-only string type.
