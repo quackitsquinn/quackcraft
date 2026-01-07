@@ -14,6 +14,7 @@ engine = { path = "engine" }
 wgpu = { workspace = true }
 smol = { workspace = true }
 bytemuck = { workspace = true }
+glam = { workspace = true}
 glfw = { workspace = true }
 
 

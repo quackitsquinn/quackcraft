@@ -1,3 +1,8 @@
+use std::{
+    any::{Any, TypeId},
+    marker, mem,
+};
+
 use engine::{
     component::ComponentStore,
     graphics::{
@@ -159,7 +164,7 @@ impl Game {
             .get_mut::<RenderController<RenderPipelines>>();
         let wgpu = self.component_db.get::<WgpuRenderer>();
         let mut encoder = wgpu.create_encoder(Some("Main Render Encoder"));
-        let (view, texture) = renderer.render_pipelines(&mut encoder)?;
+        let (view, _texture) = renderer.render_pipelines(&mut encoder)?;
         wgpu.submit_single(encoder.finish());
         view.present();
         Ok(())
