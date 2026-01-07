@@ -15,7 +15,7 @@ pub struct DepthTexture {
 
 impl DepthTexture {
     pub const TEXTURE_FORMAT: TextureFormat = TextureFormat::Depth32Float;
-    pub fn new(state: &mut ComponentStore) -> Self {
+    pub fn new(state: &ComponentStore) -> Self {
         let wgpu = state.get::<WgpuRenderer>();
         let config = wgpu.config.get();
         let size = wgpu::Extent3d {

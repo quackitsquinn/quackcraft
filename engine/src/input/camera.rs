@@ -162,7 +162,7 @@ impl CameraController {
     }
 
     pub fn update_camera(&mut self, keyboard: &crate::input::keyboard::Keyboard, delta_time: f64) {
-        let speed = 0.2;
+        let speed = 10.0 * delta_time as f32;
         let front = self.front();
         if keyboard.is_key_held(Key::W) {
             let front = self.front();

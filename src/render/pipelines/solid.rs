@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Component};
 
 use engine::{
     component::{ComponentHandle, ComponentStore, ComponentStoreHandle},
@@ -8,6 +8,7 @@ use engine::{
         lowlevel::{
             WgpuRenderer,
             buf::{IndexBuffer, VertexBuffer, VertexLayout},
+            depth::DepthTexture,
             pipeline::WgpuPipeline,
         },
         pipeline::{RenderPipeline, controller::PipelineKey},
@@ -29,6 +30,7 @@ pub struct SolidGeometryPipeline {
     world: ComponentHandle<ActiveWorld>,
     wgpu: ComponentHandle<WgpuRenderer>,
     camera: ComponentHandle<CameraController>,
+    depth_texture: ComponentHandle<DepthTexture>,
     camera_bind_group: Option<wgpu::BindGroup>,
     pipeline: Option<WgpuPipeline>,
 }
@@ -39,6 +41,7 @@ impl SolidGeometryPipeline {
             world: csh.handle_for(),
             wgpu: csh.handle_for(),
             camera: csh.handle_for(),
+            depth_texture: csh.handle_for(),
             chunks: HashMap::new(),
             camera_bind_group: None,
             pipeline: None,
@@ -65,6 +68,9 @@ impl SolidGeometryPipeline {
 
         let camera = self.camera.get();
         let (camera_bind_group_layout, camera_bind_group) = camera.bind_group(0);
+
+        let depth_texture = self.depth_texture.get();
+        builder = builder.depth(depth_texture.state());
 
         self.camera_bind_group = Some(camera_bind_group);
 
@@ -118,11 +124,12 @@ impl<K: PipelineKey> RenderPipeline<K> for SolidGeometryPipeline {
         target: &wgpu::TextureView,
     ) {
         let wgpu = controller.wgpu.get();
+        let depth_texture = self.depth_texture.get();
         let mut render_pass_desc = wgpu.render_pass(
             Some("Solid Geometry Pipeline Render Pass"),
             encoder,
             target,
-            None,
+            Some(depth_texture.attachment()),
             wgpu::LoadOp::Load,
         );
 
@@ -153,7 +160,7 @@ impl ChunkSolidRenderData {
         chunk: &Chunk,
         chunk_coord: BlockPosition,
     ) -> Self {
-        let (vertices, indices) = build_mesh_for_chunk(chunk);
+        let (vertices, indices) = build_mesh_for_chunk(chunk, chunk_coord * bp(16, 16, 16));
         let wgpu = wgpu.get();
         let vertex_buffer = wgpu.vertex_buffer(
             &vertices,
@@ -211,7 +218,10 @@ unsafe impl VertexLayout for SolidBlockVertex {
 }
 
 /// TODO: This function in the future can be made to return (BufferState<SolidBlockVertex>, BufferState<TransparentBlockVertex>)
-fn build_mesh_for_chunk(chunk: &Chunk) -> (Vec<SolidBlockVertex>, Vec<u16>) {
+fn build_mesh_for_chunk(
+    chunk: &Chunk,
+    world_pos: BlockPosition,
+) -> (Vec<SolidBlockVertex>, Vec<u16>) {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -222,6 +232,7 @@ fn build_mesh_for_chunk(chunk: &Chunk) -> (Vec<SolidBlockVertex>, Vec<u16>) {
                 if block.is_solid() {
                     mesh_block_at(
                         chunk,
+                        world_pos,
                         bp(x as i64, y as i64, z as i64),
                         &mut vertices,
                         &mut indices,
@@ -236,17 +247,19 @@ fn build_mesh_for_chunk(chunk: &Chunk) -> (Vec<SolidBlockVertex>, Vec<u16>) {
 
 fn mesh_block_at(
     chunk: &Chunk,
+    chunk_world_pos: BlockPosition,
     chunk_pos: BlockPosition,
     vertices: &mut Vec<SolidBlockVertex>,
     indices: &mut Vec<u16>,
 ) {
     let mut push_face = |face: CardinalDirection| {
         let base_index = vertices.len() as u16;
+        let world_pos = chunk_pos + chunk_world_pos;
         for (pos, uv) in FACE_TABLE[face as usize].iter() {
             let world_pos = Vec3::new(
-                chunk_pos.0 as f32 + pos[0],
-                chunk_pos.1 as f32 + pos[1],
-                chunk_pos.2 as f32 + pos[2],
+                world_pos.0 as f32 + pos[0],
+                world_pos.1 as f32 + pos[1],
+                world_pos.2 as f32 + pos[2],
             );
             // FIXME: using the default no texture texture index 0 for now
             let vertex = SolidBlockVertex::new(world_pos, Vec2::new(uv[0], uv[1]), 0);

@@ -14,6 +14,7 @@ pub struct PipelineBuilder<'a> {
     layouts: Vec<VertexBufferLayout<'static>>,
     primitive_state: wgpu::PrimitiveState,
     color_targets: Vec<Option<wgpu::ColorTargetState>>,
+    depth_stencil: Option<wgpu::DepthStencilState>,
 }
 
 impl<'a> PipelineBuilder<'a> {
@@ -27,6 +28,7 @@ impl<'a> PipelineBuilder<'a> {
             shader_module: None,
             primitive_state: wgpu::PrimitiveState::default(),
             color_targets: Vec::new(),
+            depth_stencil: None,
         }
     }
 
@@ -72,6 +74,12 @@ impl<'a> PipelineBuilder<'a> {
         self
     }
 
+    /// Sets the depth stencil state for the pipeline.
+    pub fn depth(mut self, state: wgpu::DepthStencilState) -> Self {
+        self.depth_stencil = Some(state);
+        self
+    }
+
     pub fn build(
         self,
         compilation_options: Option<wgpu::PipelineCompilationOptions<'_>>,
@@ -96,7 +104,7 @@ impl<'a> PipelineBuilder<'a> {
                 vertex: shader.vertex_state(&self.layouts, compilation_options.clone()),
                 fragment: shader.fragment_state(&self.color_targets, compilation_options),
                 primitive: self.primitive_state,
-                depth_stencil: None,
+                depth_stencil: self.depth_stencil,
                 multisample: wgpu::MultisampleState::default(),
                 multiview_mask: None,
                 cache: None,

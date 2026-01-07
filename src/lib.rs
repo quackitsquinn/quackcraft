@@ -6,7 +6,7 @@ use std::{
 use engine::{
     component::ComponentStore,
     graphics::{
-        lowlevel::WgpuRenderer,
+        lowlevel::{WgpuRenderer, depth::DepthTexture},
         pipeline::{controller::RenderController, pipelines::clear::ClearPipeline},
     },
     input::{camera::CameraController, keyboard::Keyboard},
@@ -101,6 +101,9 @@ impl Game {
 
         let renderer: RenderController<RenderPipelines> = RenderController::new(&state);
         state.insert(renderer);
+
+        let depth_texture = DepthTexture::new(&state);
+        state.insert(depth_texture);
 
         state.finish_initialization();
 

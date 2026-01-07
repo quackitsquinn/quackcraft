@@ -83,7 +83,7 @@ impl WgpuRenderer {
             format: surface_format,
             width: size.0 as u32,
             height: size.1 as u32,
-            present_mode: PresentMode::Immediate,
+            present_mode: PresentMode::Fifo,
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
