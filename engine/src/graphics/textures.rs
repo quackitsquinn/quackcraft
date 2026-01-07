@@ -4,14 +4,12 @@ use wgpu::{TextureFormat, TextureUsages};
 
 use crate::{
     ReadOnly, ReadOnlyString,
-    component::{ComponentHandle, ComponentStoreHandle},
+    component::{ComponentHandle, ComponentStore, ComponentStoreHandle},
     graphics::{
         image::Image,
         lowlevel::{WgpuRenderer, texture::Texture},
     },
 };
-
-pub type TextureHandle = u32;
 
 /// A structure managing a collection of textures.
 /// This is effectively a texture atlas, packing multiple textures into a single GPU texture. The difference
@@ -28,7 +26,7 @@ pub struct TextureCollection {
 
 impl TextureCollection {
     pub fn new(
-        state: &ComponentStoreHandle,
+        state: &ComponentStore,
         label: Option<impl Into<ReadOnlyString>>,
         dimensions: (u32, u32),
     ) -> Self {
@@ -43,64 +41,28 @@ impl TextureCollection {
     }
 
     /// Adds a new texture from raw RGBA8 data.
-    pub fn add_texture(&mut self, name: &str, data: ReadOnly<u8>) -> TextureHandle {
-        let handle = self.buf.len() as TextureHandle;
-        self.buf.push(data);
+    pub fn add_texture(&mut self, name: &str, data: &Image) -> TextureHandle {
+        let handle = TextureHandle::single(self.buf.len() as u32);
+        self.buf.push(data.pixel_bytes().clone());
         self.textures.insert(name.to_string(), handle);
         handle
     }
 
-    /// Loads a texture from a file path.
-    pub fn load_texture_from_file(
-        &mut self,
-        name: &str,
-        path: &str,
-    ) -> anyhow::Result<(TextureHandle, Image)> {
-        let img = Image::from_file(path)?;
-        let (width, height) = img.dimensions();
-        if width != self.dimensions.0 || height != self.dimensions.1 {
-            anyhow::bail!(
-                "Texture dimensions do not match atlas dimensions: expected {}x{}, got {}x{}",
-                self.dimensions.0,
-                self.dimensions.1,
-                width,
-                height
-            );
-        }
-
-        Ok((self.add_texture(name, img.pixel_bytes().clone()), img))
-    }
-
-    pub fn load_texture(
-        &mut self,
-        name: &str,
-        data: &[u8],
-    ) -> anyhow::Result<(TextureHandle, Image)> {
-        let img = Image::from_mem(data)?;
-        let (width, height) = img.dimensions();
-        if width != self.dimensions.0 || height != self.dimensions.1 {
-            anyhow::bail!(
-                "Texture dimensions do not match atlas dimensions: expected {}x{}, got {}x{}",
-                self.dimensions.0,
-                self.dimensions.1,
-                width,
-                height
-            );
-        }
-
-        Ok((self.add_texture(name, img.pixel_bytes().clone()), img))
-    }
-
     /// Adds multiple textures from an iterator of (name, data) pairs.
-    pub fn add_textures(
+    pub fn add_textures<'a>(
         &mut self,
-        textures: impl IntoIterator<Item = (String, ReadOnly<u8>)>,
+        name: &str,
+        textures: impl IntoIterator<Item = &'a Image>,
     ) -> TextureHandle {
-        let base = self.buf.len() as TextureHandle;
-        for (name, data) in textures {
-            self.add_texture(&name, data);
+        let base = self.buf.len() as u32;
+        let mut count = 0;
+        for texture in textures {
+            self.buf.push(texture.pixel_bytes().clone());
+            count += 1;
         }
-        base
+        let handle = TextureHandle::new(base, count);
+        self.textures.insert(name.to_string(), handle);
+        handle
     }
 
     pub fn push_invalid_texture(&mut self) -> TextureHandle {
@@ -121,7 +83,8 @@ impl TextureCollection {
             }
         }
 
-        self.add_texture("invalid_texture", data.into())
+        self.buf.push(data.into());
+        TextureHandle::single(self.buf.len() as u32 - 1)
     }
 
     /// Retrieves a texture handle by name.
@@ -145,5 +108,44 @@ impl TextureCollection {
 
         self.gpu_texture = Some(texture);
         self.gpu_texture.as_ref().unwrap().clone()
+    }
+}
+
+/// A handle to a texture within a TextureCollection.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TextureHandle {
+    pub base_layer: u32,
+    pub count: u32,
+}
+
+impl TextureHandle {
+    /// Creates a new TextureHandle.
+    pub fn new(base_layer: u32, count: u32) -> Self {
+        Self { base_layer, count }
+    }
+
+    /// Creates a TextureHandle for a single layer.
+    pub fn single(layer: u32) -> Self {
+        Self {
+            base_layer: layer,
+            count: 1,
+        }
+    }
+
+    /// Creates a null TextureHandle.
+    ///
+    /// This just points to layer 0 with a count of 1. Typically where the missing texture resides.
+    pub fn null() -> Self {
+        Self {
+            base_layer: 0,
+            count: 1,
+        }
+    }
+
+    /// Gets the texture array layer for the given index.
+    /// Panics if the index is out of bounds.
+    pub fn layer(&self, index: u32) -> u32 {
+        assert!(index < self.count);
+        self.base_layer + index
     }
 }

@@ -1,10 +1,11 @@
-use std::sync::Arc;
+use std::{fmt::Debug, sync::Arc};
 
 use anyhow::anyhow;
 use image::ImageBuffer;
 
 use crate::ReadOnly;
 
+#[derive(PartialEq, Eq)]
 pub struct Image {
     image: image::ImageBuffer<image::Rgba<u8>, ReadOnly<u8>>,
     pixel_bytes: ReadOnly<u8>,
@@ -41,5 +42,22 @@ impl Image {
     /// Returns the raw pixel bytes of the image in RGBA format.
     pub fn pixel_bytes(&self) -> &ReadOnly<u8> {
         &self.pixel_bytes
+    }
+}
+
+impl Debug for Image {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Image")
+            .field("dimensions", &self.dimensions())
+            .finish()
+    }
+}
+
+impl Clone for Image {
+    fn clone(&self) -> Self {
+        Self {
+            image: self.image.clone(),
+            pixel_bytes: self.pixel_bytes.clone(),
+        }
     }
 }

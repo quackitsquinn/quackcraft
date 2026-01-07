@@ -12,17 +12,18 @@ use engine::{
             pipeline::WgpuPipeline,
         },
         pipeline::{RenderPipeline, controller::PipelineKey},
+        textures::TextureCollection,
     },
     input::camera::CameraController,
 };
 use glam::{Vec2, Vec3};
 use log::info;
-use wgpu::naga::Block;
 
 use crate::{
     BlockPosition, FACE_INDICES, FACE_TABLE,
     coords::bp,
-    world::{ActiveWorld, Chunk},
+    render::block_textures::BlockTextureAtlas,
+    world::{ActiveWorld, Block, Chunk},
 };
 
 pub struct SolidGeometryPipeline {
@@ -30,7 +31,10 @@ pub struct SolidGeometryPipeline {
     world: ComponentHandle<ActiveWorld>,
     wgpu: ComponentHandle<WgpuRenderer>,
     camera: ComponentHandle<CameraController>,
+    atlas: ComponentHandle<BlockTextureAtlas>,
+    textures: ComponentHandle<TextureCollection>,
     depth_texture: ComponentHandle<DepthTexture>,
+    textures_bind_group: Option<wgpu::BindGroup>,
     camera_bind_group: Option<wgpu::BindGroup>,
     pipeline: Option<WgpuPipeline>,
 }
@@ -42,8 +46,11 @@ impl SolidGeometryPipeline {
             wgpu: csh.handle_for(),
             camera: csh.handle_for(),
             depth_texture: csh.handle_for(),
+            atlas: csh.handle_for(),
+            textures: csh.handle_for(),
             chunks: HashMap::new(),
             camera_bind_group: None,
+            textures_bind_group: None,
             pipeline: None,
         };
 
@@ -55,6 +62,7 @@ impl SolidGeometryPipeline {
 
     fn create_pipeline(&mut self) {
         let wgpu = self.wgpu.get();
+        let mut textures = self.textures.get_mut();
         let mut builder = wgpu
             .pipeline_builder("Solid Geometry Pipeline")
             .shader(
@@ -68,13 +76,19 @@ impl SolidGeometryPipeline {
 
         let camera = self.camera.get();
         let (camera_bind_group_layout, camera_bind_group) = camera.bind_group(0);
+        self.camera_bind_group = Some(camera_bind_group);
+        builder = builder.push_bind_group(camera_bind_group_layout);
 
         let depth_texture = self.depth_texture.get();
         builder = builder.depth(depth_texture.state());
 
-        self.camera_bind_group = Some(camera_bind_group);
+        let block_texture = textures.gpu_texture();
 
-        builder = builder.push_bind_group(camera_bind_group_layout);
+        let (blocks_bind_layout, blocks_bind_group) =
+            block_texture.layout_and_bind_group(Some("block textures"), 1, 0);
+        self.textures_bind_group = Some(blocks_bind_group);
+
+        builder = builder.push_bind_group(blocks_bind_layout);
 
         info!("Creating Solid Geometry Pipeline: {:#?}", builder);
 
@@ -85,6 +99,7 @@ impl SolidGeometryPipeline {
     pub fn create_initial_chunks(&mut self) {
         let world_ref = self.world.get();
         let world = world_ref.get_world().expect("no world present");
+        let atlas = self.atlas.get();
 
         let mut vertex_count = 0;
         let mut index_count = 0;
@@ -92,7 +107,7 @@ impl SolidGeometryPipeline {
         for (chunk_coord, chunk_res) in world.chunks.iter() {
             let chunk = chunk_res.get();
             let render_data =
-                ChunkSolidRenderData::from_chunk(self.wgpu.clone(), &chunk, *chunk_coord);
+                ChunkSolidRenderData::from_chunk(self.wgpu.clone(), &atlas, &chunk, *chunk_coord);
             vertex_count += render_data.vertex_buffer.count();
             index_count += render_data.index_buffer.count();
             self.chunks.insert(*chunk_coord, render_data);
@@ -142,6 +157,9 @@ impl<K: PipelineKey> RenderPipeline<K> for SolidGeometryPipeline {
         if let Some(ref camera_bind_group) = self.camera_bind_group {
             render_pass_desc.set_bind_group(0, camera_bind_group, &[]);
         }
+        if let Some(ref textures_bind_group) = self.textures_bind_group {
+            render_pass_desc.set_bind_group(1, textures_bind_group, &[]);
+        }
 
         for chunk_render_data in self.chunks.values() {
             chunk_render_data.draw(&mut render_pass_desc);
@@ -157,10 +175,11 @@ struct ChunkSolidRenderData {
 impl ChunkSolidRenderData {
     pub fn from_chunk(
         wgpu: ComponentHandle<WgpuRenderer>,
+        atlas: &BlockTextureAtlas,
         chunk: &Chunk,
         chunk_coord: BlockPosition,
     ) -> Self {
-        let (vertices, indices) = build_mesh_for_chunk(chunk, chunk_coord * bp(16, 16, 16));
+        let (vertices, indices) = build_mesh_for_chunk(atlas, chunk, chunk_coord * bp(16, 16, 16));
         let wgpu = wgpu.get();
         let vertex_buffer = wgpu.vertex_buffer(
             &vertices,
@@ -219,6 +238,7 @@ unsafe impl VertexLayout for SolidBlockVertex {
 
 /// TODO: This function in the future can be made to return (BufferState<SolidBlockVertex>, BufferState<TransparentBlockVertex>)
 fn build_mesh_for_chunk(
+    atlas: &BlockTextureAtlas,
     chunk: &Chunk,
     world_pos: BlockPosition,
 ) -> (Vec<SolidBlockVertex>, Vec<u16>) {
@@ -231,9 +251,11 @@ fn build_mesh_for_chunk(
                 let block = chunk.data[x][y][z];
                 if block.is_solid() {
                     mesh_block_at(
+                        block,
                         chunk,
                         world_pos,
                         bp(x as i64, y as i64, z as i64),
+                        atlas,
                         &mut vertices,
                         &mut indices,
                     );
@@ -246,9 +268,11 @@ fn build_mesh_for_chunk(
 }
 
 fn mesh_block_at(
+    block: Block,
     chunk: &Chunk,
     chunk_world_pos: BlockPosition,
     chunk_pos: BlockPosition,
+    atlas: &BlockTextureAtlas,
     vertices: &mut Vec<SolidBlockVertex>,
     indices: &mut Vec<u16>,
 ) {
@@ -262,7 +286,11 @@ fn mesh_block_at(
                 world_pos.2 as f32 + pos[2],
             );
             // FIXME: using the default no texture texture index 0 for now
-            let vertex = SolidBlockVertex::new(world_pos, Vec2::new(uv[0], uv[1]), 0);
+            let vertex = SolidBlockVertex::new(
+                world_pos,
+                Vec2::new(uv[0], uv[1]),
+                atlas.texture_index(block, face),
+            );
             vertices.push(vertex);
         }
         for &index in FACE_INDICES.iter() {

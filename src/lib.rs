@@ -21,6 +21,7 @@ use crate::{
     world::ActiveWorld,
 };
 
+pub mod assets;
 pub mod coords;
 pub mod mesh;
 pub mod render;
@@ -105,6 +106,11 @@ impl Game {
         let depth_texture = DepthTexture::new(&state);
         state.insert(depth_texture);
 
+        let (tc, atlas, assets) = assets::init_asset_store(&state, &state.get());
+        state.insert(assets);
+        state.insert(tc);
+        state.insert(atlas);
+
         state.finish_initialization();
 
         let mut renderer = state.get_mut::<RenderController<RenderPipelines>>();
@@ -125,6 +131,8 @@ impl Game {
         drop_all!(renderer, camera);
 
         CameraController::register_callback(camera_handle, &state.get::<window::GlfwWindow>());
+
+        info!("Component Store initialized: {:?}", state);
 
         Ok(Self {
             component_db: state,
@@ -203,7 +211,6 @@ impl Game {
 pub fn run_game() -> anyhow::Result<()> {
     let game = Game::new()?;
 
-    println!("Game initialized: {:?}", game.component_db);
     let mut game = game;
 
     let mut last_delta = std::time::Instant::now();

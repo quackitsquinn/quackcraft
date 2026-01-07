@@ -181,8 +181,14 @@ mod get_impls {
 
             /// Gets a reference to a component of the specified type.
             pub fn get<T: 'static>(&self) -> std::cell::Ref<'_, T> {
-                self.get_checked()
-                    .expect("Component not found in ComponentDB")
+                if let Some(component) = self.get_checked::<T>() {
+                    component
+                } else {
+                    panic!(
+                        "Component {} not found in ComponentDB",
+                        std::any::type_name::<T>()
+                    );
+                }
             }
 
             /// Gets a mutable reference to a component of the specified type.
@@ -193,8 +199,14 @@ mod get_impls {
 
             /// Gets a mutable reference to a component of the specified type.
             pub fn get_mut<T: 'static>(&self) -> std::cell::RefMut<'_, T> {
-                self.get_mut_checked()
-                    .expect("Component not found in ComponentDB")
+                if let Some(component) = self.get_mut_checked::<T>() {
+                    component
+                } else {
+                    panic!(
+                        "Component {} not found in ComponentDB",
+                        std::any::type_name::<T>()
+                    );
+                }
             }
         };
     }

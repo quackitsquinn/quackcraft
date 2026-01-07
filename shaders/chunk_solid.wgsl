@@ -36,15 +36,21 @@ fn vs(
 }
 
 
-// /// Fragment shader
-// @group(1) @binding(0) // Block texture array
-// var block_textures: texture_2d_array<f32>;
-// @group(1) @binding(1) // Block texture sampler
-// var sampler_block: sampler;
+/// Fragment shader
+@group(1) @binding(0) // Block texture array
+var block_textures: texture_2d_array<f32>;
+@group(1) @binding(1) // Block texture sampler
+var sampler_block: sampler;
 
 @fragment
 fn fs(in: DrawData) -> @location(0) vec4<f32> {
-    return vec4<f32>(in.tex_coord, f32(in.texture_id) / 16.0, 1.0);
+    return textureSample(
+        block_textures,
+        sampler_block,
+        // Flipping the texture coordinate vertically
+        vec2<f32>(in.tex_coord.x, 1.0 - in.tex_coord.y),
+        in.texture_id,
+    );
 }
 
 
