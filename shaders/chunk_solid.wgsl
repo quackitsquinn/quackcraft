@@ -16,9 +16,6 @@ struct ChunkData {
     /// Position of the vertex in world space.
     @location(0) position: vec3<f32>,
     /// Texture coordinates.
-    // TODO: It would probably be way better to just to have a `face_index` and then grab a predefined
-    // set of texture coordinates in the shader based on that.
-    // This would save a lot of memory bandwidth.
     @location(1) tex_coord: vec2<f32>,
     /// Texture ID for the block type. Specifically, the index into `block_textures`.
     @location(2) texture_id: u32,
@@ -39,21 +36,15 @@ fn vs(
 }
 
 
-/// Fragment shader
-@group(1) @binding(0) // Block texture array
-var block_textures: texture_2d_array<f32>;
-@group(1) @binding(1) // Block texture sampler
-var sampler_block: sampler;
+// /// Fragment shader
+// @group(1) @binding(0) // Block texture array
+// var block_textures: texture_2d_array<f32>;
+// @group(1) @binding(1) // Block texture sampler
+// var sampler_block: sampler;
 
 @fragment
 fn fs(in: DrawData) -> @location(0) vec4<f32> {
-    return textureSample(
-        block_textures,
-        sampler_block,
-        // Flipping the texture coordinate vertically
-        vec2<f32>(in.tex_coord.x, 1.0 - in.tex_coord.y),
-        in.texture_id,
-    );
+    return vec4<f32>(in.tex_coord, f32(in.texture_id) / 16.0, 1.0);
 }
 
 

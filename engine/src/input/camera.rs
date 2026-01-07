@@ -1,27 +1,28 @@
 use std::fmt::Debug;
 
-use glam::{Mat4, Vec2, Vec3};
+use glam::{Mat4, Vec2, Vec3, vec2};
+use glfw::Key;
+use log::info;
 
 use crate::{
-    component::{ComponentHandle, ComponentStoreHandle},
+    component::{ComponentHandle, ComponentStore, ComponentStoreHandle},
     debug::{DebugProvider, DebugRenderer},
     graphics::{
         callback::TargetHandle,
         camera::Camera,
         lowlevel::{WgpuRenderer, buf::UniformBuffer},
     },
+    window::GlfwWindow,
 };
 
 #[derive(Clone)]
 pub struct CameraController {
-    pos: Vec3,
+    pub pos: Vec3,
     /// Pitch and yaw rotation.
     pub rot: Vec2,
     camera: Camera,
     uniform: UniformBuffer<Mat4>,
     callback_handle: Option<TargetHandle<(f64, f64)>>,
-    position_entry: DebugProvider,
-    rotation_entry: DebugProvider,
     wgpu_handle: ComponentHandle<WgpuRenderer>,
 }
 
@@ -36,10 +37,7 @@ impl Debug for CameraController {
 }
 
 impl CameraController {
-    pub fn new<'b>(
-        state: &ComponentStoreHandle,
-        debug_renderer: &mut DebugRenderer,
-    ) -> CameraController {
+    pub fn new(state: &ComponentStore) -> CameraController {
         let wgpu = state.get::<WgpuRenderer>();
         let (width, height) = wgpu.dimensions();
         let camera = Camera::new(
@@ -56,10 +54,6 @@ impl CameraController {
             pos: Vec3::ZERO,
             callback_handle: None,
             rot: Vec2::ZERO,
-            position_entry: debug_renderer
-                .add_statistic("Camera Position", format!("{:?}", Vec3::ZERO)),
-            rotation_entry: debug_renderer
-                .add_statistic("Camera Rotation", format!("{:?}", Vec2::ZERO)),
         }
     }
 
@@ -104,14 +98,11 @@ impl CameraController {
     pub fn flush(&mut self) {
         let matrix = self.camera.projection_view_matrix();
         self.uniform.write(&matrix);
-        self.position_entry
-            .update_value(format!("{:.2?}", self.pos));
-        self.rotation_entry
-            .update_value(format!("{:.2?}", self.rot));
     }
 
     /// Sets the camera to look at a specific target point.
     pub fn look_at(&mut self, target: Vec3) {
+        self.camera.pos(self.pos);
         self.camera.look_at(target);
         self.flush();
     }
@@ -143,55 +134,55 @@ impl CameraController {
         )
     }
 
-    // / Creates the main camera controller and sets up mouse callbacks.
-    // TODO: This needs to be completely reworked to fit the new architecture.
-    // pub fn create_main_camera(
-    //     wgpu: &Wgpu,
-    //     window: &GlfwWindow,
-    //     debug_renderer: &mut DebugRenderer,
-    //     binding: u32,
-    // ) -> (
-    //     Resource<CameraController>,
-    //     wgpu::BindGroupLayout,
-    //     wgpu::BindGroup,
-    // ) {
-    //     let camera: Resource<CameraController> =
-    //         CameraController::new(wgpu.clone(), debug_renderer).into();
-    //     let (camera_layout, camera_bind_group) = camera.get().bind_group(binding);
+    /// Registers mouse movement callbacks to control the camera rotation.
+    pub fn register_callback(this: ComponentHandle<CameraController>, window: &GlfwWindow) {
+        let closure_camera = this.clone();
+        let mut last = Vec2::ZERO;
+        let mut first_mouse = true;
+        let handle = window.register_mouse_pos_callback(Some("camera"), move |(x, y)| {
+            let container = closure_camera.clone();
+            let mut camera = container.get_mut();
+            let pos = vec2(x as f32, y as f32);
+            if first_mouse {
+                last = pos;
+                first_mouse = false;
+                return;
+            }
 
-    //     let closure_camera = camera.clone();
-    //     CameraController::register_callback(closure_camera.clone(), window);
-    //     window.set_mouse_mode(glfw::CursorMode::Disabled);
+            let mut offset = pos - last;
+            last = pos;
 
-    //     (camera, camera_layout, camera_bind_group)
-    // }
+            // Invert y-axis for typical FPS camera control
+            offset *= Vec2::NEG_Y + Vec2::X;
 
-    // / Registers mouse movement callbacks to control the camera rotation.
-    // pub fn register_callback(this: Resource<CameraController>, window: &GlfwWindow) {
-    //     let closure_camera = this.clone();
-    //     let mut last = Vec2::ZERO;
-    //     let mut first_mouse = true;
-    //     let handle = window.register_mouse_pos_callback(Some("camera"), move |(x, y)| {
-    //         let container = closure_camera.clone();
-    //         let mut camera = container.get_mut();
-    //         let pos = vec2(x as f32, y as f32);
-    //         if first_mouse {
-    //             last = pos;
-    //             first_mouse = false;
-    //             return;
-    //         }
+            camera.process_rot(offset);
+        });
 
-    //         let mut offset = pos - last;
-    //         last = pos;
+        this.get_mut().callback_handle = Some(handle);
+    }
 
-    //         // Invert y-axis for typical FPS camera control
-    //         offset *= Vec2::NEG_Y + Vec2::X;
+    pub fn update_camera(&mut self, keyboard: &crate::input::keyboard::Keyboard, delta_time: f64) {
+        let speed = 0.2;
+        let front = self.front();
+        if keyboard.is_key_held(Key::W) {
+            let front = self.front();
+            self.update_position(|c| c + front * speed);
+        }
+        if keyboard.is_key_held(Key::S) {
+            let front = self.front();
+            self.update_position(|c| c - front * speed);
+        }
+        if keyboard.is_key_held(Key::A) {
+            let right = front.cross(Vec3::Y).normalize();
+            self.update_position(|c| c - right * speed);
+        }
+        if keyboard.is_key_held(Key::D) {
+            let right = front.cross(Vec3::Y).normalize();
+            self.update_position(|c| c + right * speed);
+        }
 
-    //         camera.process_rot(offset);
-    //     });
-
-    //     this.get_mut().callback_handle = Some(handle);
-    // }
+        self.flush();
+    }
 
     pub fn front(&self) -> Vec3 {
         self.camera.front()

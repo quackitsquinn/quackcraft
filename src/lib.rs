@@ -9,12 +9,17 @@ use engine::{
         lowlevel::WgpuRenderer,
         pipeline::{controller::RenderController, pipelines::clear::ClearPipeline},
     },
-    input::keyboard::Keyboard,
+    input::{camera::CameraController, keyboard::Keyboard},
     window,
 };
+use glam::Vec3;
 use glfw::{Action, WindowEvent};
+use log::info;
 
-use crate::{render::RenderPipelines, world::ActiveWorld};
+use crate::{
+    render::{RenderPipelines, pipelines::solid::SolidGeometryPipeline},
+    world::ActiveWorld,
+};
 
 pub mod coords;
 pub mod mesh;
@@ -83,26 +88,40 @@ impl Game {
         state.insert(Keyboard::new());
         let window = window::GlfwWindow::new(800, 600, "Minecraft Clone")
             .expect("Failed to create GLFW window");
-
         smol::block_on(WgpuRenderer::attach_to(&mut state, &window))?;
-
+        window.set_mouse_mode(glfw::CursorMode::Disabled);
         state.insert(window);
+
+        let camera = CameraController::new(&state);
+        let camera_handle = state.insert(camera);
 
         let world = world::World::test(&state.handle());
         let active_world = ActiveWorld::with_world(world);
         state.insert(active_world);
 
-        let mut renderer: RenderController<RenderPipelines> = RenderController::new(&state);
+        let renderer: RenderController<RenderPipelines> = RenderController::new(&state);
+        state.insert(renderer);
 
+        state.finish_initialization();
+
+        let mut renderer = state.get_mut::<RenderController<RenderPipelines>>();
         renderer.add_pipeline(
             RenderPipelines::Clear,
             ClearPipeline::new(1.0, 0.0, 0.5, 1.0),
         );
 
-        renderer.set_render_order(vec![RenderPipelines::Clear]);
-        state.insert(renderer);
+        let solid_pipeline = SolidGeometryPipeline::new(&state);
+        renderer.add_pipeline(RenderPipelines::SolidGeometry, solid_pipeline);
 
-        state.finish_initialization();
+        renderer.set_render_order(vec![RenderPipelines::Clear, RenderPipelines::SolidGeometry]);
+
+        let mut camera = state.get_mut::<CameraController>();
+        camera.pos = glam::Vec3::new(30.0, 32.0, 30.0);
+        camera.look_at(Vec3::ZERO);
+
+        drop_all!(renderer, camera);
+
+        CameraController::register_callback(camera_handle, &state.get::<window::GlfwWindow>());
 
         Ok(Self {
             component_db: state,
@@ -124,6 +143,7 @@ impl Game {
         }
 
         let mut keyboard = self.component_db.get_mut::<Keyboard>();
+        keyboard.update_keys();
         let wgpu = self.component_db.get::<WgpuRenderer>();
 
         window.poll_events();
@@ -137,17 +157,23 @@ impl Game {
                     wgpu.resize((x, y));
                 }
                 WindowEvent::Key(key, _, Action::Press, _) => {
+                    info!("Key pressed: {:?}", key);
                     keyboard.press_key(key);
                 }
 
                 WindowEvent::Key(key, _, Action::Release, _) => {
+                    info!("Key released: {:?}", key);
                     keyboard.release_key(key);
                 }
                 _ => {}
             }
         }
 
-        drop_all!(window, keyboard);
+        // Update the camera
+        let mut camera = self.component_db.get_mut::<CameraController>();
+        camera.update_camera(&keyboard, delta_time);
+
+        drop_all!(window, keyboard, camera);
 
         let mut renderer = self
             .component_db

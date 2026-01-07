@@ -24,6 +24,7 @@ use crate::{
 
 pub mod buf;
 pub mod depth;
+pub mod pipeline;
 pub mod shader;
 pub mod texture;
 
@@ -487,6 +488,10 @@ impl WgpuRenderer {
             multiview_mask: None,
             cache: None,
         })
+    }
+
+    pub fn pipeline_builder<'a>(&'a self, label: &'a str) -> pipeline::PipelineBuilder<'a> {
+        pipeline::PipelineBuilder::new(self, label)
     }
 
     /// Acquires the current texture view from the surface.

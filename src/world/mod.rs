@@ -59,6 +59,8 @@ impl World {
             }
         }
 
+        world.populate_neighbors();
+
         world
     }
 

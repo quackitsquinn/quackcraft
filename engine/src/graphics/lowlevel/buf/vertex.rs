@@ -40,6 +40,11 @@ where
         &self.buffer
     }
 
+    /// Returns the number of vertices in the buffer.
+    pub fn count(&self) -> usize {
+        (self.buffer.size() as usize) / std::mem::size_of::<T>()
+    }
+
     /// Sets the vertex buffer on the given render pass at the specified slot and range.
     pub fn set_on(&self, pass: &mut wgpu::RenderPass<'_>, slot: u32, range: impl RangeBounds<u64>) {
         pass.set_vertex_buffer(slot, self.buffer.slice(range));

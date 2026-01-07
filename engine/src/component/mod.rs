@@ -45,7 +45,7 @@ impl ComponentStore {
     /// Inserts a component into the database.
     ///
     /// There must be no other references to the database when calling this method.
-    pub fn insert<T: 'static>(&mut self, component: T) {
+    pub fn insert<T: 'static>(&mut self, component: T) -> ComponentHandle<T> {
         if self.map.contains_key(&TypeId::of::<T>()) {
             panic!(
                 "Component of type {} already exists in State",
@@ -57,6 +57,7 @@ impl ComponentStore {
             Rc::get_mut(&mut self.map).expect("Cannot insert component into shared State");
 
         mut_map.insert(TypeId::of::<T>(), ResourceNode::new(component));
+        self.handle_for::<T>()
     }
 
     /// Creates a handle for a component of the specified type.

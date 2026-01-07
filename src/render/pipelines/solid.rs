@@ -1,17 +1,21 @@
 use std::collections::HashMap;
 
 use engine::{
-    component::{ComponentHandle, ComponentStoreHandle},
+    component::{ComponentHandle, ComponentStore, ComponentStoreHandle},
     graphics::{
         CardinalDirection,
+        camera::Camera,
         lowlevel::{
             WgpuRenderer,
             buf::{IndexBuffer, VertexBuffer, VertexLayout},
+            pipeline::WgpuPipeline,
         },
         pipeline::{RenderPipeline, controller::PipelineKey},
     },
+    input::camera::CameraController,
 };
 use glam::{Vec2, Vec3};
+use log::info;
 use wgpu::naga::Block;
 
 use crate::{
@@ -24,21 +28,51 @@ pub struct SolidGeometryPipeline {
     chunks: HashMap<BlockPosition, ChunkSolidRenderData>,
     world: ComponentHandle<ActiveWorld>,
     wgpu: ComponentHandle<WgpuRenderer>,
+    camera: ComponentHandle<CameraController>,
+    camera_bind_group: Option<wgpu::BindGroup>,
+    pipeline: Option<WgpuPipeline>,
 }
 
 impl SolidGeometryPipeline {
-    pub fn new(csh: &ComponentStoreHandle) -> SolidGeometryPipeline {
-        Self {
+    pub fn new(csh: &ComponentStore) -> SolidGeometryPipeline {
+        let mut new = Self {
             world: csh.handle_for(),
             wgpu: csh.handle_for(),
+            camera: csh.handle_for(),
             chunks: HashMap::new(),
-        }
+            camera_bind_group: None,
+            pipeline: None,
+        };
+
+        new.create_pipeline();
+        new.create_initial_chunks();
+
+        new
     }
 
-    fn create_pipeline(&self) -> wgpu::RenderPipeline {
-        todo!(
-            "implement some sort of PipelineBuilder system because im tired of 8 parameter functions"
-        )
+    fn create_pipeline(&mut self) {
+        let wgpu = self.wgpu.get();
+        let mut builder = wgpu
+            .pipeline_builder("Solid Geometry Pipeline")
+            .shader(
+                "Solid Geometry Shader",
+                include_str!("../../../shaders/chunk_solid.wgsl"),
+                Some("vs"),
+                Some("fs"),
+            )
+            .add_vertex_layout::<SolidBlockVertex>();
+        builder = builder.add_color_target(wgpu.config.get().format);
+
+        let camera = self.camera.get();
+        let (camera_bind_group_layout, camera_bind_group) = camera.bind_group(0);
+
+        self.camera_bind_group = Some(camera_bind_group);
+
+        builder = builder.push_bind_group(camera_bind_group_layout);
+
+        info!("Creating Solid Geometry Pipeline: {:#?}", builder);
+
+        self.pipeline = Some(builder.build(None));
     }
 
     /// Creates initial chunk render data for all chunks in the world.
@@ -46,12 +80,24 @@ impl SolidGeometryPipeline {
         let world_ref = self.world.get();
         let world = world_ref.get_world().expect("no world present");
 
+        let mut vertex_count = 0;
+        let mut index_count = 0;
+
         for (chunk_coord, chunk_res) in world.chunks.iter() {
             let chunk = chunk_res.get();
             let render_data =
                 ChunkSolidRenderData::from_chunk(self.wgpu.clone(), &chunk, *chunk_coord);
+            vertex_count += render_data.vertex_buffer.count();
+            index_count += render_data.index_buffer.count();
             self.chunks.insert(*chunk_coord, render_data);
         }
+
+        info!(
+            "Created solid geometry for {} chunks ({} vertices, {} indices)",
+            self.chunks.len(),
+            vertex_count,
+            index_count
+        );
     }
 }
 
@@ -79,6 +125,16 @@ impl<K: PipelineKey> RenderPipeline<K> for SolidGeometryPipeline {
             None,
             wgpu::LoadOp::Load,
         );
+
+        let pipeline = self
+            .pipeline
+            .as_ref()
+            .expect("Solid Geometry Pipeline not created");
+
+        render_pass_desc.set_pipeline(&pipeline.pipeline);
+        if let Some(ref camera_bind_group) = self.camera_bind_group {
+            render_pass_desc.set_bind_group(0, camera_bind_group, &[]);
+        }
 
         for chunk_render_data in self.chunks.values() {
             chunk_render_data.draw(&mut render_pass_desc);
@@ -154,6 +210,7 @@ unsafe impl VertexLayout for SolidBlockVertex {
     };
 }
 
+/// TODO: This function in the future can be made to return (BufferState<SolidBlockVertex>, BufferState<TransparentBlockVertex>)
 fn build_mesh_for_chunk(chunk: &Chunk) -> (Vec<SolidBlockVertex>, Vec<u16>) {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
